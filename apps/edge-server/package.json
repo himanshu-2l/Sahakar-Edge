@@ -1,0 +1,30 @@
+{
+  "name": "@sahakar/edge-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/server.js",
+  "types": "./dist/server.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "start": "node dist/server.js",
+    "dev": "node --watch src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo edge-server:lint-ok",
+    "test": "echo edge-server:test-ok"
+  },
+  "dependencies": {
+    "@fastify/cors": "^10.0.2",
+    "@sahakar/db-edge": "workspace:*",
+    "@sahakar/hardware-adapters": "workspace:*",
+    "@sahakar/sync-protocol": "workspace:*",
+    "@sahakar/test-fixtures": "workspace:*",
+    "@sahakar/types": "workspace:*",
+    "@sahakar/validation": "workspace:*",
+    "fastify": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "typescript": "^5.8.2"
+  }
+}
