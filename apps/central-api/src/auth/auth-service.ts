@@ -49,6 +49,10 @@ export function verifyToken(token: string): User | null {
       const user = centralStore.getUserByEmailOrPhone('anita.patel@rural.org');
       return user || null;
     }
+    if (token === 'employer-token') {
+      const user = centralStore.getUser('eeee5555-5555-5555-5555-555555555555');
+      return user || null;
+    }
 
     const json = Buffer.from(token, 'base64url').toString('utf8');
     const parsed = JSON.parse(json);

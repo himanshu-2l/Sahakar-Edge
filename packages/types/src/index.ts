@@ -322,6 +322,8 @@ export interface Skill {
   name: string;
   description: string;
   parentSkillId?: string | null;
+  parentCategory?: string;
+  evidenceRule?: string;
 }
 
 export interface CourseSkill {
@@ -392,6 +394,7 @@ export interface Credential {
 export interface JobOpportunity {
   id: string;
   employerId: string;
+  employerName?: string;
   title: string;
   description: string;
   location: string;
@@ -404,24 +407,31 @@ export interface JobOpportunity {
 export interface JobRequiredSkill {
   jobId: string;
   skillId: string;
+  skillCode?: string;
+  skillName?: string;
   requiredLevel: number;
   weight: number;
 }
 
 export interface JobMatchResult {
   job: JobOpportunity;
-  matchScore: number; // 0 to 100
+  matchScore: number; // 0 to 100 (weighted verified skill overlap)
+  hardEligibilityPassed: boolean;
+  eligibilityReasons?: string[];
   matchedSkills: Array<{
     skillCode: string;
     skillName: string;
     traineeLevel: number;
     requiredLevel: number;
+    weight?: number;
   }>;
   missingSkills: Array<{
     skillCode: string;
     skillName: string;
     requiredLevel: number;
+    weight?: number;
   }>;
+  explanation?: string;
 }
 
 // ==========================================

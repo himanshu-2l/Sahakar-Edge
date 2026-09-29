@@ -14,6 +14,10 @@ import {
   Assessment,
   Question,
   UserRole,
+  type Skill,
+  type JobOpportunity,
+  type JobRequiredSkill,
+  type SkillEvidence,
 } from '@sahakar/types';
 import {
   SEED_INSTITUTES,
@@ -27,6 +31,10 @@ import {
   SEED_LESSONS,
   SEED_ASSESSMENT,
   SEED_QUESTIONS,
+  SEED_SKILLS,
+  SEED_JOB_OPPORTUNITIES,
+  SEED_JOB_REQUIRED_SKILLS,
+  SEED_TRAINEE_SKILL_EVIDENCES,
 } from '@sahakar/test-fixtures';
 
 export class CentralMemoryStore {
@@ -53,6 +61,12 @@ export class CentralMemoryStore {
   private edgeNodes: Map<string, any> = new Map();
   private credentials: Map<string, any> = new Map();
 
+  // Skills, Job Opportunities & Employment Evidence
+  private skills: Map<string, Skill> = new Map();
+  private jobOpportunities: Map<string, JobOpportunity> = new Map();
+  private jobRequiredSkills: Map<string, JobRequiredSkill[]> = new Map();
+  private skillEvidences: Map<string, SkillEvidence> = new Map();
+
   constructor() {
     this.seedBaseline();
   }
@@ -69,6 +83,10 @@ export class CentralMemoryStore {
     this.lessons.clear();
     this.assessments.clear();
     this.questions.clear();
+    this.skills.clear();
+    this.jobOpportunities.clear();
+    this.jobRequiredSkills.clear();
+    this.skillEvidences.clear();
 
     for (const inst of SEED_INSTITUTES) this.institutes.set(inst.id, { ...inst });
     for (const user of SEED_USERS) this.users.set(user.id, { ...user });
@@ -81,6 +99,15 @@ export class CentralMemoryStore {
     for (const les of SEED_LESSONS) this.lessons.set(les.id, { ...les });
     this.assessments.set(SEED_ASSESSMENT.id, { ...SEED_ASSESSMENT });
     for (const q of SEED_QUESTIONS) this.questions.set(q.id, { ...q });
+
+    for (const skill of SEED_SKILLS) this.skills.set(skill.id, { ...skill });
+    for (const job of SEED_JOB_OPPORTUNITIES) this.jobOpportunities.set(job.id, { ...job });
+    for (const req of SEED_JOB_REQUIRED_SKILLS) {
+      const existing = this.jobRequiredSkills.get(req.jobId) || [];
+      existing.push({ ...req });
+      this.jobRequiredSkills.set(req.jobId, existing);
+    }
+    for (const ev of SEED_TRAINEE_SKILL_EVIDENCES) this.skillEvidences.set(ev.id, { ...ev });
   }
 
   // --- Institutes ---
@@ -426,6 +453,86 @@ export class CentralMemoryStore {
     cred.updatedAt = new Date().toISOString();
     this.credentials.set(id, cred);
     return cred;
+  }
+
+  // --- Skills & Taxonomy ---
+  listSkills(): Skill[] {
+    return Array.from(this.skills.values());
+  }
+
+  getSkill(id: string): Skill | undefined {
+    return this.skills.get(id);
+  }
+
+  getSkillByCode(code: string): Skill | undefined {
+    return Array.from(this.skills.values()).find((s) => s.code === code);
+  }
+
+  createSkill(data: Omit<Skill, 'id'> & { id?: string }): Skill {
+    const id = data.id || randomUUID();
+    const skill: Skill = { id, ...data };
+    this.skills.set(id, skill);
+    return skill;
+  }
+
+  // --- Job Opportunities & Required Skills ---
+  listJobs(activeOnly = true): JobOpportunity[] {
+    const all = Array.from(this.jobOpportunities.values());
+    if (activeOnly) {
+      return all.filter((j) => j.active);
+    }
+    return all;
+  }
+
+  getJob(id: string): JobOpportunity | undefined {
+    return this.jobOpportunities.get(id);
+  }
+
+  createJob(
+    jobData: Omit<JobOpportunity, 'id' | 'createdAt'> & { id?: string },
+    requiredSkills?: JobRequiredSkill[]
+  ): JobOpportunity {
+    const id = jobData.id || randomUUID();
+    const createdAt = new Date().toISOString();
+    const job: JobOpportunity = {
+      id,
+      createdAt,
+      ...jobData,
+    };
+    this.jobOpportunities.set(id, job);
+
+    if (requiredSkills && requiredSkills.length > 0) {
+      const formatted = requiredSkills.map((r) => ({
+        ...r,
+        jobId: id,
+      }));
+      this.jobRequiredSkills.set(id, formatted);
+    }
+
+    return job;
+  }
+
+  getJobRequiredSkills(jobId: string): JobRequiredSkill[] {
+    return this.jobRequiredSkills.get(jobId) || [];
+  }
+
+  // --- Skill Evidence ---
+  listTraineeSkillEvidences(traineeId: string): SkillEvidence[] {
+    return Array.from(this.skillEvidences.values()).filter((e) => e.traineeId === traineeId);
+  }
+
+  addSkillEvidence(
+    evidenceData: Omit<SkillEvidence, 'id' | 'issuedAt'> & { id?: string; issuedAt?: string }
+  ): SkillEvidence {
+    const id = evidenceData.id || randomUUID();
+    const issuedAt = evidenceData.issuedAt || new Date().toISOString();
+    const evidence: SkillEvidence = {
+      id,
+      issuedAt,
+      ...evidenceData,
+    };
+    this.skillEvidences.set(id, evidence);
+    return evidence;
   }
 
   getSyncStats(): any {

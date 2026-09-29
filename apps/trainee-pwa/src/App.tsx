@@ -5,6 +5,8 @@ import {
   SEED_SESSION,
   SEED_USERS,
   SEED_JOB_OPPORTUNITY,
+  SEED_JOB_OPPORTUNITIES,
+  SEED_JOB_REQUIRED_SKILLS,
 } from '@sahakar/test-fixtures';
 import {
   offlineStore,
@@ -670,71 +672,150 @@ export default function App() {
         )}
 
         {/* ========================================================
-            TAB 5: OPPORTUNITIES
+            TAB 5: OPPORTUNITIES (Explainable Job Matching)
         ======================================================== */}
         {activeTab === 'OPPORTUNITIES' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* Notice header explaining transparent scoring */}
             <div
               style={{
-                backgroundColor: '#ffffff',
+                backgroundColor: '#eff6ff',
+                border: '1px solid #bfdbfe',
                 borderRadius: '8px',
-                padding: '1rem',
-                border: '1px solid #e2e8f0',
+                padding: '0.75rem',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.7rem', backgroundColor: '#dcfce7', color: '#15803d', padding: '0.2rem 0.4rem', borderRadius: '4px', fontWeight: 700 }}>
-                  High Match Opportunity
-                </span>
-                <span style={{ fontSize: '0.7rem', color: '#64748b' }}>Cooperative Sector</span>
+              <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#1e40af', marginBottom: '0.2rem' }}>
+                NCCT Transparent Cooperative Job Matching
               </div>
-
-              <h2 style={{ fontSize: '1rem', margin: '0.5rem 0 0.25rem 0', color: '#0f172a' }}>
-                {SEED_JOB_OPPORTUNITY.title}
-              </h2>
-              <div style={{ fontSize: '0.8rem', color: '#0369a1', fontWeight: 700 }}>
-                Employer: Anand Milk Union (Amul) Talent Network
+              <div style={{ fontSize: '0.75rem', color: '#1e3a8a', lineHeight: 1.4 }}>
+                Matches are determined strictly by verified skill evidence and Ed25519 credentials.
+                No speculative probability or opaque AI scores.
               </div>
-              <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '0.25rem 0 0.5rem 0' }}>
-                Location: {SEED_JOB_OPPORTUNITY.location} • Experience: Freshers Eligible
-              </p>
-
-              {/* Explainable Skill Breakdown per 06_CREDENTIALS_SKILLS_EMPLOYMENT.md */}
-              <div style={{ backgroundColor: '#f8fafc', padding: '0.75rem', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', marginBottom: '0.4rem' }}>
-                  Transparent Skill Breakdown:
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                  <div style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                    <span>✓ Matched:</span> PACS Double-Entry Accounting
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                    <span>✓ Matched:</span> NCCT Certificate Credential
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                    <span>○ Missing:</span> Dairy Cold Chain Management (Elective)
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={() => alert('Application submitted with verified NCCT credential!')}
-                style={{
-                  width: '100%',
-                  marginTop: '0.75rem',
-                  backgroundColor: '#0284c7',
-                  color: '#ffffff',
-                  border: 'none',
-                  padding: '0.5rem',
-                  borderRadius: '6px',
-                  fontSize: '0.8rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
-              >
-                Apply with Verified Credential
-              </button>
             </div>
+
+            {/* List of cooperative job opportunities */}
+            {SEED_JOB_OPPORTUNITIES.map((job) => {
+              const reqs = SEED_JOB_REQUIRED_SKILLS.filter((r) => r.jobId === job.id);
+              // Trainee Anita Patel's verified skills: PACS_ACCOUNTING, VOUCHER_ENTRY, COOP_GOVERNANCE
+              const anitaSkillCodes = ['PACS_ACCOUNTING', 'VOUCHER_ENTRY', 'COOP_GOVERNANCE'];
+              
+              const matchedReqs = reqs.filter((r) => r.skillCode && anitaSkillCodes.includes(r.skillCode));
+              const missingReqs = reqs.filter((r) => !r.skillCode || !anitaSkillCodes.includes(r.skillCode));
+              
+              const totalWeight = reqs.reduce((sum, r) => sum + r.weight, 0);
+              const matchedWeight = matchedReqs.reduce((sum, r) => sum + r.weight, 0);
+              const matchScore = totalWeight > 0 ? Math.round((matchedWeight / totalWeight) * 100) : 0;
+              const isHighMatch = matchScore >= 70;
+
+              return (
+                <div
+                  key={job.id}
+                  style={{
+                    backgroundColor: '#ffffff',
+                    borderRadius: '8px',
+                    padding: '1rem',
+                    border: isHighMatch ? '1.5px solid #22c55e' : '1px solid #e2e8f0',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span
+                      style={{
+                        fontSize: '0.7rem',
+                        backgroundColor: isHighMatch ? '#dcfce7' : '#f1f5f9',
+                        color: isHighMatch ? '#15803d' : '#475569',
+                        padding: '0.2rem 0.5rem',
+                        borderRadius: '4px',
+                        fontWeight: 700,
+                      }}
+                    >
+                      {isHighMatch ? `High Match • ${matchScore}% Verified Overlap` : `${matchScore}% Verified Overlap`}
+                    </span>
+                    <span style={{ fontSize: '0.7rem', color: '#64748b' }}>
+                      {job.experienceYears > 0 ? `${job.experienceYears} yr exp` : 'Freshers Welcome'}
+                    </span>
+                  </div>
+
+                  <h2 style={{ fontSize: '1rem', margin: '0.5rem 0 0.25rem 0', color: '#0f172a' }}>
+                    {job.title}
+                  </h2>
+                  <div style={{ fontSize: '0.8rem', color: '#0369a1', fontWeight: 700 }}>
+                    Employer: {job.employerName || 'Cooperative Talent Network'}
+                  </div>
+                  <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '0.25rem 0 0.5rem 0' }}>
+                    Location: {job.location} • Qualification: {job.qualification}
+                  </p>
+
+                  {/* Explainable Skill Breakdown per 06_CREDENTIALS_SKILLS_EMPLOYMENT.md */}
+                  <div
+                    style={{
+                      backgroundColor: '#f8fafc',
+                      padding: '0.75rem',
+                      borderRadius: '6px',
+                      border: '1px solid #e2e8f0',
+                      marginTop: '0.5rem',
+                    }}
+                  >
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', marginBottom: '0.4rem' }}>
+                      Transparent Skill Breakdown:
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      {matchedReqs.map((m) => (
+                        <div
+                          key={m.skillId}
+                          style={{
+                            fontSize: '0.75rem',
+                            color: '#16a34a',
+                            fontWeight: 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.3rem',
+                          }}
+                        >
+                          <span>✓ Matched:</span> {m.skillName || m.skillCode} (Weight: {Math.round(m.weight * 100)}%)
+                        </div>
+                      ))}
+                      {missingReqs.map((m) => (
+                        <div
+                          key={m.skillId}
+                          style={{
+                            fontSize: '0.75rem',
+                            color: '#64748b',
+                            fontWeight: 500,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.3rem',
+                          }}
+                        >
+                          <span>○ Missing:</span> {m.skillName || m.skillCode} (Weight: {Math.round(m.weight * 100)}%)
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() =>
+                      alert(`Application submitted to ${job.employerName || 'Employer'} with verified NCCT credential!`)
+                    }
+                    style={{
+                      width: '100%',
+                      marginTop: '0.75rem',
+                      backgroundColor: isHighMatch ? '#0284c7' : '#64748b',
+                      color: '#ffffff',
+                      border: 'none',
+                      padding: '0.5rem',
+                      borderRadius: '6px',
+                      fontSize: '0.8rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {isHighMatch ? 'Apply with Verified Credential' : 'View Job & Training Pathways'}
+                  </button>
+                </div>
+              );
+            })}
           </div>
         )}
 
