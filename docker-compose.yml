@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # 1. Central PostgreSQL Database
+  # ==========================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: sahakar-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: sahakar_central
+      POSTGRES_USER: sahakar_admin
+      POSTGRES_PASSWORD: sahakar_secure_password_dev_only
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U sahakar_admin -d sahakar_central']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================
+  # 2. Central API Server (Fastify + TypeScript)
+  # ==========================================
+  central-api:
+    build:
+      context: .
+      dockerfile: apps/central-api/Dockerfile
+    container_name: sahakar-central-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      HOST: 0.0.0.0
+      DATABASE_URL: postgresql://sahakar_admin:sahakar_secure_password_dev_only@postgres:5432/sahakar_central
+      JWT_SECRET: super_secret_ncct_central_key_change_in_prod
+      ISSUER_ED25519_PRIVATE_KEY: ${ISSUER_ED25519_PRIVATE_KEY:-}
+    ports:
+      - '4000:4000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:4000/health']
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ==========================================
+  # 3. Web Admin Dashboard (Next.js)
+  # ==========================================
+  web-admin:
+    build:
+      context: .
+      dockerfile: apps/web-admin/Dockerfile
+    container_name: sahakar-web-admin
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      NEXT_PUBLIC_CENTRAL_API_URL: http://central-api:4000
+    ports:
+      - '3000:3000'
+    depends_on:
+      - central-api
+
+  # ==========================================
+  # 4. Trainee PWA (Offline Shell + Static Delivery)
+  # ==========================================
+  trainee-pwa:
+    build:
+      context: .
+      dockerfile: apps/trainee-pwa/Dockerfile
+    container_name: sahakar-trainee-pwa
+    restart: unless-stopped
+    ports:
+      - '5173:80'
+    depends_on:
+      - central-api
+
+volumes:
+  postgres_data:
