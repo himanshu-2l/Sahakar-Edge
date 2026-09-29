@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  validate:
+    name: Lint, Typecheck, Test & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Install Monorepo Dependencies
+        run: pnpm install --frozen-lockfile=false
+
+      - name: Lint Codebase
+        run: pnpm run lint
+
+      - name: Typecheck Workspace Packages
+        run: pnpm run typecheck
+
+      - name: Run Master Integration Test Suite (Phase 0 - 8)
+        run: pnpm run test
+
+      - name: Build Production Workspace Artifacts
+        run: pnpm run build

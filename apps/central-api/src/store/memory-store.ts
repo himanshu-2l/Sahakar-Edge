@@ -108,6 +108,30 @@ export class CentralMemoryStore {
       this.jobRequiredSkills.set(req.jobId, existing);
     }
     for (const ev of SEED_TRAINEE_SKILL_EVIDENCES) this.skillEvidences.set(ev.id, { ...ev });
+
+    // Seed default edge node per 05_HARDWARE_EDGE.md
+    this.edgeNodes.set('edge-node-ricm-bhopal-01', {
+      id: 'edge-node-ricm-bhopal-01',
+      nodeId: 'edge-node-ricm-bhopal-01',
+      instituteId: '11111111-1111-1111-1111-111111111111',
+      name: 'RICM Bhopal - Main Training Hall Gateway',
+      publicKey: 'simulated-ed25519-public-key-ricm-01',
+      softwareVersion: '1.0.0',
+      lastSeenAt: new Date().toISOString(),
+      healthStatus: 'ONLINE_SYNCED',
+      telemetry: {
+        cpuTemperatureC: 44.2,
+        cpuLoadPercent: 12.5,
+        memoryUsagePercent: 32.0,
+        diskUsagePercent: 24.0,
+        uptimeSeconds: 7200,
+        networkState: 'ONLINE',
+        wanSimulationMode: 'online',
+        appVersion: '1.0.0',
+        lastSyncAt: new Date().toISOString(),
+        queuedEventCount: 0,
+      },
+    });
   }
 
   // --- Institutes ---

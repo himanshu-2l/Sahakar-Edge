@@ -9,6 +9,7 @@ import { courseRoutes } from './routes/courses.routes.js';
 import { registerSyncRoutes } from './routes/sync.routes.js';
 import { registerCredentialRoutes } from './routes/credentials.routes.js';
 import { registerJobRoutes } from './routes/jobs.routes.js';
+import { edgeRoutes } from './routes/edge.routes.js';
 
 export async function buildCentralServer() {
   const app = Fastify({
@@ -44,6 +45,7 @@ export async function buildCentralServer() {
   await app.register(batchRoutes, { prefix: '/api/v1' });
   await app.register(sessionRoutes, { prefix: '/api/v1' });
   await app.register(courseRoutes, { prefix: '/api/v1' });
+  await app.register(edgeRoutes, { prefix: '/api/v1' });
   await app.register(registerSyncRoutes);
   await app.register(registerCredentialRoutes);
   await app.register(registerJobRoutes);

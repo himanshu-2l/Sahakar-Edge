@@ -1,5 +1,6 @@
 import { EdgeJournalService } from './journal-service.js';
 import type { SyncBatchResponse } from '@sahakar/sync-protocol';
+import type { DeviceTelemetry, EdgeNodeHealthStatus } from '@sahakar/types';
 
 export interface SyncClientConfig {
   centralApiUrl: string;
@@ -126,5 +127,16 @@ export class EdgeSyncClient {
         error: err?.message || 'Sync failed',
       };
     }
+  }
+
+  /**
+   * Step 4: Transmit Edge Device Telemetry Heartbeat per 08_API_SPEC.md & 05_HARDWARE_EDGE.md
+   */
+  public async sendHeartbeat(
+    telemetry: DeviceTelemetry,
+    healthStatus?: EdgeNodeHealthStatus
+  ): Promise<{ acknowledged: boolean; serverTime: string }> {
+    const url = `${this.config.centralApiUrl}/api/v1/edge/${this.config.nodeId}/heartbeat`;
+    return this.request(url, { telemetry, healthStatus });
   }
 }

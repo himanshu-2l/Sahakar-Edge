@@ -239,5 +239,45 @@ assert.ok(stats.totalIngestedEvents >= 3);
 assert.strictEqual(stats.registeredNodesCount, 1);
 console.log('✓ Central sync monitor telemetry accurately reports fleet statistics.');
 
+// ========================================================
+// Test 8: Edge Node Fleet Registry & Heartbeat Telemetry
+// ========================================================
+console.log('Test 8: Edge Node Fleet Registry & Heartbeat Telemetry (08_API_SPEC.md)...');
+// 8a. Query edge node health
+const healthRes = await centralApp.inject({
+  method: 'GET',
+  url: `/api/v1/edge/${edgeApp.nodeId}/health`,
+});
+assert.strictEqual(healthRes.statusCode, 200);
+const healthBody = JSON.parse(healthRes.body);
+assert.strictEqual(healthBody.nodeId, edgeApp.nodeId);
+assert.ok(healthBody.telemetry);
+
+// 8b. Send heartbeat via syncClient
+const heartbeatRes = await syncClient.sendHeartbeat({
+  cpuTemperatureC: 45.8,
+  cpuLoadPercent: 18.2,
+  memoryUsagePercent: 35.0,
+  diskUsagePercent: 24.5,
+  uptimeSeconds: 7800,
+  networkState: 'ONLINE',
+  wanSimulationMode: 'online',
+  appVersion: '1.0.0',
+  lastSyncAt: new Date().toISOString(),
+  queuedEventCount: 0,
+});
+assert.strictEqual(heartbeatRes.acknowledged, true);
+
+// 8c. List all edge nodes centrally
+const listNodesRes = await centralApp.inject({
+  method: 'GET',
+  url: '/api/v1/edge',
+});
+assert.strictEqual(listNodesRes.statusCode, 200);
+const listNodesBody = JSON.parse(listNodesRes.body);
+assert.ok(listNodesBody.edgeNodes.length >= 1);
+assert.strictEqual(listNodesBody.edgeNodes[0].nodeId, edgeApp.nodeId);
+console.log('✓ Edge node fleet telemetry, heartbeats, and health queries verified.');
+
 console.log('\n=== ALL PHASE 4 INTEGRATION TESTS PASSED SUCCESSFULLY! ===\n');
 process.exit(0);

@@ -7,7 +7,14 @@
     "build": "pnpm -r run build",
     "test": "node scripts/run-all-tests.ts",
     "typecheck": "pnpm -r run typecheck",
-    "lint": "pnpm -r run lint"
+    "lint": "pnpm -r run lint",
+    "demo:simulate": "node scripts/simulate-partition.ts",
+    "demo:reset": "node scripts/reset-demo.ts",
+    "demo:benchmark": "node scripts/benchmark-load.ts",
+    "dev:api": "pnpm --filter @sahakar/central-api dev",
+    "dev:admin": "pnpm --filter @sahakar/web-admin dev",
+    "dev:edge": "pnpm --filter @sahakar/edge-server dev",
+    "dev:trainee": "pnpm --filter @sahakar/trainee-pwa dev"
   },
   "devDependencies": {
     "@types/node": "^22.13.10",
