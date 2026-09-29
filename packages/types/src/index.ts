@@ -346,12 +346,18 @@ export enum CredentialStatus {
   EXPIRED = 'EXPIRED',
 }
 
+export interface SkillSummary {
+  skillCode: string;
+  skillName: string;
+  level: number;
+}
+
 export interface CanonicalCredentialPayload {
   credentialId: string;
   issuer: {
     id: string;
     name: string;
-    instituteId: string;
+    instituteId?: string;
   };
   recipient: {
     traineeId: string;
@@ -361,11 +367,7 @@ export interface CanonicalCredentialPayload {
     id: string;
     title: string;
   };
-  skillsSummary: Array<{
-    skillCode: string;
-    skillName: string;
-    level: number;
-  }>;
+  skillsSummary: SkillSummary[];
   issuedAt: string;
   expiresAt: string | null;
   schemaVersion: number;

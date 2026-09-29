@@ -51,6 +51,7 @@ export class CentralMemoryStore {
   private progressRecords: Map<string, any> = new Map();
   private assessmentSubmissions: Map<string, any> = new Map();
   private edgeNodes: Map<string, any> = new Map();
+  private credentials: Map<string, any> = new Map();
 
   constructor() {
     this.seedBaseline();
@@ -395,6 +396,38 @@ export class CentralMemoryStore {
     return Array.from(this.edgeNodes.values());
   }
 
+  // --- Credentials ---
+  saveCredential(cred: any): void {
+    this.credentials.set(cred.id, { ...cred, updatedAt: new Date().toISOString() });
+  }
+
+  getCredential(id: string): any | undefined {
+    return this.credentials.get(id);
+  }
+
+  listCredentials(traineeId?: string): any[] {
+    let all = Array.from(this.credentials.values());
+    if (traineeId) {
+      all = all.filter((c) => c.traineeId === traineeId);
+    }
+    return all;
+  }
+
+  updateCredentialStatus(id: string, status: string, reason?: string, actorId?: string): any | undefined {
+    const cred = this.credentials.get(id);
+    if (!cred) return undefined;
+
+    cred.status = status;
+    if (status === 'REVOKED') {
+      cred.revokedAt = new Date().toISOString();
+      cred.revocationReason = reason || 'Revoked by authority';
+      cred.revokedBy = actorId || 'system';
+    }
+    cred.updatedAt = new Date().toISOString();
+    this.credentials.set(id, cred);
+    return cred;
+  }
+
   getSyncStats(): any {
     return {
       totalIngestedEvents: this.ingestedEvents.size,
@@ -402,6 +435,7 @@ export class CentralMemoryStore {
       registeredNodesCount: this.edgeNodes.size,
       attendanceRecordsCount: this.attendanceRecords.size,
       assessmentSubmissionsCount: this.assessmentSubmissions.size,
+      credentialsIssuedCount: this.credentials.size,
     };
   }
 }
