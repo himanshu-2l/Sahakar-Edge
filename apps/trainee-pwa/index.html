@@ -4,10 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0369a1" />
+    <meta name="description" content="Sahakar Edge — Offline-First Trainee Learning & Assessment Portal" />
+    <link rel="manifest" href="/manifest.json" />
     <title>Sahakar Edge — Trainee Portal</title>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch((err) => {
+            console.log('SW registration note:', err.message);
+          });
+        });
+      }
+    </script>
   </body>
 </html>

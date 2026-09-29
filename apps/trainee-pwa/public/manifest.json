@@ -1,0 +1,22 @@
+{
+  "short_name": "Sahakar PWA",
+  "name": "Sahakar Edge — Trainee Learning Portal",
+  "description": "Offline-first cooperative training, attendance, and assessment PWA for NCCT institutes",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#ffffff",
+  "theme_color": "#0369a1",
+  "display": "standalone",
+  "orientation": "portrait"
+}

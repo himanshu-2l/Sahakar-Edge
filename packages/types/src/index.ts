@@ -222,6 +222,22 @@ export interface Lesson {
   order: number;
 }
 
+export interface ContentManifestAsset {
+  uri: string;
+  sha256: string;
+  sizeBytes: number;
+}
+
+export interface ContentManifest {
+  courseId: string;
+  version: number;
+  generatedAt: string;
+  modules: Module[];
+  lessons: Lesson[];
+  assessments: Assessment[];
+  assets: ContentManifestAsset[];
+}
+
 // ==========================================
 // 5. Attendance & Identity Verification
 // ==========================================

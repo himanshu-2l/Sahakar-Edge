@@ -8,6 +8,7 @@ console.log('========================================================\n');
 const testSuites = [
   'scripts/test-phase0.ts',
   'scripts/test-phase1.ts',
+  'scripts/test-phase2.ts',
 ];
 
 for (const suite of testSuites) {
