@@ -1,5 +1,11 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import { authRoutes } from './routes/auth.routes.js';
+import { instituteRoutes } from './routes/institutes.routes.js';
+import { programmeRoutes } from './routes/programmes.routes.js';
+import { batchRoutes } from './routes/batches.routes.js';
+import { sessionRoutes } from './routes/sessions.routes.js';
+import { courseRoutes } from './routes/courses.routes.js';
 
 export async function buildCentralServer() {
   const app = Fastify({
@@ -28,10 +34,19 @@ export async function buildCentralServer() {
     };
   });
 
+  // Register domain modules under /api/v1
+  await app.register(authRoutes, { prefix: '/api/v1' });
+  await app.register(instituteRoutes, { prefix: '/api/v1' });
+  await app.register(programmeRoutes, { prefix: '/api/v1' });
+  await app.register(batchRoutes, { prefix: '/api/v1' });
+  await app.register(sessionRoutes, { prefix: '/api/v1' });
+  await app.register(courseRoutes, { prefix: '/api/v1' });
+
   return app;
 }
 
-if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
+const isDirectRun = process.argv[1] && (process.argv[1].endsWith('server.js') || process.argv[1].endsWith('server.ts'));
+if (isDirectRun && process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
   const port = Number(process.env.PORT) || 4000;
   const host = process.env.HOST || '0.0.0.0';
   const server = await buildCentralServer();

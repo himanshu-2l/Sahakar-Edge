@@ -66,7 +66,8 @@ export async function buildEdgeServer(config: Partial<EdgeServerConfig> = {}) {
   return app;
 }
 
-if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
+const isDirectRun = process.argv[1] && (process.argv[1].endsWith('server.js') || process.argv[1].endsWith('server.ts'));
+if (isDirectRun && process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
   const port = Number(process.env.PORT) || 4100;
   const host = process.env.HOST || '0.0.0.0';
   const server = await buildEdgeServer();
