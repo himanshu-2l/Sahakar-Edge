@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "prebuild": "pnpm --filter \"@sahakar/types\" --filter \"@sahakar/validation\" --filter \"@sahakar/test-fixtures\" run build",
+    "build": "vite build",
     "typecheck": "tsc --noEmit",
     "lint": "echo trainee-pwa:lint-ok",
     "test": "echo trainee-pwa:test-ok"
