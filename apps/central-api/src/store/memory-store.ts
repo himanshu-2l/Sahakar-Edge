@@ -42,6 +42,16 @@ export class CentralMemoryStore {
   private assessments: Map<string, Assessment> = new Map();
   private questions: Map<string, Question> = new Map();
 
+  // Ingested sync events & deduplication
+  private ingestedEvents: Map<string, any> = new Map();
+  private centralLogicalSequence = 0;
+
+  // Operational business records
+  private attendanceRecords: Map<string, any> = new Map();
+  private progressRecords: Map<string, any> = new Map();
+  private assessmentSubmissions: Map<string, any> = new Map();
+  private edgeNodes: Map<string, any> = new Map();
+
   constructor() {
     this.seedBaseline();
   }
@@ -293,6 +303,105 @@ export class CentralMemoryStore {
       modules: modulesWithLessons,
       assessment: assessment ? { ...assessment, questions } : null,
       generatedAt: new Date().toISOString(),
+    };
+  }
+
+  // --- Sync Ingestion & Idempotency ---
+  isEventIngested(eventId: string): boolean {
+    return this.ingestedEvents.has(eventId);
+  }
+
+  getCentralSequence(): number {
+    return this.centralLogicalSequence;
+  }
+
+  recordIngestedEvent(event: any): number {
+    this.centralLogicalSequence++;
+    this.ingestedEvents.set(event.id, {
+      ...event,
+      ingestedAt: new Date().toISOString(),
+      centralSequence: this.centralLogicalSequence,
+    });
+    return this.centralLogicalSequence;
+  }
+
+  listIngestedEvents(limit = 100): any[] {
+    return Array.from(this.ingestedEvents.values()).slice(-limit);
+  }
+
+  // --- Operational Records (Attendance, Progress, Assessment) ---
+  recordAttendance(record: any): void {
+    const key = record.recordId || record.id || `${record.sessionId}-${record.traineeId}`;
+    this.attendanceRecords.set(key, { ...record, updatedAt: new Date().toISOString() });
+  }
+
+  listAttendanceBySession(sessionId: string): any[] {
+    return Array.from(this.attendanceRecords.values()).filter(
+      (a) => a.sessionId === sessionId
+    );
+  }
+
+  recordProgress(record: any): void {
+    const key = `${record.traineeId}-${record.lessonId}`;
+    this.progressRecords.set(key, { ...record, updatedAt: new Date().toISOString() });
+  }
+
+  getTraineeProgress(traineeId: string): any {
+    const traineeProgress = Array.from(this.progressRecords.values()).filter(
+      (p) => p.traineeId === traineeId && (p.completed || p.eventType === 'LESSON_COMPLETED')
+    );
+    const totalLessons = this.lessons.size;
+    const completedCount = traineeProgress.length;
+    const percentage = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+
+    return {
+      traineeId,
+      completedLessons: traineeProgress.map((p) => p.lessonId),
+      completedCount,
+      totalLessons,
+      progressPercentage: percentage,
+    };
+  }
+
+  recordAssessmentSubmission(submission: any): void {
+    const key = submission.submissionId || submission.id || `${submission.assessmentId}-${submission.traineeId}-${Date.now()}`;
+    this.assessmentSubmissions.set(key, { ...submission, recordedAt: new Date().toISOString() });
+  }
+
+  listAssessmentSubmissions(traineeId?: string): any[] {
+    let all = Array.from(this.assessmentSubmissions.values());
+    if (traineeId) {
+      all = all.filter((s) => s.traineeId === traineeId);
+    }
+    return all;
+  }
+
+  // --- Edge Node Fleet Management ---
+  registerOrUpdateEdgeNode(nodeId: string, metadata: any): void {
+    const existing = this.edgeNodes.get(nodeId) || {};
+    this.edgeNodes.set(nodeId, {
+      ...existing,
+      ...metadata,
+      nodeId,
+      lastSeenAt: new Date().toISOString(),
+    });
+  }
+
+  getEdgeNode(nodeId: string): any | undefined {
+    return this.edgeNodes.get(nodeId);
+  }
+
+  listEdgeNodes(): any[] {
+    return Array.from(this.edgeNodes.values());
+  }
+
+  getSyncStats(): any {
+    return {
+      totalIngestedEvents: this.ingestedEvents.size,
+      centralLogicalSequence: this.centralLogicalSequence,
+      registeredNodesCount: this.edgeNodes.size,
+      attendanceRecordsCount: this.attendanceRecords.size,
+      assessmentSubmissionsCount: this.assessmentSubmissions.size,
     };
   }
 }

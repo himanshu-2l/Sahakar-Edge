@@ -13,7 +13,7 @@ import {
 import { Programme, Batch, Enrollment, EnrollmentStatus, ProgrammeStatus } from '@sahakar/types';
 
 export default function AdminDashboardPage() {
-  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'PROGRAMMES' | 'BATCHES' | 'COURSES'>('OVERVIEW');
+  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'PROGRAMMES' | 'BATCHES' | 'COURSES' | 'SYNC_MONITOR'>('OVERVIEW');
 
   // Interactive state initialized with seed fixtures
   const [programmes, setProgrammes] = useState<Programme[]>([SEED_PROGRAMME]);
@@ -111,7 +111,7 @@ export default function AdminDashboardPage() {
 
       {/* Navigation Sub-bar */}
       <nav style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e2e8f0', padding: '0 2rem', display: 'flex', gap: '2rem' }}>
-        {(['OVERVIEW', 'PROGRAMMES', 'BATCHES', 'COURSES'] as const).map((tab) => (
+        {(['OVERVIEW', 'PROGRAMMES', 'BATCHES', 'COURSES', 'SYNC_MONITOR'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -371,6 +371,138 @@ export default function AdminDashboardPage() {
   syncFormat: 'CANONICAL_JSON_ZOD_V1',
 }, null, 2)}
               </pre>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 5: Sync Monitor (07_UI_UX_SPEC.md & 04_OFFLINE_SYNC_PROTOCOL.md) */}
+        {activeTab === 'SYNC_MONITOR' && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <div>
+                <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Edge Node Fleet & Offline Synchronization Monitor</h2>
+                <p style={{ margin: '0.25rem 0 0 0', color: '#64748b', fontSize: '0.85rem' }}>
+                  Real-time telemetry and idempotent ingestion pipeline across rural NCCT training centres
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.75rem', backgroundColor: '#dcfce7', color: '#166534', padding: '0.25rem 0.6rem', borderRadius: '4px', fontWeight: 700 }}>
+                  ● Central Ingestion Active
+                </span>
+              </div>
+            </div>
+
+            {/* Sync Telemetry Cards per 04_OFFLINE_SYNC_PROTOCOL.md */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '1rem 1.25rem', border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>REGISTERED EDGE NODES</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0369a1', margin: '0.2rem 0' }}>1 Active</div>
+                <div style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 600 }}>RICM Bhopal Lab 1</div>
+              </div>
+
+              <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '1rem 1.25rem', border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>INGESTED DOMAIN EVENTS</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#16a34a', margin: '0.2rem 0' }}>42 Events</div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Canonical SHA-256 Verified</div>
+              </div>
+
+              <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '1rem 1.25rem', border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>CONFLICTS RESOLVED</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', margin: '0.2rem 0' }}>0 Conflicts</div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Deterministic Append-Merge</div>
+              </div>
+
+              <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '1rem 1.25rem', border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>LAST CENTRAL SYNC</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0284c7', margin: '0.2rem 0' }}>Just now</div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Sequence #1042</div>
+              </div>
+            </div>
+
+            {/* Fleet Status Table */}
+            <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '1.5rem', overflow: 'hidden' }}>
+              <div style={{ padding: '1rem 1.5rem', backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontWeight: 700, fontSize: '0.9rem' }}>
+                Deployed Edge Nodes Fleet
+              </div>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#64748b' }}>
+                    <th style={{ padding: '0.75rem 1.5rem' }}>Node Identifier</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>Institute & Venue</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>Status</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>Hardware Telemetry</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>Storage (WAL)</th>
+                    <th style={{ padding: '0.75rem 1.5rem' }}>Last Handshake</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    <td style={{ padding: '0.75rem 1.5rem', fontWeight: 700 }}>
+                      <code>edge-node-ricm-bhopal-01</code>
+                    </td>
+                    <td style={{ padding: '0.75rem 1rem' }}>RICM Bhopal (Lab 1)</td>
+                    <td style={{ padding: '0.75rem 1rem' }}>
+                      <span style={{ backgroundColor: '#dcfce7', color: '#166534', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 700, fontSize: '0.75rem' }}>
+                        ONLINE_SYNCED
+                      </span>
+                    </td>
+                    <td style={{ padding: '0.75rem 1rem', color: '#334155' }}>
+                      Temp: 44.2°C • Load: 12% • RAM: 24%
+                    </td>
+                    <td style={{ padding: '0.75rem 1rem', color: '#334155' }}>
+                      NVMe 24% (180 GB Free)
+                    </td>
+                    <td style={{ padding: '0.75rem 1.5rem', color: '#64748b' }}>
+                      2 mins ago
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Ingested Audit Stream */}
+            <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+              <div style={{ padding: '1rem 1.5rem', backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>Recent Ingested Edge Events (Tamper-Evident SHA-256 Audit Stream)</span>
+                <span style={{ fontSize: '0.75rem', color: '#64748b' }}>RFC 8785 Canonical JSON Verified</span>
+              </div>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#64748b' }}>
+                    <th style={{ padding: '0.75rem 1.5rem' }}>Event Type</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>Aggregate</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>Actor / Trainee</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>SHA-256 Digest</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>Resolution</th>
+                    <th style={{ padding: '0.75rem 1.5rem' }}>Ingested At</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { type: 'ASSESSMENT_SUBMITTED', agg: 'ASSESSMENT', actor: 'Anita Patel (PACS Member)', hash: 'a1b89…34e2', res: 'MERGED (Score: 100%)', time: '5 mins ago' },
+                    { type: 'PROGRESS_RECORDED', agg: 'PROGRESS', actor: 'Anita Patel (PACS Member)', hash: 'f482c…910d', res: 'MERGED (Lesson 1.1 Done)', time: '8 mins ago' },
+                    { type: 'ATTENDANCE_OVERRIDDEN', agg: 'ATTENDANCE', actor: 'Prof. Ramesh Sharma (Trainer)', hash: '3e710…6ca4', res: 'AUDITED (Glare override)', time: '14 mins ago' },
+                    { type: 'ATTENDANCE_RECORDED', agg: 'ATTENDANCE', actor: 'Anita Patel (PACS Member)', hash: '9b24e…88fa', res: 'MERGED (QR Verified)', time: '22 mins ago' },
+                  ].map((ev, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '0.75rem 1.5rem', fontWeight: 700, color: '#0369a1' }}>{ev.type}</td>
+                      <td style={{ padding: '0.75rem 1rem' }}>
+                        <span style={{ backgroundColor: '#f1f5f9', padding: '0.2rem 0.4rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>
+                          {ev.agg}
+                        </span>
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem' }}>{ev.actor}</td>
+                      <td style={{ padding: '0.75rem 1rem', fontFamily: 'monospace', color: '#64748b', fontSize: '0.75rem' }}>
+                        {ev.hash}
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem' }}>
+                        <span style={{ color: '#16a34a', fontWeight: 700, fontSize: '0.75rem' }}>✓ {ev.res}</span>
+                      </td>
+                      <td style={{ padding: '0.75rem 1.5rem', color: '#64748b', fontSize: '0.8rem' }}>{ev.time}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         )}

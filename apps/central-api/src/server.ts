@@ -6,6 +6,7 @@ import { programmeRoutes } from './routes/programmes.routes.js';
 import { batchRoutes } from './routes/batches.routes.js';
 import { sessionRoutes } from './routes/sessions.routes.js';
 import { courseRoutes } from './routes/courses.routes.js';
+import { registerSyncRoutes } from './routes/sync.routes.js';
 
 export async function buildCentralServer() {
   const app = Fastify({
@@ -41,6 +42,7 @@ export async function buildCentralServer() {
   await app.register(batchRoutes, { prefix: '/api/v1' });
   await app.register(sessionRoutes, { prefix: '/api/v1' });
   await app.register(courseRoutes, { prefix: '/api/v1' });
+  await app.register(registerSyncRoutes);
 
   return app;
 }
