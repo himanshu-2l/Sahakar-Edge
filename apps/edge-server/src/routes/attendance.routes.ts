@@ -3,14 +3,78 @@ import { DatabaseSync } from 'node:sqlite';
 import { randomUUID } from 'node:crypto';
 import { EdgeJournalService } from '../services/journal-service.js';
 import { EdgeAuthService } from '../services/edge-auth.js';
+import { EdgeAttendanceManager } from '../services/attendance-manager.js';
+import { AttendanceVerificationMethod } from '@sahakar/types';
 
 export async function registerAttendanceRoutes(
   app: FastifyInstance,
   db: DatabaseSync,
   journalService: EdgeJournalService,
-  authService: EdgeAuthService
+  authService: EdgeAuthService,
+  attendanceManager?: EdgeAttendanceManager
 ) {
-  // Record attendance event locally
+  const manager =
+    attendanceManager || new EdgeAttendanceManager(db, journalService, 'edge-node-ricm-bhopal-01');
+
+  // Hardware Adapter Capture Endpoint (Simulated Face, QR)
+  app.post<{
+    Body: {
+      sessionId: string;
+      method: string;
+      traineeId?: string;
+      rawPayload?: string;
+    };
+  }>('/api/v1/attendance/capture', async (request, reply) => {
+    const { sessionId, method, traineeId, rawPayload } = request.body || {};
+
+    if (!sessionId || !method) {
+      return reply.status(400).send({
+        error: 'BAD_REQUEST',
+        message: 'sessionId and method are required',
+      });
+    }
+
+    const authUser = authService.authenticate(request);
+    const actorId = authUser ? authUser.id : traineeId || 'system';
+
+    const verificationMethod =
+      method === 'SIMULATED_FACE'
+        ? AttendanceVerificationMethod.SIMULATED_FACE
+        : AttendanceVerificationMethod.QR;
+
+    const result = await manager.processCapture(
+      {
+        sessionId,
+        nodeId: 'edge-node-ricm-bhopal-01',
+        traineeId,
+        rawPayload,
+        actorId,
+      },
+      verificationMethod
+    );
+
+    if (!result.evidence.verified) {
+      return reply.status(422).send({
+        success: false,
+        error: result.evidence.error || 'Verification failed',
+        evidence: result.evidence,
+      });
+    }
+
+    return reply.status(201).send({
+      success: true,
+      evidence: result.evidence,
+      event: result.event,
+    });
+  });
+
+  // Providers Health Check
+  app.get('/api/v1/attendance/providers/health', async () => {
+    const health = await manager.getProvidersHealth();
+    return { providers: health };
+  });
+
+  // Record attendance event locally (Direct/Legacy path)
   app.post<{
     Body: {
       sessionId: string;
@@ -117,46 +181,22 @@ export async function registerAttendanceRoutes(
     const authUser = authService.requireAuth(request, reply);
     if (!authUser) return;
 
-    const existing = db
-      .prepare('SELECT * FROM local_attendance_records WHERE id = ?')
-      .get(recordId) as any;
+    try {
+      const { record, event } = manager.overrideAttendance(
+        recordId,
+        reason,
+        authUser.id,
+        result as any
+      );
 
-    if (!existing) {
-      return reply.status(404).send({ error: 'NOT_FOUND', message: 'Attendance record not found' });
+      return reply.send({
+        success: true,
+        overridden: true,
+        record,
+        event,
+      });
+    } catch (err: any) {
+      return reply.status(404).send({ error: 'ERROR', message: err.message });
     }
-
-    const occurredAt = new Date().toISOString();
-    const payload = {
-      recordId,
-      sessionId: existing.session_id,
-      traineeId: existing.trainee_id,
-      previousResult: existing.result,
-      newResult: result,
-      overrideReason: reason,
-      overriddenBy: authUser.id,
-      occurredAt,
-    };
-
-    const event = journalService.appendEventInTransaction({
-      aggregateType: 'ATTENDANCE',
-      aggregateId: existing.session_id,
-      eventType: 'ATTENDANCE_OVERRIDDEN',
-      payload,
-      operationalCallback: (txDb) => {
-        txDb
-          .prepare(`
-            UPDATE local_attendance_records
-            SET result = ?, override_reason = ?
-            WHERE id = ?
-          `)
-          .run(result, reason, recordId);
-      },
-    });
-
-    return reply.send({
-      success: true,
-      overridden: true,
-      event,
-    });
   });
 }
