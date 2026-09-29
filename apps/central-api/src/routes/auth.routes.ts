@@ -45,4 +45,16 @@ export async function authRoutes(fastify: FastifyInstance) {
       user: request.auth?.user,
     };
   });
+
+  // Token refresh per 08_API_SPEC.md
+  fastify.post('/auth/refresh', { preHandler: [authenticate] }, async (request) => {
+    const user = request.auth!.user;
+    const token = generateToken(user);
+    return { token, user };
+  });
+
+  // Logout per 08_API_SPEC.md
+  fastify.post('/auth/logout', { preHandler: [authenticate] }, async () => {
+    return { success: true, message: 'Logged out successfully' };
+  });
 }

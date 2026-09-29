@@ -91,6 +91,28 @@ export async function registerJobRoutes(app: FastifyInstance) {
     }
   );
 
+  // Alias per 08_API_SPEC.md: GET /trainees/:id/skills
+  app.get<{ Params: { id: string } }>(
+    '/api/v1/trainees/:id/skills',
+    async (request, reply) => {
+      const traineeId = request.params.id;
+      const trainee = centralStore.getUser(traineeId);
+      if (!trainee) {
+        return reply.status(404).send({ error: 'NOT_FOUND', message: 'Trainee not found' });
+      }
+
+      const profileMap = jobMatchingService.getTraineeSkillProfile(traineeId);
+      const verifiedSkills = Array.from(profileMap.values());
+
+      return reply.send({
+        traineeId,
+        traineeName: trainee.name,
+        verifiedSkillsCount: verifiedSkills.length,
+        skills: verifiedSkills,
+      });
+    }
+  );
+
   // ==========================================
   // Job Opportunities Endpoints
   // ==========================================
@@ -186,6 +208,32 @@ export async function registerJobRoutes(app: FastifyInstance) {
     Querystring: { eligibleOnly?: string };
   }>('/api/v1/jobs/match/:traineeId', async (request, reply) => {
     const { traineeId } = request.params;
+    const { eligibleOnly } = request.query;
+
+    const trainee = centralStore.getUser(traineeId);
+    if (!trainee) {
+      return reply.status(404).send({ error: 'NOT_FOUND', message: 'Trainee not found' });
+    }
+
+    const matches = jobMatchingService.matchTraineeToAllJobs(
+      traineeId,
+      eligibleOnly === 'true'
+    );
+
+    return reply.send({
+      traineeId,
+      traineeName: trainee.name,
+      totalOpportunitiesChecked: centralStore.listJobs(true).length,
+      matches,
+    });
+  });
+
+  // Alias per 08_API_SPEC.md: GET /trainees/:id/job-matches
+  app.get<{
+    Params: { id: string };
+    Querystring: { eligibleOnly?: string };
+  }>('/api/v1/trainees/:id/job-matches', async (request, reply) => {
+    const traineeId = request.params.id;
     const { eligibleOnly } = request.query;
 
     const trainee = centralStore.getUser(traineeId);

@@ -34,4 +34,19 @@ export async function instituteRoutes(fastify: FastifyInstance) {
       return reply.status(201).send({ institute });
     }
   );
+
+  // Update institute per 08_API_SPEC.md
+  fastify.patch<{ Params: { id: string }; Body: Record<string, unknown> }>(
+    '/institutes/:id',
+    { preHandler: [authenticate, requirePermission('manage:institutes')] },
+    async (request, reply) => {
+      const inst = centralStore.getInstitute(request.params.id);
+      if (!inst) {
+        return reply.status(404).send({ error: 'NOT_FOUND', message: 'Institute not found' });
+      }
+
+      Object.assign(inst, request.body, { updatedAt: new Date().toISOString() });
+      return reply.send({ institute: inst });
+    }
+  );
 }

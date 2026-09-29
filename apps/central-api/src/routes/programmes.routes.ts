@@ -42,6 +42,21 @@ export async function programmeRoutes(fastify: FastifyInstance) {
     }
   );
 
+  // Update programme per 08_API_SPEC.md
+  fastify.patch<{ Params: { id: string }; Body: Record<string, unknown> }>(
+    '/programmes/:id',
+    { preHandler: [authenticate, requirePermission('manage:programmes')] },
+    async (request, reply) => {
+      const prog = centralStore.getProgramme(request.params.id);
+      if (!prog) {
+        return reply.status(404).send({ error: 'NOT_FOUND', message: 'Programme not found' });
+      }
+
+      const updated = centralStore.updateProgramme(request.params.id, request.body as any);
+      return reply.send({ programme: updated });
+    }
+  );
+
   // Enroll trainee in programme/batch
   fastify.post<{ Params: { id: string } }>(
     '/programmes/:id/enrollments',

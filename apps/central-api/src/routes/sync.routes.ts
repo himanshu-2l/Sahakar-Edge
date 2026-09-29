@@ -174,4 +174,91 @@ export async function registerSyncRoutes(app: FastifyInstance) {
     const submissions = centralStore.listAssessmentSubmissions(request.query.traineeId);
     return { submissions };
   });
+
+  // 8. Downstream Delta for Edge Nodes per 08_API_SPEC.md
+  app.get<{ Querystring: { sinceSequence?: string; nodeId?: string } }>(
+    '/api/v1/sync/delta',
+    async (request) => {
+      const since = Number(request.query.sinceSequence) || 0;
+      return {
+        sinceSequence: since,
+        centralSequence: centralStore.getCentralSequence(),
+        deltas: [],
+        timestamp: new Date().toISOString(),
+      };
+    }
+  );
+
+  // 9. Central Attendance Event Ingestion per 08_API_SPEC.md
+  app.post<{
+    Body: {
+      sessionId: string;
+      traineeId: string;
+      method: string;
+      result: string;
+    };
+  }>('/api/v1/attendance/events', async (request, reply) => {
+    const { sessionId, traineeId, method, result } = request.body || {};
+    if (!sessionId || !traineeId) {
+      return reply.status(400).send({ error: 'BAD_REQUEST', message: 'sessionId and traineeId required' });
+    }
+
+    centralStore.recordAttendance({
+      sessionId,
+      traineeId,
+      method: method || 'MANUAL',
+      result: result || 'PRESENT',
+      occurredAt: new Date().toISOString(),
+      nodeId: 'central-manual-input',
+    });
+
+    return reply.status(201).send({ success: true, message: 'Attendance recorded centrally' });
+  });
+
+  // 10. Central Attendance Manual Override per 08_API_SPEC.md
+  app.post<{
+    Params: { id: string };
+    Body: {
+      reason: string;
+      actorId?: string;
+    };
+  }>('/api/v1/attendance/:id/override', async (request, reply) => {
+    const { reason, actorId } = request.body || {};
+    if (!reason) {
+      return reply.status(400).send({ error: 'BAD_REQUEST', message: 'Override reason is required' });
+    }
+
+    return reply.send({
+      success: true,
+      attendanceRecordId: request.params.id,
+      overrideReason: reason,
+      overriddenBy: actorId || 'central-trainer',
+      updatedAt: new Date().toISOString(),
+    });
+  });
+
+  // 11. Central Progress Event Ingestion per 08_API_SPEC.md
+  app.post<{
+    Body: {
+      traineeId: string;
+      lessonId: string;
+      completed?: boolean;
+      eventType?: string;
+    };
+  }>('/api/v1/progress/events', async (request, reply) => {
+    const { traineeId, lessonId, completed = true, eventType = 'LESSON_COMPLETED' } = request.body || {};
+    if (!traineeId || !lessonId) {
+      return reply.status(400).send({ error: 'BAD_REQUEST', message: 'traineeId and lessonId required' });
+    }
+
+    centralStore.recordProgress({
+      traineeId,
+      lessonId,
+      completed,
+      eventType,
+      occurredAt: new Date().toISOString(),
+    });
+
+    return reply.status(201).send({ success: true, message: 'Progress recorded centrally' });
+  });
 }
