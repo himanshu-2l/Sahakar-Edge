@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev --port 3000",
+    "prebuild": "pnpm --filter \"@sahakar/types\" --filter \"@sahakar/validation\" --filter \"@sahakar/sync-protocol\" --filter \"@sahakar/credential-core\" --filter \"@sahakar/test-fixtures\" run build",
     "build": "next build",
     "start": "next start --port 3000",
     "typecheck": "tsc --noEmit",
