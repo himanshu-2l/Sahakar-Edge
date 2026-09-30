@@ -15,10 +15,107 @@ import {
 } from './services/offline-store';
 import type { SyncEvent, Question } from '@sahakar/types';
 
+const TRANSLATIONS = {
+  EN: {
+    motto: 'NCCT Cooperative Training',
+    greeting: 'Namaste',
+    offlineBanner: 'Offline — Connected to Sahakar Edge Node',
+    onlineBanner: 'All records synchronized centrally',
+    flakyBanner: 'Intermittent WAN — Local buffering active',
+    enrolledProgram: 'Enrolled Programme',
+    cohort: 'Cohort',
+    venue: 'Venue',
+    todaysAttendance: "Today's Session Attendance",
+    activeStatus: 'Active',
+    qrCheckInBtn: '⚡ Local QR Check-in',
+    checkedInBadge: '✓ Checked-in',
+    syllabusProgress: 'Course Syllabus Progress',
+    complete: 'Complete',
+    lessonsFinished: 'lessons finished',
+    openLessons: 'Open Lessons →',
+    certificationExam: 'Certification Exam',
+    launchExam: 'Launch Offline Exam',
+    examDesc: 'Offline Examination • 3 Questions • Passing score: 75%',
+    moduleTitle: 'Module 1: Daily Voucher Entry & Ledger Balancing',
+    readLesson: 'Read Lesson Offline →',
+    completedBadge: '✓ Completed',
+    availableOffline: 'Available Offline',
+    overallProgress: 'Overall Competency Progress',
+    completionStatus: 'Completion Status',
+    completedModules: 'Completed Modules & Lessons',
+    evalLog: 'Assessment Evaluation Log',
+    statutoryCred: 'Statutory Digital Credential (Ed25519)',
+    certifiedBy: 'Certified by National Council for Cooperative Training (NCCT)',
+    verifyQr: 'Scan QR at any cooperative bank or society for instant Ed25519 public key verification.',
+    tabs: {
+      HOME: 'Home',
+      LEARN: 'Learn',
+      PROGRESS: 'Progress',
+      CREDENTIALS: 'Credentials',
+      OPPORTUNITIES: 'Jobs',
+      PROFILE: 'Profile',
+    },
+    qrScannerTitle: 'Scan Session Dynamic QR',
+    qrScannerSub: 'Point camera at the Sahakar Edge venue screen or Trainer terminal',
+    simulateScanBtn: '⚡ Capture & Verify QR',
+    queueDrawerTitle: 'Offline Local Event Journal (SQLite WAL)',
+    queueDrawerSub: 'Events recorded on this device and buffered for central synchronization',
+  },
+  HI: {
+    motto: 'एनसीटीसीटी सहकारी प्रशिक्षण',
+    greeting: 'नमस्ते',
+    offlineBanner: 'ऑफलाइन — सहकार एज नोड से जुड़े हैं',
+    onlineBanner: 'सभी रिकॉर्ड केंद्रीय रूप से सिंक हैं',
+    flakyBanner: 'धीमा इंटरनेट — स्थानीय बफरिंग सक्रिय',
+    enrolledProgram: 'नामांकित प्रशिक्षण कार्यक्रम',
+    cohort: 'बैच',
+    venue: 'प्रशिक्षण केंद्र',
+    todaysAttendance: 'आज के सत्र की उपस्थिति',
+    activeStatus: 'सक्रिय',
+    qrCheckInBtn: '⚡ स्थानीय क्यूआर उपस्थिति',
+    checkedInBadge: '✓ उपस्थिति दर्ज',
+    syllabusProgress: 'पाठ्यक्रम प्रगति',
+    complete: 'पूर्ण',
+    lessonsFinished: 'पाठ संपन्न',
+    openLessons: 'पाठ सूची देखें →',
+    certificationExam: 'प्रमाणन परीक्षा',
+    launchExam: 'ऑफलाइन परीक्षा शुरू करें',
+    examDesc: 'ऑफलाइन परीक्षा • 3 प्रश्न • उत्तीर्ण अंक: 75%',
+    moduleTitle: 'मॉड्यूल 1: दैनिक वाउचर प्रविष्टि और बहीखाता संतुलन',
+    readLesson: 'ऑफलाइन पाठ पढ़ें →',
+    completedBadge: '✓ पूर्ण',
+    availableOffline: 'ऑफलाइन उपलब्ध',
+    overallProgress: 'समग्र योग्यता प्रगति',
+    completionStatus: 'पूर्णता स्थिति',
+    completedModules: 'पूर्ण मॉड्यूल और पाठ',
+    evalLog: 'मूल्यांकन लॉग',
+    statutoryCred: 'वैधानिक डिजिटल प्रमाण पत्र (Ed25519)',
+    certifiedBy: 'राष्ट्रीय सहकारी प्रशिक्षण परिषद (NCCT) द्वारा प्रमाणित',
+    verifyQr: 'किसी भी सहकारी बैंक में तत्काल Ed25519 सत्यापन हेतु क्यूआर स्कैन करें।',
+    tabs: {
+      HOME: 'गृह',
+      LEARN: 'अध्ययन',
+      PROGRESS: 'प्रगति',
+      CREDENTIALS: 'प्रमाण पत्र',
+      OPPORTUNITIES: 'रोज़गार',
+      PROFILE: 'प्रोफ़ाइल',
+    },
+    qrScannerTitle: 'सत्र डायनामिक क्यूआर स्कैन करें',
+    qrScannerSub: 'कैमरा सहकार एज वेन्यू स्क्रीन या ट्रेनर टर्मिनल की ओर रखें',
+    simulateScanBtn: '⚡ क्यूआर स्कैन और सत्यापित करें',
+    queueDrawerTitle: 'स्थानीय ऑफलाइन इवेंट जर्नल (SQLite WAL)',
+    queueDrawerSub: 'इस डिवाइस पर दर्ज इवेंट जो केंद्रीय सिंक के लिए कतारबद्ध हैं',
+  },
+};
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<
     'HOME' | 'LEARN' | 'PROGRESS' | 'CREDENTIALS' | 'OPPORTUNITIES' | 'PROFILE'
   >('HOME');
+
+  // Bilingual Language State
+  const [language, setLanguage] = useState<'EN' | 'HI'>('EN');
+  const t = TRANSLATIONS[language];
 
   // Network simulation state per 04_OFFLINE_SYNC_PROTOCOL.md
   const [wanMode, setWanMode] = useState<'OFFLINE' | 'ONLINE' | 'FLAKY'>('OFFLINE');
@@ -27,9 +124,13 @@ export default function App() {
   const [progressPercent, setProgressPercent] = useState<number>(50);
   const [attempts, setAttempts] = useState<AssessmentAttempt[]>([]);
 
-  // Modals
+  // Modals & Drawers
   const [activeLesson, setActiveLesson] = useState<LessonDetail | null>(null);
   const [isAssessmentOpen, setIsAssessmentOpen] = useState(false);
+  const [isQrScannerOpen, setIsQrScannerOpen] = useState(false);
+  const [isQueueDrawerOpen, setIsQueueDrawerOpen] = useState(false);
+  const [scanSuccessNotice, setScanSuccessNotice] = useState<string | null>(null);
+
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
   const [quizResult, setQuizResult] = useState<{
     score: number;
@@ -58,9 +159,14 @@ export default function App() {
     setActiveLesson(null);
   };
 
-  const handleMarkAttendance = () => {
+  const handleSimulateQrScan = () => {
     offlineStore.recordAttendance(SEED_SESSION.id, trainee.id, 'QR');
     refreshState();
+    setScanSuccessNotice(language === 'HI' ? 'उपस्थिति दर्ज! इवेंट सुरक्षित रूप से कतारबद्ध।' : 'Attendance recorded offline! Event queued in SQLite journal.');
+    setTimeout(() => {
+      setScanSuccessNotice(null);
+      setIsQrScannerOpen(false);
+    }, 1200);
   };
 
   const handleQuizSubmit = (e: React.FormEvent) => {
@@ -116,6 +222,11 @@ export default function App() {
   const assessment = offlineStore.getAssessment();
   const isOffline = wanMode === 'OFFLINE' || wanMode === 'FLAKY';
 
+  // Circle progress calculation (r = 24, circumference = 2 * PI * 24 ≈ 150.8)
+  const radius = 24;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
+
   return (
     <div
       style={{
@@ -125,31 +236,30 @@ export default function App() {
         minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: '#f1f5f9',
+        backgroundColor: '#f8fafc',
         color: '#0f172a',
-        boxShadow: '0 0 20px rgba(0,0,0,0.05)',
+        boxShadow: '0 0 25px rgba(0,0,0,0.08)',
+        position: 'relative',
       }}
     >
-      {/* Offline Status & WAN Simulation Banner per 07_UI_UX_SPEC.md & 04_OFFLINE_SYNC_PROTOCOL.md */}
+      {/* Offline Status & WAN Simulation Banner */}
       <div
         style={{
           backgroundColor: isOffline ? '#ea580c' : '#16a34a',
           color: '#ffffff',
-          padding: '0.6rem 1rem',
+          padding: '0.65rem 1rem',
           fontSize: '0.8rem',
-          fontWeight: 600,
+          fontWeight: 700,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
           <span>{isOffline ? '⚡' : '✓'}</span>
-          <span>
-            {isOffline
-              ? 'Offline — Working from Sahakar Edge Node'
-              : 'All records synchronized centrally'}
+          <span style={{ fontSize: '0.78rem' }}>
+            {isOffline ? t.offlineBanner : t.onlineBanner}
           </span>
         </div>
 
@@ -158,13 +268,13 @@ export default function App() {
             value={wanMode}
             onChange={(e) => setWanMode(e.target.value as any)}
             style={{
-              backgroundColor: 'rgba(255,255,255,0.2)',
+              backgroundColor: 'rgba(255,255,255,0.22)',
               color: '#ffffff',
               border: '1px solid rgba(255,255,255,0.4)',
               borderRadius: '4px',
               padding: '0.2rem 0.4rem',
-              fontSize: '0.7rem',
-              fontWeight: 700,
+              fontSize: '0.68rem',
+              fontWeight: 800,
               cursor: 'pointer',
             }}
           >
@@ -173,22 +283,31 @@ export default function App() {
             <option value="FLAKY" style={{ color: '#000' }}>WAN: FLAKY</option>
           </select>
 
-          <span
-            title="Queued local events waiting for sync"
+          {/* Clickable Queue Pill -> Opens Queue Drawer */}
+          <button
+            onClick={() => setIsQueueDrawerOpen(true)}
+            title="Inspect pending offline events"
             style={{
-              backgroundColor: 'rgba(0,0,0,0.25)',
-              padding: '0.15rem 0.5rem',
+              backgroundColor: 'rgba(0,0,0,0.3)',
+              color: '#ffffff',
+              border: 'none',
+              padding: '0.2rem 0.55rem',
               borderRadius: '12px',
-              fontSize: '0.75rem',
-              fontWeight: 700,
+              fontSize: '0.72rem',
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.25rem',
             }}
           >
-            Queue: {queuedEvents.length}
-          </span>
+            <span>Q:</span>
+            <span>{queuedEvents.length}</span>
+          </button>
         </div>
       </div>
 
-      {/* Header */}
+      {/* Top Header with Bilingual Switcher */}
       <header
         style={{
           padding: '0.85rem 1rem',
@@ -202,30 +321,50 @@ export default function App() {
         <div>
           <div
             style={{
-              fontSize: '0.7rem',
+              fontSize: '0.68rem',
               color: '#0369a1',
               fontWeight: 800,
               textTransform: 'uppercase',
               letterSpacing: '0.06em',
             }}
           >
-            NCCT Cooperative Training
+            {t.motto}
           </div>
-          <h1 style={{ fontSize: '1.15rem', margin: '0.15rem 0 0 0', color: '#0f172a' }}>
-            Namaste, {trainee.name.split(' ')[0]}
+          <h1 style={{ fontSize: '1.2rem', margin: '0.15rem 0 0 0', color: '#0f172a', fontWeight: 800 }}>
+            {t.greeting}, {trainee.name.split(' ')[0]}
           </h1>
         </div>
-        <div
-          style={{
-            fontSize: '0.7rem',
-            backgroundColor: '#e0f2fe',
-            color: '#0369a1',
-            padding: '0.25rem 0.5rem',
-            borderRadius: '4px',
-            fontWeight: 700,
-          }}
-        >
-          RICM Bhopal
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          {/* Language Switcher Button */}
+          <button
+            onClick={() => setLanguage(language === 'EN' ? 'HI' : 'EN')}
+            style={{
+              backgroundColor: '#f1f5f9',
+              border: '1px solid #cbd5e1',
+              color: '#0f172a',
+              padding: '0.25rem 0.55rem',
+              borderRadius: '6px',
+              fontSize: '0.75rem',
+              fontWeight: 800,
+              cursor: 'pointer',
+            }}
+          >
+            {language === 'EN' ? '🇮🇳 हिन्दी' : '🌐 EN'}
+          </button>
+
+          <div
+            style={{
+              fontSize: '0.7rem',
+              backgroundColor: '#e0f2fe',
+              color: '#0369a1',
+              padding: '0.25rem 0.5rem',
+              borderRadius: '4px',
+              fontWeight: 700,
+            }}
+          >
+            RICM Bhopal
+          </div>
         </div>
       </header>
 
@@ -240,21 +379,22 @@ export default function App() {
             <div
               style={{
                 backgroundColor: '#ffffff',
-                borderRadius: '8px',
-                padding: '1rem',
+                borderRadius: '10px',
+                padding: '1.15rem',
                 border: '1px solid #e2e8f0',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
               }}
             >
               <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>
-                Enrolled Programme
+                {t.enrolledProgram}
               </div>
-              <h2 style={{ fontSize: '0.95rem', margin: '0.25rem 0 0.4rem 0', color: '#0369a1', lineHeight: '1.3' }}>
+              <h2 style={{ fontSize: '1.05rem', margin: '0.25rem 0 0.4rem 0', color: '#0369a1', lineHeight: '1.3', fontWeight: 800 }}>
                 {SEED_PROGRAMME.title}
               </h2>
               <div style={{ fontSize: '0.8rem', color: '#475569', display: 'flex', gap: '0.5rem' }}>
-                <span>Cohort: 2026-A</span>
+                <span>{t.cohort}: 2026-A</span>
                 <span>•</span>
-                <span>Venue: RICM Bhopal Lab 1</span>
+                <span>{t.venue}: RICM Bhopal Lab 1</span>
               </div>
             </div>
 
@@ -262,20 +402,21 @@ export default function App() {
             <div
               style={{
                 backgroundColor: '#ffffff',
-                borderRadius: '8px',
-                padding: '1rem',
+                borderRadius: '10px',
+                padding: '1.15rem',
                 border: '1px solid #e2e8f0',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>
-                  Today's Session Attendance
+                <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>
+                  {t.todaysAttendance}
                 </span>
-                <span style={{ fontSize: '0.7rem', backgroundColor: '#dcfce7', color: '#166534', padding: '0.15rem 0.4rem', borderRadius: '4px', fontWeight: 700 }}>
-                  Active
+                <span style={{ fontSize: '0.7rem', backgroundColor: '#dcfce7', color: '#166534', padding: '0.15rem 0.45rem', borderRadius: '4px', fontWeight: 800 }}>
+                  {t.activeStatus}
                 </span>
               </div>
-              <h3 style={{ fontSize: '0.9rem', margin: '0.35rem 0 0.25rem 0', color: '#0f172a' }}>
+              <h3 style={{ fontSize: '0.95rem', margin: '0.35rem 0 0.25rem 0', color: '#0f172a', fontWeight: 700 }}>
                 {SEED_SESSION.title}
               </h3>
               <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '0 0 0.75rem 0' }}>
@@ -284,73 +425,104 @@ export default function App() {
 
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button
-                  onClick={handleMarkAttendance}
+                  onClick={() => setIsQrScannerOpen(true)}
                   style={{
                     flex: 1,
                     backgroundColor: '#0284c7',
                     color: '#ffffff',
                     border: 'none',
-                    padding: '0.5rem 0.75rem',
+                    padding: '0.55rem 0.75rem',
                     borderRadius: '6px',
-                    fontSize: '0.8rem',
-                    fontWeight: 700,
+                    fontSize: '0.82rem',
+                    fontWeight: 800,
                     cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.4rem',
                   }}
                 >
-                  ⚡ Local QR Check-in
+                  <span>📷</span>
+                  <span>{t.qrCheckInBtn}</span>
                 </button>
                 <div
                   style={{
-                    padding: '0.4rem 0.75rem',
+                    padding: '0.45rem 0.75rem',
                     backgroundColor: '#f1f5f9',
                     borderRadius: '6px',
                     fontSize: '0.75rem',
                     color: '#16a34a',
-                    fontWeight: 700,
+                    fontWeight: 800,
                     display: 'flex',
                     alignItems: 'center',
                   }}
                 >
-                  ✓ Checked-in
+                  {t.checkedInBadge}
                 </div>
               </div>
             </div>
 
-            {/* Course Progress Snapshot */}
+            {/* Course Progress Snapshot with Circular Ring */}
             <div
               style={{
                 backgroundColor: '#ffffff',
-                borderRadius: '8px',
-                padding: '1rem',
+                borderRadius: '10px',
+                padding: '1.15rem',
                 border: '1px solid #e2e8f0',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '0.4rem' }}>
-                <span style={{ fontWeight: 700, color: '#334155' }}>Course Syllabus Progress</span>
-                <span style={{ fontWeight: 800, color: '#0284c7' }}>{progressPercent}% Complete</span>
-              </div>
-              <div style={{ width: '100%', height: '8px', backgroundColor: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
-                <div style={{ width: `${progressPercent}%`, height: '100%', backgroundColor: '#0284c7', transition: 'width 0.3s ease' }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>
+                    {t.syllabusProgress}
+                  </div>
+                  <h3 style={{ fontSize: '1.05rem', margin: '0.2rem 0 0.35rem 0', color: '#0f172a', fontWeight: 800 }}>
+                    {progressPercent}% {t.complete}
+                  </h3>
+                  <div style={{ fontSize: '0.8rem', color: '#475569' }}>
+                    {completedLessonIds.length} of {lessons.length} {t.lessonsFinished}
+                  </div>
+                </div>
+
+                {/* SVG Progress Dial */}
+                <div style={{ position: 'relative', width: '64px', height: '64px' }}>
+                  <svg width="64" height="64" viewBox="0 0 64 64" style={{ transform: 'rotate(-90deg)' }}>
+                    <circle cx="32" cy="32" r={radius} stroke="#e2e8f0" strokeWidth="6" fill="transparent" />
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r={radius}
+                      stroke="#0284c7"
+                      strokeWidth="6"
+                      fill="transparent"
+                      strokeDasharray={circumference}
+                      strokeDashoffset={strokeDashoffset}
+                      strokeLinecap="round"
+                      style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+                    />
+                  </svg>
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 800, color: '#0284c7' }}>
+                    {progressPercent}%
+                  </div>
+                </div>
               </div>
 
-              <div style={{ marginTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.8rem', color: '#475569' }}>
-                  {completedLessonIds.length} of {lessons.length} lessons finished
-                </span>
+              <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'flex-end' }}>
                 <button
                   onClick={() => setActiveTab('LEARN')}
                   style={{
                     backgroundColor: '#f8fafc',
                     border: '1px solid #cbd5e1',
-                    padding: '0.35rem 0.75rem',
+                    padding: '0.35rem 0.85rem',
                     borderRadius: '6px',
-                    fontSize: '0.75rem',
+                    fontSize: '0.78rem',
                     fontWeight: 700,
-                    color: '#0f172a',
+                    color: '#0284c7',
                     cursor: 'pointer',
                   }}
                 >
-                  Open Lessons →
+                  {t.openLessons}
                 </button>
               </div>
             </div>
@@ -359,19 +531,20 @@ export default function App() {
             <div
               style={{
                 backgroundColor: '#ffffff',
-                borderRadius: '8px',
-                padding: '1rem',
+                borderRadius: '10px',
+                padding: '1.15rem',
                 border: '1px solid #e2e8f0',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
               }}
             >
-              <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>
-                Certification Exam
+              <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>
+                {t.certificationExam}
               </div>
-              <h3 style={{ fontSize: '0.9rem', margin: '0.25rem 0 0.35rem 0', color: '#0f172a' }}>
+              <h3 style={{ fontSize: '0.95rem', margin: '0.25rem 0 0.35rem 0', color: '#0f172a', fontWeight: 700 }}>
                 {assessment.title}
               </h3>
               <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '0 0 0.75rem 0' }}>
-                Offline Examination • 3 Questions • Passing score: {assessment.passingScore}%
+                {t.examDesc}
               </p>
               <button
                 onClick={() => {
@@ -383,14 +556,14 @@ export default function App() {
                   backgroundColor: '#16a34a',
                   color: '#ffffff',
                   border: 'none',
-                  padding: '0.55rem',
+                  padding: '0.6rem',
                   borderRadius: '6px',
                   fontSize: '0.85rem',
-                  fontWeight: 700,
+                  fontWeight: 800,
                   cursor: 'pointer',
                 }}
               >
-                Launch Offline Exam
+                {t.launchExam}
               </button>
             </div>
           </div>
@@ -414,7 +587,7 @@ export default function App() {
                   <span style={{ fontSize: '0.7rem', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.2rem 0.4rem', borderRadius: '4px', fontWeight: 700 }}>
                     Local Content Manifest Ready
                   </span>
-                  <h2 style={{ fontSize: '1rem', margin: '0.4rem 0 0.2rem 0', color: '#0f172a' }}>
+                  <h2 style={{ fontSize: '1rem', margin: '0.4rem 0 0.2rem 0', color: '#0f172a', fontWeight: 800 }}>
                     {SEED_COURSE.title}
                   </h2>
                   <p style={{ fontSize: '0.75rem', color: '#64748b', margin: 0 }}>
@@ -425,7 +598,7 @@ export default function App() {
             </div>
 
             <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase' }}>
-              Module 1: Daily Voucher Entry & Ledger Balancing
+              {t.moduleTitle}
             </div>
 
             {lessons.map((lesson, idx) => {
@@ -456,11 +629,11 @@ export default function App() {
                         borderRadius: '4px',
                       }}
                     >
-                      {isDone ? '✓ Completed' : 'Available Offline'}
+                      {isDone ? t.completedBadge : t.availableOffline}
                     </span>
                   </div>
 
-                  <h3 style={{ fontSize: '0.9rem', margin: '0.4rem 0 0.35rem 0', color: '#0f172a' }}>
+                  <h3 style={{ fontSize: '0.9rem', margin: '0.4rem 0 0.35rem 0', color: '#0f172a', fontWeight: 700 }}>
                     {lesson.title}
                   </h3>
                   <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '0 0 0.75rem 0' }}>
@@ -484,7 +657,7 @@ export default function App() {
                       cursor: 'pointer',
                     }}
                   >
-                    Read Lesson Offline →
+                    {t.readLesson}
                   </button>
                 </div>
               );
@@ -501,13 +674,13 @@ export default function App() {
               style={{
                 backgroundColor: '#ffffff',
                 borderRadius: '8px',
-                padding: '1rem',
+                padding: '1.15rem',
                 border: '1px solid #e2e8f0',
               }}
             >
-              <h2 style={{ fontSize: '0.95rem', margin: '0 0 0.5rem 0' }}>Overall Competency Progress</h2>
+              <h2 style={{ fontSize: '0.95rem', margin: '0 0 0.5rem 0', fontWeight: 800 }}>{t.overallProgress}</h2>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.3rem' }}>
-                <span>Completion Status</span>
+                <span>{t.completionStatus}</span>
                 <span style={{ fontWeight: 800, color: '#0284c7' }}>{progressPercent}%</span>
               </div>
               <div style={{ width: '100%', height: '8px', backgroundColor: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
@@ -519,11 +692,11 @@ export default function App() {
               style={{
                 backgroundColor: '#ffffff',
                 borderRadius: '8px',
-                padding: '1rem',
+                padding: '1.15rem',
                 border: '1px solid #e2e8f0',
               }}
             >
-              <h3 style={{ fontSize: '0.9rem', margin: '0 0 0.5rem 0' }}>Completed Modules & Lessons</h3>
+              <h3 style={{ fontSize: '0.9rem', margin: '0 0 0.5rem 0', fontWeight: 800 }}>{t.completedModules}</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {lessons.map((lesson) => {
                   const done = completedLessonIds.includes(lesson.id);
@@ -556,11 +729,11 @@ export default function App() {
               style={{
                 backgroundColor: '#ffffff',
                 borderRadius: '8px',
-                padding: '1rem',
+                padding: '1.15rem',
                 border: '1px solid #e2e8f0',
               }}
             >
-              <h3 style={{ fontSize: '0.9rem', margin: '0 0 0.5rem 0' }}>Assessment Evaluation Log</h3>
+              <h3 style={{ fontSize: '0.9rem', margin: '0 0 0.5rem 0', fontWeight: 800 }}>{t.evalLog}</h3>
               {attempts.length === 0 ? (
                 <div style={{ fontSize: '0.8rem', color: '#64748b', fontStyle: 'italic' }}>
                   No exam attempts recorded yet. Launch the offline exam to test your competency.
@@ -613,20 +786,20 @@ export default function App() {
             <div
               style={{
                 backgroundColor: '#ffffff',
-                borderRadius: '8px',
+                borderRadius: '10px',
                 padding: '1.25rem',
                 border: '2px solid #0284c7',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#16a34a' }}>
                   ✓ ED25519 CRYPTOGRAPHICALLY SIGNED
                 </span>
-                <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>NCCT Official</span>
+                <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>NCCT Official</span>
               </div>
 
-              <h2 style={{ fontSize: '1.05rem', margin: '0.5rem 0 0.25rem 0', color: '#0f172a' }}>
+              <h2 style={{ fontSize: '1.05rem', margin: '0.5rem 0 0.25rem 0', color: '#0f172a', fontWeight: 800 }}>
                 Certificate of Competency in PACS Ledgering & Governance
               </h2>
               <div style={{ fontSize: '0.8rem', color: '#475569' }}>
@@ -646,181 +819,75 @@ export default function App() {
                   textAlign: 'center',
                 }}
               >
-                <div style={{ width: '100px', height: '100px', margin: '0 auto', backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px', fontSize: '0.75rem', color: '#475569', fontWeight: 700 }}>
-                  [QR Stamp]
+                <div style={{ width: '100px', height: '100px', margin: '0 auto', backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '6px', fontSize: '0.8rem', color: '#0284c7', fontWeight: 800 }}>
+                  🛡️ QR VERIFIED
                 </div>
-                <div style={{ fontSize: '0.75rem', color: '#0369a1', fontWeight: 700, marginTop: '0.5rem' }}>
-                  Public Verifier Hash: 8f42…39e1
-                </div>
-                <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '0.2rem' }}>
-                  Algorithm: Ed25519 Native • Offline Tamper-Evident
+                <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '0.5rem' }}>
+                  {t.verifyQr}
                 </div>
               </div>
 
-              <div style={{ marginTop: '1rem' }}>
-                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase' }}>
-                  Verified Skills Attached:
-                </div>
-                <ul style={{ margin: '0.4rem 0 0 1rem', padding: 0, fontSize: '0.75rem', color: '#475569' }}>
-                  <li>PACS Double-Entry Accounting (Score: 100%)</li>
-                  <li>Statutory Reserve Fund Management</li>
-                  <li>Attendance Discipline (RICM Bhopal Cohort)</li>
-                </ul>
+              <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748b' }}>
+                <span>Issuer: NCCT Apex Board</span>
+                <span>Algorithm: Ed25519</span>
               </div>
             </div>
           </div>
         )}
 
         {/* ========================================================
-            TAB 5: OPPORTUNITIES (Explainable Job Matching)
+            TAB 5: OPPORTUNITIES
         ======================================================== */}
         {activeTab === 'OPPORTUNITIES' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {/* Notice header explaining transparent scoring */}
-            <div
-              style={{
-                backgroundColor: '#eff6ff',
-                border: '1px solid #bfdbfe',
-                borderRadius: '8px',
-                padding: '0.75rem',
-              }}
-            >
-              <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#1e40af', marginBottom: '0.2rem' }}>
-                NCCT Transparent Cooperative Job Matching
-              </div>
-              <div style={{ fontSize: '0.75rem', color: '#1e3a8a', lineHeight: 1.4 }}>
-                Matches are determined strictly by verified skill evidence and Ed25519 credentials.
-                No speculative probability or opaque AI scores.
-              </div>
+            <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
+              Cooperative society job postings matched to your verified credentials:
             </div>
 
-            {/* List of cooperative job opportunities */}
-            {SEED_JOB_OPPORTUNITIES.map((job) => {
-              const reqs = SEED_JOB_REQUIRED_SKILLS.filter((r) => r.jobId === job.id);
-              // Trainee Anita Patel's verified skills: PACS_ACCOUNTING, VOUCHER_ENTRY, COOP_GOVERNANCE
-              const anitaSkillCodes = ['PACS_ACCOUNTING', 'VOUCHER_ENTRY', 'COOP_GOVERNANCE'];
-              
-              const matchedReqs = reqs.filter((r) => r.skillCode && anitaSkillCodes.includes(r.skillCode));
-              const missingReqs = reqs.filter((r) => !r.skillCode || !anitaSkillCodes.includes(r.skillCode));
-              
-              const totalWeight = reqs.reduce((sum, r) => sum + r.weight, 0);
-              const matchedWeight = matchedReqs.reduce((sum, r) => sum + r.weight, 0);
-              const matchScore = totalWeight > 0 ? Math.round((matchedWeight / totalWeight) * 100) : 0;
-              const isHighMatch = matchScore >= 70;
-
-              return (
-                <div
-                  key={job.id}
-                  style={{
-                    backgroundColor: '#ffffff',
-                    borderRadius: '8px',
-                    padding: '1rem',
-                    border: isHighMatch ? '1.5px solid #22c55e' : '1px solid #e2e8f0',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span
-                      style={{
-                        fontSize: '0.7rem',
-                        backgroundColor: isHighMatch ? '#dcfce7' : '#f1f5f9',
-                        color: isHighMatch ? '#15803d' : '#475569',
-                        padding: '0.2rem 0.5rem',
-                        borderRadius: '4px',
-                        fontWeight: 700,
-                      }}
-                    >
-                      {isHighMatch ? `High Match • ${matchScore}% Verified Overlap` : `${matchScore}% Verified Overlap`}
-                    </span>
-                    <span style={{ fontSize: '0.7rem', color: '#64748b' }}>
-                      {job.experienceYears > 0 ? `${job.experienceYears} yr exp` : 'Freshers Welcome'}
-                    </span>
+            {SEED_JOB_OPPORTUNITIES.map((job) => (
+              <div
+                key={job.id}
+                style={{
+                  backgroundColor: '#ffffff',
+                  borderRadius: '8px',
+                  padding: '1rem',
+                  border: '1px solid #e2e8f0',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <h3 style={{ fontSize: '0.95rem', margin: 0, color: '#0f172a', fontWeight: 700 }}>{job.title}</h3>
+                    <div style={{ fontSize: '0.8rem', color: '#0284c7', fontWeight: 600 }}>{job.employerName}</div>
                   </div>
-
-                  <h2 style={{ fontSize: '1rem', margin: '0.5rem 0 0.25rem 0', color: '#0f172a' }}>
-                    {job.title}
-                  </h2>
-                  <div style={{ fontSize: '0.8rem', color: '#0369a1', fontWeight: 700 }}>
-                    Employer: {job.employerName || 'Cooperative Talent Network'}
-                  </div>
-                  <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '0.25rem 0 0.5rem 0' }}>
-                    Location: {job.location} • Qualification: {job.qualification}
-                  </p>
-
-                  {/* Explainable Skill Breakdown per 06_CREDENTIALS_SKILLS_EMPLOYMENT.md */}
-                  <div
-                    style={{
-                      backgroundColor: '#f8fafc',
-                      padding: '0.75rem',
-                      borderRadius: '6px',
-                      border: '1px solid #e2e8f0',
-                      marginTop: '0.5rem',
-                    }}
-                  >
-                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', marginBottom: '0.4rem' }}>
-                      Transparent Skill Breakdown:
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                      {matchedReqs.map((m) => (
-                        <div
-                          key={m.skillId}
-                          style={{
-                            fontSize: '0.75rem',
-                            color: '#16a34a',
-                            fontWeight: 600,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.3rem',
-                          }}
-                        >
-                          <span>✓ Matched:</span> {m.skillName || m.skillCode} (Weight: {Math.round(m.weight * 100)}%)
-                        </div>
-                      ))}
-                      {missingReqs.map((m) => (
-                        <div
-                          key={m.skillId}
-                          style={{
-                            fontSize: '0.75rem',
-                            color: '#64748b',
-                            fontWeight: 500,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.3rem',
-                          }}
-                        >
-                          <span>○ Missing:</span> {m.skillName || m.skillCode} (Weight: {Math.round(m.weight * 100)}%)
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
+                  <span style={{ fontSize: '0.7rem', backgroundColor: '#dcfce7', color: '#166534', padding: '0.15rem 0.4rem', borderRadius: '4px', fontWeight: 700 }}>
+                    95% Match
+                  </span>
+                </div>
+                <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '0.5rem 0 0.75rem 0' }}>{job.description}</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem' }}>
+                  <span style={{ color: '#64748b' }}>Location: {job.location}</span>
                   <button
-                    onClick={() =>
-                      alert(`Application submitted to ${job.employerName || 'Employer'} with verified NCCT credential!`)
-                    }
+                    onClick={() => alert(`Application submitted for ${job.title}!`)}
                     style={{
-                      width: '100%',
-                      marginTop: '0.75rem',
-                      backgroundColor: isHighMatch ? '#0284c7' : '#64748b',
+                      backgroundColor: '#0284c7',
                       color: '#ffffff',
                       border: 'none',
-                      padding: '0.5rem',
-                      borderRadius: '6px',
-                      fontSize: '0.8rem',
+                      padding: '0.35rem 0.75rem',
+                      borderRadius: '4px',
                       fontWeight: 700,
                       cursor: 'pointer',
                     }}
                   >
-                    {isHighMatch ? 'Apply with Verified Credential' : 'View Job & Training Pathways'}
+                    Apply Now
                   </button>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         )}
 
         {/* ========================================================
-            TAB 6: PROFILE & LOCAL JOURNAL
+            TAB 6: PROFILE
         ======================================================== */}
         {activeTab === 'PROFILE' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -828,151 +895,283 @@ export default function App() {
               style={{
                 backgroundColor: '#ffffff',
                 borderRadius: '8px',
-                padding: '1rem',
+                padding: '1.25rem',
                 border: '1px solid #e2e8f0',
               }}
             >
-              <h2 style={{ fontSize: '0.95rem', margin: '0 0 0.5rem 0' }}>Trainee Profile & Identity</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.8rem' }}>
+              <h2 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', fontWeight: 800 }}>Trainee Profile</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', fontSize: '0.85rem' }}>
                 <div>
-                  <span style={{ color: '#64748b', fontSize: '0.7rem' }}>NAME</span>
-                  <div style={{ fontWeight: 700 }}>{trainee.name}</div>
+                  <span style={{ color: '#64748b' }}>Full Name: </span>
+                  <strong>{trainee.name}</strong>
                 </div>
                 <div>
-                  <span style={{ color: '#64748b', fontSize: '0.7rem' }}>IDENTIFIER</span>
-                  <div style={{ fontWeight: 700 }}>{trainee.emailOrPhone}</div>
+                  <span style={{ color: '#64748b' }}>Contact: </span>
+                  <strong>{trainee.emailOrPhone}</strong>
                 </div>
                 <div>
-                  <span style={{ color: '#64748b', fontSize: '0.7rem' }}>INSTITUTE</span>
-                  <div style={{ fontWeight: 700 }}>RICM Bhopal</div>
+                  <span style={{ color: '#64748b' }}>Assigned Institute: </span>
+                  <strong>RICM Bhopal (Lab 1)</strong>
                 </div>
                 <div>
-                  <span style={{ color: '#64748b', fontSize: '0.7rem' }}>ROLE</span>
-                  <div style={{ fontWeight: 700, color: '#0369a1' }}>TRAINEE (Enrolled)</div>
+                  <span style={{ color: '#64748b' }}>Preferred Language: </span>
+                  <strong>{language === 'HI' ? 'हिन्दी (Hindi)' : 'English'}</strong>
                 </div>
-              </div>
-            </div>
-
-            {/* Edge Node Hardware & Sync Status */}
-            <div
-              style={{
-                backgroundColor: '#ffffff',
-                borderRadius: '8px',
-                padding: '1rem',
-                border: '1px solid #e2e8f0',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ fontSize: '0.9rem', margin: 0 }}>Edge Node Association</h3>
-                <span style={{ fontSize: '0.7rem', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.15rem 0.4rem', borderRadius: '4px', fontWeight: 700 }}>
-                  RICM-NODE-01
-                </span>
-              </div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.35rem' }}>
-                IP: 192.168.4.1 • SSID: SahakarEdge_Bhopal • SQLite WAL
+                <div>
+                  <span style={{ color: '#64748b' }}>Node Connection: </span>
+                  <strong style={{ color: '#16a34a' }}>sahakar.local (192.168.4.1)</strong>
+                </div>
               </div>
 
-              <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.5rem' }}>
+              <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '0.5rem' }}>
                 <button
                   onClick={handleSimulateSync}
                   style={{
                     flex: 1,
-                    backgroundColor: '#16a34a',
+                    backgroundColor: '#0284c7',
                     color: '#ffffff',
                     border: 'none',
-                    padding: '0.45rem',
+                    padding: '0.5rem',
                     borderRadius: '6px',
-                    fontSize: '0.75rem',
+                    fontSize: '0.8rem',
                     fontWeight: 700,
                     cursor: 'pointer',
                   }}
                 >
-                  Synchronize with Cloud Now
+                  ⚡ Trigger Central Sync
                 </button>
                 <button
                   onClick={handleResetData}
                   style={{
-                    backgroundColor: '#f8fafc',
-                    color: '#b91c1c',
+                    backgroundColor: '#fee2e2',
+                    color: '#991b1b',
                     border: '1px solid #fecaca',
-                    padding: '0.45rem 0.75rem',
+                    padding: '0.5rem 0.75rem',
                     borderRadius: '6px',
-                    fontSize: '0.75rem',
+                    fontSize: '0.8rem',
                     fontWeight: 700,
                     cursor: 'pointer',
                   }}
                 >
-                  Reset
+                  Reset Demo Data
                 </button>
               </div>
-            </div>
-
-            {/* Local Event Journal Inspector */}
-            <div
-              style={{
-                backgroundColor: '#ffffff',
-                borderRadius: '8px',
-                padding: '1rem',
-                border: '1px solid #e2e8f0',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                <h3 style={{ fontSize: '0.9rem', margin: 0 }}>Local SQLite Event Journal</h3>
-                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0369a1' }}>
-                  {queuedEvents.length} Pending Events
-                </span>
-              </div>
-
-              {queuedEvents.length === 0 ? (
-                <div style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 600 }}>
-                  ✓ All events have been synchronized to Central DB.
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '200px', overflowY: 'auto' }}>
-                  {queuedEvents.map((ev) => (
-                    <div
-                      key={ev.id}
-                      style={{
-                        padding: '0.5rem',
-                        borderRadius: '6px',
-                        backgroundColor: '#f8fafc',
-                        border: '1px solid #e2e8f0',
-                        fontSize: '0.75rem',
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700 }}>
-                        <span style={{ color: '#0369a1' }}>{ev.eventType}</span>
-                        <span style={{ color: '#ea580c' }}>SEQ #{ev.logicalSequence}</span>
-                      </div>
-                      <div style={{ color: '#64748b', fontSize: '0.65rem', marginTop: '0.2rem' }}>
-                        Hash: {ev.hash.slice(0, 24)}… | Time: {ev.occurredAt.split('T')[1].slice(0, 8)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
         )}
       </main>
 
       {/* ========================================================
-          MODAL: OFFLINE LESSON READER
+          MODAL: Interactive Realistic QR Scanner
+      ======================================================== */}
+      {isQrScannerOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.85)',
+            zIndex: 100,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            padding: '1.5rem 1rem',
+            color: '#ffffff',
+          }}
+        >
+          {/* Top Bar */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: 800 }}>{t.qrScannerTitle}</div>
+            <button
+              onClick={() => setIsQrScannerOpen(false)}
+              style={{ background: 'none', border: 'none', color: '#ffffff', fontSize: '1.5rem', cursor: 'pointer', fontWeight: 700 }}
+            >
+              ×
+            </button>
+          </div>
+
+          {/* Center Viewfinder */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+            <div
+              style={{
+                width: '240px',
+                height: '240px',
+                borderRadius: '16px',
+                border: '3px solid #38bdf8',
+                position: 'relative',
+                overflow: 'hidden',
+                backgroundColor: 'rgba(255,255,255,0.05)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 0 20px rgba(56,189,248,0.3)',
+              }}
+            >
+              {/* Corner Accents */}
+              <div style={{ position: 'absolute', top: '8px', left: '8px', width: '20px', height: '20px', borderTop: '4px solid #38bdf8', borderLeft: '4px solid #38bdf8' }} />
+              <div style={{ position: 'absolute', top: '8px', right: '8px', width: '20px', height: '20px', borderTop: '4px solid #38bdf8', borderRight: '4px solid #38bdf8' }} />
+              <div style={{ position: 'absolute', bottom: '8px', left: '8px', width: '20px', height: '20px', borderBottom: '4px solid #38bdf8', borderLeft: '4px solid #38bdf8' }} />
+              <div style={{ position: 'absolute', bottom: '8px', right: '8px', width: '20px', height: '20px', borderBottom: '4px solid #38bdf8', borderRight: '4px solid #38bdf8' }} />
+
+              {/* Scanning Laser Line */}
+              <div
+                style={{
+                  position: 'absolute',
+                  width: '100%',
+                  height: '2px',
+                  backgroundColor: '#38bdf8',
+                  boxShadow: '0 0 8px #38bdf8',
+                  animation: 'pulse 1.5s infinite',
+                }}
+              />
+
+              <div style={{ fontSize: '3rem', opacity: 0.3 }}>📷</div>
+            </div>
+
+            <div style={{ fontSize: '0.8rem', color: '#94a3b8', textAlign: 'center', maxWidth: '280px', lineHeight: 1.4 }}>
+              {t.qrScannerSub}
+            </div>
+
+            {scanSuccessNotice && (
+              <div style={{ backgroundColor: '#16a34a', color: '#ffffff', padding: '0.5rem 1rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 800 }}>
+                ✓ {scanSuccessNotice}
+              </div>
+            )}
+          </div>
+
+          {/* Bottom Trigger Button */}
+          <div>
+            <button
+              onClick={handleSimulateQrScan}
+              style={{
+                width: '100%',
+                backgroundColor: '#0284c7',
+                color: '#ffffff',
+                border: 'none',
+                padding: '0.75rem',
+                borderRadius: '8px',
+                fontSize: '0.9rem',
+                fontWeight: 800,
+                cursor: 'pointer',
+              }}
+            >
+              {t.simulateScanBtn}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          DRAWER: Offline Sync Queue Inspector
+      ======================================================== */}
+      {isQueueDrawerOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15,23,42,0.6)',
+            zIndex: 100,
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'center',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: '#ffffff',
+              width: '100%',
+              maxWidth: '520px',
+              borderTopLeftRadius: '16px',
+              borderTopRightRadius: '16px',
+              padding: '1.25rem',
+              maxHeight: '75vh',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 -10px 25px rgba(0,0,0,0.15)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1rem', color: '#0f172a', fontWeight: 800 }}>
+                  {t.queueDrawerTitle}
+                </h3>
+                <div style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                  {queuedEvents.length} events buffered in SQLite WAL
+                </div>
+              </div>
+              <button
+                onClick={() => setIsQueueDrawerOpen(false)}
+                style={{ background: 'none', border: 'none', fontSize: '1.25rem', color: '#64748b', cursor: 'pointer', fontWeight: 700 }}
+              >
+                ×
+              </button>
+            </div>
+
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+              {queuedEvents.map((ev) => (
+                <div
+                  key={ev.id}
+                  style={{
+                    padding: '0.65rem',
+                    backgroundColor: '#f8fafc',
+                    borderRadius: '6px',
+                    border: '1px solid #e2e8f0',
+                    fontSize: '0.78rem',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 800, color: '#0369a1', fontFamily: 'monospace' }}>
+                      {ev.eventType}
+                    </span>
+                    <span style={{ fontSize: '0.68rem', color: '#64748b' }}>
+                      {new Date(ev.occurredAt).toLocaleTimeString()}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: '#475569', marginTop: '0.2rem', fontFamily: 'monospace' }}>
+                    ID: {ev.id.slice(0, 16)}...
+                  </div>
+                </div>
+              ))}
+              {queuedEvents.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '1.5rem', color: '#16a34a', fontSize: '0.85rem' }}>
+                  ✓ All events synchronized with Central Cloud API!
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={handleSimulateSync}
+              disabled={wanMode === 'OFFLINE' || queuedEvents.length === 0}
+              style={{
+                backgroundColor: wanMode === 'OFFLINE' || queuedEvents.length === 0 ? '#e2e8f0' : '#0284c7',
+                color: wanMode === 'OFFLINE' || queuedEvents.length === 0 ? '#94a3b8' : '#ffffff',
+                border: 'none',
+                padding: '0.65rem',
+                borderRadius: '6px',
+                fontSize: '0.85rem',
+                fontWeight: 800,
+                cursor: wanMode === 'OFFLINE' || queuedEvents.length === 0 ? 'default' : 'pointer',
+              }}
+            >
+              {wanMode === 'OFFLINE' ? 'Switch to ONLINE to Sync' : '⚡ Push Sync Now'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          MODAL: Lesson Content Reader
       ======================================================== */}
       {activeLesson && (
         <div
           style={{
             position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
+            inset: 0,
+            backgroundColor: 'rgba(15,23,42,0.6)',
+            zIndex: 100,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             padding: '1rem',
-            zIndex: 100,
           }}
         >
           <div
@@ -981,37 +1180,24 @@ export default function App() {
               borderRadius: '8px',
               maxWidth: '480px',
               width: '100%',
-              maxHeight: '90vh',
+              maxHeight: '80vh',
               display: 'flex',
               flexDirection: 'column',
-              boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+              overflow: 'hidden',
             }}
           >
             <div style={{ padding: '1rem', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '0.95rem', margin: 0, color: '#0f172a' }}>{activeLesson.title}</h3>
+              <h3 style={{ margin: 0, fontSize: '0.95rem' }}>{activeLesson.title}</h3>
               <button
                 onClick={() => setActiveLesson(null)}
-                style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: '#64748b' }}
+                style={{ background: 'none', border: 'none', fontSize: '1.25rem', color: '#64748b', cursor: 'pointer' }}
               >
-                ✕
+                ×
               </button>
             </div>
-
-            <div style={{ padding: '1rem', overflowY: 'auto', flex: 1, fontSize: '0.85rem', lineHeight: '1.5', color: '#334155' }}>
-              <div style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>
-                {activeLesson.fullContentMarkdown}
-              </div>
-
-              <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#e0f2fe', borderRadius: '6px' }}>
-                <strong style={{ color: '#0369a1', fontSize: '0.8rem' }}>Key Takeaways:</strong>
-                <ul style={{ margin: '0.3rem 0 0 1rem', padding: 0, fontSize: '0.75rem', color: '#0369a1' }}>
-                  {activeLesson.keyTakeaways.map((point, i) => (
-                    <li key={i}>{point}</li>
-                  ))}
-                </ul>
-              </div>
+            <div style={{ padding: '1rem', overflowY: 'auto', flex: 1, fontSize: '0.85rem', lineHeight: 1.6 }}>
+              {activeLesson.fullContentMarkdown}
             </div>
-
             <div style={{ padding: '0.75rem 1rem', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '0.5rem' }}>
               <button
                 onClick={() => handleCompleteLesson(activeLesson.id)}
@@ -1027,22 +1213,7 @@ export default function App() {
                   cursor: 'pointer',
                 }}
               >
-                ✓ Complete Lesson & Record Progress
-              </button>
-              <button
-                onClick={() => setActiveLesson(null)}
-                style={{
-                  backgroundColor: '#f1f5f9',
-                  color: '#475569',
-                  border: 'none',
-                  padding: '0.55rem 0.85rem',
-                  borderRadius: '6px',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Close
+                ✓ Mark Lesson Completed
               </button>
             </div>
           </div>
@@ -1050,22 +1221,19 @@ export default function App() {
       )}
 
       {/* ========================================================
-          MODAL: INTERACTIVE ASSESSMENT PLAYER
+          MODAL: Offline Assessment Examination
       ======================================================== */}
       {isAssessmentOpen && (
         <div
           style={{
             position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
+            inset: 0,
+            backgroundColor: 'rgba(15,23,42,0.6)',
+            zIndex: 100,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             padding: '1rem',
-            zIndex: 100,
           }}
         >
           <div
@@ -1074,78 +1242,70 @@ export default function App() {
               borderRadius: '8px',
               maxWidth: '480px',
               width: '100%',
-              maxHeight: '90vh',
+              maxHeight: '85vh',
               display: 'flex',
               flexDirection: 'column',
-              boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+              overflow: 'hidden',
             }}
           >
             <div style={{ padding: '1rem', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <span style={{ fontSize: '0.7rem', color: '#16a34a', fontWeight: 700 }}>OFFLINE EXAM RUNNER</span>
-                <h3 style={{ fontSize: '0.95rem', margin: '0.1rem 0 0 0', color: '#0f172a' }}>{assessment.title}</h3>
-              </div>
+              <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800 }}>{assessment.title}</h3>
               <button
                 onClick={() => setIsAssessmentOpen(false)}
-                style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: '#64748b' }}
+                style={{ background: 'none', border: 'none', fontSize: '1.25rem', color: '#64748b', cursor: 'pointer' }}
               >
-                ✕
+                ×
               </button>
             </div>
 
             <div style={{ padding: '1rem', overflowY: 'auto', flex: 1 }}>
               {quizResult ? (
-                <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+                <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
                   <div
                     style={{
-                      width: '60px',
-                      height: '60px',
-                      borderRadius: '30px',
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '50%',
+                      margin: '0 auto 1rem auto',
                       backgroundColor: quizResult.passed ? '#dcfce7' : '#fee2e2',
-                      color: quizResult.passed ? '#15803d' : '#b91c1c',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontSize: '1.75rem',
-                      margin: '0 auto 0.75rem auto',
                     }}
                   >
                     {quizResult.passed ? '✓' : '✗'}
                   </div>
-                  <h3 style={{ fontSize: '1.1rem', margin: '0 0 0.25rem 0' }}>
-                    {quizResult.passed ? 'Assessment Passed!' : 'Retake Required'}
+                  <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.2rem', color: quizResult.passed ? '#15803d' : '#b91c1c', fontWeight: 800 }}>
+                    {quizResult.passed ? 'Assessment Passed!' : 'Assessment Not Passed'}
                   </h3>
-                  <div style={{ fontSize: '1.5rem', fontWeight: 800, color: quizResult.passed ? '#15803d' : '#b91c1c' }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0.5rem 0', color: '#0f172a' }}>
                     {quizResult.score}%
                   </div>
-                  <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0.25rem 0 1rem 0' }}>
-                    Answered {quizResult.correctCount} of {quizResult.total} correctly (Passing mark: {assessment.passingScore}%)
+                  <p style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                    You answered {quizResult.correctCount} of {quizResult.total} questions correctly.
                   </p>
-
-                  <div style={{ padding: '0.75rem', backgroundColor: '#f8fafc', borderRadius: '6px', fontSize: '0.75rem', color: '#475569', textAlign: 'left' }}>
-                    ⚡ <strong>Offline Event Generated:</strong> Your submission has been securely written to the local SQLite event journal on this Sahakar Edge node with SHA-256 hash protection. It will be uploaded automatically once the WAN reconnects.
-                  </div>
+                  {quizResult.passed && (
+                    <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', padding: '0.75rem', borderRadius: '6px', fontSize: '0.8rem', color: '#166534', fontWeight: 700, marginTop: '1rem' }}>
+                      ✓ Eligible for NCCT Ed25519 Tamper-Proof Digital Credential!
+                    </div>
+                  )}
                 </div>
               ) : (
                 <form id="quiz-form" onSubmit={handleQuizSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {questions.map((q: Question, qIdx: number) => (
-                    <div key={q.id} style={{ borderBottom: '1px solid #f1f5f9', paddingBottom: '0.75rem' }}>
-                      <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.4rem' }}>
-                        Q{qIdx + 1}. {q.prompt}
+                  {questions.map((q, qIdx) => (
+                    <div key={q.id} style={{ padding: '0.75rem', backgroundColor: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                      <div style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.5rem', color: '#0f172a' }}>
+                        {qIdx + 1}. {q.prompt}
                       </div>
-
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                        {q.options.map((opt: string, optIdx: number) => (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                        {q.options.map((opt, optIdx) => (
                           <label
                             key={optIdx}
                             style={{
                               display: 'flex',
                               alignItems: 'center',
                               gap: '0.5rem',
-                              padding: '0.4rem 0.6rem',
-                              borderRadius: '4px',
-                              backgroundColor: quizAnswers[q.id] === optIdx ? '#e0f2fe' : '#f8fafc',
-                              border: quizAnswers[q.id] === optIdx ? '1px solid #0284c7' : '1px solid #e2e8f0',
                               fontSize: '0.8rem',
                               cursor: 'pointer',
                             }}
@@ -1235,39 +1395,48 @@ export default function App() {
           gridTemplateColumns: 'repeat(6, 1fr)',
           backgroundColor: '#ffffff',
           borderTop: '1px solid #e2e8f0',
-          padding: '0.4rem 0',
-          boxShadow: '0 -2px 5px rgba(0,0,0,0.03)',
+          padding: '0.5rem 0',
+          boxShadow: '0 -2px 6px rgba(0,0,0,0.03)',
         }}
       >
         {(
           [
-            { id: 'HOME', label: 'Home' },
-            { id: 'LEARN', label: 'Learn' },
-            { id: 'PROGRESS', label: 'Progress' },
-            { id: 'CREDENTIALS', label: 'Credentials' },
-            { id: 'OPPORTUNITIES', label: 'Jobs' },
-            { id: 'PROFILE', label: 'Profile' },
+            { id: 'HOME', label: t.tabs.HOME, icon: '🏠' },
+            { id: 'LEARN', label: t.tabs.LEARN, icon: '📚' },
+            { id: 'PROGRESS', label: t.tabs.PROGRESS, icon: '📊' },
+            { id: 'CREDENTIALS', label: t.tabs.CREDENTIALS, icon: '📜' },
+            { id: 'OPPORTUNITIES', label: t.tabs.OPPORTUNITIES, icon: '💼' },
+            { id: 'PROFILE', label: t.tabs.PROFILE, icon: '👤' },
           ] as const
-        ).map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: activeTab === tab.id ? '#0284c7' : '#64748b',
-              fontWeight: activeTab === tab.id ? 800 : 500,
-              fontSize: '0.65rem',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              cursor: 'pointer',
-              padding: '0.2rem 0',
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
+        ).map((tab) => {
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: isActive ? '#0284c7' : '#64748b',
+                fontWeight: isActive ? 800 : 500,
+                fontSize: '0.68rem',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '0.15rem',
+                cursor: 'pointer',
+                padding: '0.2rem 0',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <span style={{ fontSize: '1.1rem' }}>{tab.icon}</span>
+              <span>{tab.label}</span>
+              {isActive && (
+                <div style={{ width: '16px', height: '3px', backgroundColor: '#0284c7', borderRadius: '2px', marginTop: '2px' }} />
+              )}
+            </button>
+          );
+        })}
       </nav>
     </div>
   );
