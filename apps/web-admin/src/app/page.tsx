@@ -26,6 +26,7 @@ export default function AdminDashboardPage() {
     | 'ATTENDANCE'
     | 'CREDENTIALS'
     | 'EMPLOYMENT'
+    | 'ERP_LOGISTICS'
     | 'EDGE_NODES'
     | 'SYNC_MONITOR'
     | 'AUDIT_LOG'
@@ -62,6 +63,158 @@ export default function AdminDashboardPage() {
   const [simQueuedEvents, setSimQueuedEvents] = useState<Array<{ id: string; type: string; summary: string; timestamp: string }>>([
     { id: 'ev-init-01', type: 'ENROLLMENT_CONFIRMED', summary: 'Trainee Anita Patel rostered onto RICM Node', timestamp: '09:00 AM' },
   ]);
+
+  // ERP Hostel & Logistics State (PS 26087)
+  const [logisticsSubTab, setLogisticsSubTab] = useState<'HOSTEL' | 'TIMETABLE' | 'MESS' | 'HARDWARE_KITS'>('HOSTEL');
+  const [hostelAllotments, setHostelAllotments] = useState([
+    {
+      id: 'hst-01',
+      traineeName: 'Anita Patel',
+      institute: 'RICM Bhopal',
+      hostelBlock: 'Sardar Patel Block A (Female Wing)',
+      roomNo: 'A-204',
+      bedType: 'Single Bed (Air-Cooled)',
+      checkIn: '2026-09-20',
+      checkOut: '2026-10-20',
+      status: 'CHECKED_IN',
+      messOptIn: true,
+    },
+    {
+      id: 'hst-02',
+      traineeName: 'Vikram Rao',
+      institute: 'RICM Bhopal',
+      hostelBlock: 'Sardar Patel Block B (Male Wing)',
+      roomNo: 'B-108',
+      bedType: 'Shared Twin Bed',
+      checkIn: '2026-09-20',
+      checkOut: '2026-10-20',
+      status: 'CHECKED_IN',
+      messOptIn: true,
+    },
+    {
+      id: 'hst-03',
+      traineeName: 'Sunita Meena',
+      institute: 'RICM Bhopal',
+      hostelBlock: 'Sardar Patel Block A (Female Wing)',
+      roomNo: 'A-205',
+      bedType: 'Single Bed (Air-Cooled)',
+      checkIn: '2026-09-22',
+      checkOut: '2026-10-22',
+      status: 'CHECKED_IN',
+      messOptIn: true,
+    },
+  ]);
+
+  const [timetableSchedule, setTimetableSchedule] = useState([
+    {
+      id: 'tt-01',
+      timeSlot: '09:30 AM – 11:00 AM',
+      subject: 'PACS Computerization & Statutory Ledger Posting',
+      venue: 'Computer Lab 1 (30 Thin-Clients + Sahakar Edge Node)',
+      trainer: 'Shri Suresh Kumar (Senior Faculty, RICM)',
+      status: 'COMPLETED_TODAY',
+    },
+    {
+      id: 'tt-02',
+      timeSlot: '11:15 AM – 12:45 PM',
+      subject: 'Multi-State Cooperative Societies Act & Bye-Laws',
+      venue: 'Seminar Hall 2 (Smart Interactive Display)',
+      trainer: 'Dr. Meenakshi Joshi (Guest Lecturer, NABARD)',
+      status: 'ACTIVE_NOW',
+    },
+    {
+      id: 'tt-03',
+      timeSlot: '02:00 PM – 03:30 PM',
+      subject: 'Hands-on ERP Voucher Auditing & Reconciliations',
+      venue: 'Computer Lab 1',
+      trainer: 'Shri Suresh Kumar',
+      status: 'SCHEDULED',
+    },
+    {
+      id: 'tt-04',
+      timeSlot: '03:45 PM – 05:00 PM',
+      subject: 'Assessment & Offline Quiz on Sahakar Edge Client',
+      venue: 'Computer Lab 1',
+      trainer: 'Lab Administrator',
+      status: 'SCHEDULED',
+    },
+  ]);
+
+  const [messMenu, setMessMenu] = useState([
+    { meal: 'Breakfast (07:30 - 09:00 AM)', menu: 'Poha, Sprouts, Boiled Eggs / Banana, Tea / Milk', adherence: '100% NCCT Dietary Norms' },
+    { meal: 'Lunch (12:30 - 02:00 PM)', menu: 'Roti, Dal Tadka, Seasonal Sabzi, Rice, Curd, Salad', adherence: 'Wholesome Vegetarian' },
+    { meal: 'High Tea (05:00 - 05:30 PM)', menu: 'Tea, Roasted Makhana / Biscuits', adherence: 'Evening Refreshment' },
+    { meal: 'Dinner (07:30 - 09:30 PM)', menu: 'Chapati, Paneer Gravy, Yellow Dal, Jeera Rice, Gulab Jamun', adherence: 'Residential Trainee Mess' },
+  ]);
+
+  const [hardwareKits, setHardwareKits] = useState([
+    {
+      kitId: 'KIT-RICM-BHO-01',
+      nodeSerial: 'EDGE-ARM64-BHO-9011',
+      components: 'Raspberry Pi 4 (4GB RAM) + 64GB NVMe + High-Gain Wi-Fi AP + 4hr UPS Battery + Heavy-Duty Pelican Case',
+      venue: 'RICM Bhopal (Lab 1)',
+      status: 'DEPLOYED_OPERATIONAL',
+      dispatchedAt: '2026-08-15',
+    },
+    {
+      kitId: 'KIT-VAMNICOM-PUN-01',
+      nodeSerial: 'EDGE-ARM64-PUN-4022',
+      components: 'Raspberry Pi 4 (4GB RAM) + 64GB NVMe + High-Gain Wi-Fi AP + 4hr UPS Battery + Pelican Case',
+      venue: 'VAMNICOM Pune (Executive Center)',
+      status: 'DEPLOYED_OPERATIONAL',
+      dispatchedAt: '2026-08-10',
+    },
+  ]);
+
+  // AI Career Counselor State (PS 26087)
+  const [counselorInput, setCounselorInput] = useState('');
+  const [counselorMessages, setCounselorMessages] = useState<Array<{ sender: 'USER' | 'AI'; text: string; time: string; tags?: string[] }>>([
+    {
+      sender: 'AI',
+      text: 'Namaste! I am Sahakar Mitra (सहकार मित्र), your AI Cooperative Career & Scheme Counselor. I analyze certified candidate skills and recommend optimal career pathways across 63,000 PACS, District Cooperative Banks (DCCBs), and dairy federations like Amul. How may I guide you today?',
+      time: 'Just now',
+      tags: ['PACS Modernization', 'NABARD Subventions', 'Amul Dairy Logistics'],
+    },
+  ]);
+
+  const handleSendCounselorMessage = (textToSend?: string) => {
+    const q = (textToSend || counselorInput).trim();
+    if (!q) return;
+
+    const userMsg = {
+      sender: 'USER' as const,
+      text: q,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    let reply = '';
+    let tags: string[] = [];
+
+    const lower = q.toLowerCase();
+    if (lower.includes('pacs') || lower.includes('पैक्स') || lower.includes('accounting')) {
+      reply = 'Based on the Ministry of Cooperation nationwide PACS Computerization drive (covering 63,000+ functional PACS), certified candidates like Anita Patel are directly eligible for "PACS Secretary / Junior Accountant" roles. Starting compensation ranges from ₹18,000 to ₹32,000/month. The NCCT Ed25519 credential serves as statutory proof of double-entry day-book proficiency under NABARD norms.';
+      tags = ['63,000 PACS Drive', 'NABARD Guidelines', 'Day-Book Certified'];
+    } else if (lower.includes('amul') || lower.includes('dairy') || lower.includes('अमूल')) {
+      reply = 'For Dairy Cooperatives (such as GCMMF / Amul and state milk federations), candidates with credentials in Cooperative Governance & Dairy Society Procurement are matched to "Dairy Procurement Coordinator" and "Cold Chain Supervisor" openings. The starting role oversees village-level Bulk Milk Chilling (BMC) units and testing.';
+      tags = ['GCMMF / Amul', 'Cold Chain Management', 'Milk Testing Protocol'];
+    } else if (lower.includes('scheme') || lower.includes('योजना') || lower.includes('subsidy') || lower.includes('startup')) {
+      reply = 'Under the Ministry of Cooperation and NCDC (National Cooperative Development Corporation), rural youth can access the "Yuva Sahakar Scheme" which provides 2% interest subvention for cooperative business ventures, plus NABARD PACS Infrastructure Development Fund providing capital support for grain storage and agro-logistics.';
+      tags = ['Yuva Sahakar Scheme', 'NCDC Subventions', 'PACS Agro-Storage'];
+    } else {
+      reply = `Thank you for your query regarding cooperative careers. For the selected candidate (${selectedCandidateId === 'dddd4444-4444-4444-4444-444444444441' ? 'Anita Patel' : 'Vikram Rao'}), their highest affinity match is currently with Primary Agricultural Credit Societies and District Central Cooperative Banks (95% skill overlap). Would you like to view open vacancies or explore specialized audit certifications?`;
+      tags = ['Tailored Pathway', 'NCCT Accreditation', 'Recruiter Connect'];
+    }
+
+    const aiMsg = {
+      sender: 'AI' as const,
+      text: reply,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      tags,
+    };
+
+    setCounselorMessages((prev) => [...prev, userMsg, aiMsg]);
+    setCounselorInput('');
+  };
 
   // Attendance & Manual Override State (07_UI_UX_SPEC.md & 05_HARDWARE_EDGE.md)
   const [attendanceRecords, setAttendanceRecords] = useState([
@@ -238,7 +391,6 @@ export default function AdminDashboardPage() {
     };
     setSimQueuedEvents((prev) => [event, ...prev]);
 
-    // Update node queue count
     setEdgeNodes((nodes) =>
       nodes.map((n) =>
         n.nodeId === 'edge-node-ricm-bhopal-01' ? { ...n, queuedEvents: n.queuedEvents + 1 } : n
@@ -246,7 +398,6 @@ export default function AdminDashboardPage() {
     );
 
     if (simWanMode === 'ONLINE') {
-      // Auto sync if online
       triggerCentralSyncFromSim([event]);
     }
   };
@@ -299,7 +450,6 @@ export default function AdminDashboardPage() {
   const triggerCentralSyncFromSim = (eventsToSync = simQueuedEvents) => {
     if (eventsToSync.length === 0) return;
 
-    // 1. Add attendance record if present in synced events
     const hasAtt = eventsToSync.some((e) => e.type === 'ATTENDANCE_RECORDED');
     if (hasAtt) {
       const exists = attendanceRecords.some((a) => a.traineeId === 'dddd4444-4444-4444-4444-444444444441' && a.method === 'DYNAMIC_QR');
@@ -322,7 +472,6 @@ export default function AdminDashboardPage() {
       }
     }
 
-    // 2. If assessment is submitted, add audit log and issue credential
     const hasExam = eventsToSync.some((e) => e.type === 'ASSESSMENT_SUBMITTED');
     if (hasExam) {
       setAuditLogs((prev) => [
@@ -338,7 +487,6 @@ export default function AdminDashboardPage() {
       ]);
     }
 
-    // 3. Clear simulated queue and update node status
     setSimQueuedEvents([]);
     setEdgeNodes((nodes) =>
       nodes.map((n) =>
@@ -525,7 +673,6 @@ export default function AdminDashboardPage() {
       {/* Top Government Navigation Header */}
       <header style={{ backgroundColor: '#0f172a', color: '#ffffff', padding: '0.9rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 10px rgba(0,0,0,0.15)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          {/* Emblem Icon */}
           <div style={{ width: '42px', height: '42px', borderRadius: '50%', backgroundColor: '#1e293b', border: '2px solid #38bdf8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem', boxShadow: '0 0 10px rgba(56,189,248,0.3)' }}>
             🏛️
           </div>
@@ -539,13 +686,12 @@ export default function AdminDashboardPage() {
               </span>
             </div>
             <div style={{ fontSize: '1.2rem', fontWeight: 800, letterSpacing: '-0.01em', marginTop: '0.1rem' }}>
-              Sahakar Edge <span style={{ color: '#94a3b8', fontWeight: 400 }}>— NCCT Central Fleet & Training Portal</span>
+              Sahakar Edge <span style={{ color: '#94a3b8', fontWeight: 400 }}>— NCCT Central ERP & Training Portal</span>
             </div>
           </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-          {/* Live Trainee Mobile Simulator Toggle Button */}
           <button
             onClick={() => setShowMobileSimulator(!showMobileSimulator)}
             style={{
@@ -592,6 +738,7 @@ export default function AdminDashboardPage() {
             'ATTENDANCE',
             'CREDENTIALS',
             'EMPLOYMENT',
+            'ERP_LOGISTICS',
             'EDGE_NODES',
             'SYNC_MONITOR',
             'AUDIT_LOG',
@@ -615,7 +762,10 @@ export default function AdminDashboardPage() {
               gap: '0.35rem',
             }}
           >
-            <span>{tab.replace('_', ' ')}</span>
+            <span>{tab === 'ERP_LOGISTICS' ? 'ERP LOGISTICS & HOSTEL' : tab.replace('_', ' ')}</span>
+            {tab === 'ERP_LOGISTICS' && (
+              <span style={{ fontSize: '0.65rem', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.05rem 0.35rem', borderRadius: '4px', fontWeight: 800 }}>NEW</span>
+            )}
             {tab === 'EDGE_NODES' && (
               <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#16a34a', display: 'inline-block' }} />
             )}
@@ -635,93 +785,94 @@ export default function AdminDashboardPage() {
         {/* Tab 1: Overview */}
         {activeTab === 'OVERVIEW' && (
           <div>
-            {/* Government Mission Banner */}
             <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', borderRadius: '12px', padding: '1.75rem 2rem', color: '#ffffff', marginBottom: '2rem', border: '1px solid #334155', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'relative', zIndex: 1, maxWidth: '820px' }}>
+              <div style={{ position: 'relative', zIndex: 1, maxWidth: '860px' }}>
                 <div style={{ display: 'inline-block', backgroundColor: '#0284c7', color: '#ffffff', fontSize: '0.7rem', fontWeight: 800, padding: '0.2rem 0.6rem', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.6rem' }}>
                   Smart India Hackathon • Problem Statement PS 26087
                 </div>
                 <h1 style={{ fontSize: '1.6rem', margin: '0 0 0.5rem 0', fontWeight: 800 }}>
-                  National Offline-First Cooperative Training Infrastructure
+                  AI & LMS - Enabled Cooperative Capacity Building, ERP & Employment Ecosystem
                 </h1>
                 <p style={{ color: '#cbd5e1', fontSize: '0.9rem', lineHeight: 1.6, margin: 0 }}>
-                  Empowering rural PACS (Primary Agricultural Credit Societies), dairy federations, and cooperative banks with continuous learning, biometric attendance, and Ed25519 tamper-evident credentials—resilient against prolonged WAN dropouts.
+                  Integrated digital infrastructure for the National Council for Cooperative Training (NCCT), combining central ERP training administration, offline-accessible e-learning on ARM64 Linux edge hardware, AI career counseling, and transparent skill-based recruiter matching for rural youth.
                 </p>
                 <div style={{ display: 'flex', gap: '1rem', marginTop: '1.25rem', flexWrap: 'wrap' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', color: '#93c5fd' }}>
-                    <span>✓</span> <span>Zero-Data-Loss SQLite WAL Journal</span>
+                    <span>✓</span> <span>ERP Training & Hostel Logistics</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', color: '#93c5fd' }}>
-                    <span>✓</span> <span>Local Edge Latency &lt; 30ms</span>
+                    <span>✓</span> <span>Offline ARM64 Edge Nodes (Sub-30ms)</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', color: '#93c5fd' }}>
-                    <span>✓</span> <span>Ed25519 Cryptographic Signatures</span>
+                    <span>✓</span> <span>AI Counselor (सहकार मित्र)</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', color: '#93c5fd' }}>
+                    <span>✓</span> <span>Ed25519 Tamper-Proof Credentials</span>
                   </div>
                 </div>
               </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
-              <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '1.25rem 1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
+              <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '1.25rem 1.5rem', border: '1px solid #e2e8f0' }}>
                 <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>COOPERATIVE INSTITUTES</div>
                 <div style={{ fontSize: '1.75rem', fontWeight: 800, margin: '0.25rem 0', color: '#0369a1' }}>{SEED_INSTITUTES.length} Active</div>
                 <div style={{ fontSize: '0.75rem', color: '#64748b' }}>RICM Bhopal & VAMNICOM Pune</div>
               </div>
 
-              <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '1.25rem 1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
+              <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '1.25rem 1.5rem', border: '1px solid #e2e8f0' }}>
                 <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>CAPACITY PROGRAMMES</div>
                 <div style={{ fontSize: '1.75rem', fontWeight: 800, margin: '0.25rem 0', color: '#0369a1' }}>{programmes.length} Total</div>
                 <div style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 600 }}>NCCT Bylaw Verified</div>
               </div>
 
-              <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '1.25rem 1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
-                <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>ROSTERED TRAINEES</div>
-                <div style={{ fontSize: '1.75rem', fontWeight: 800, margin: '0.25rem 0', color: '#0369a1' }}>{enrollments.length} Enrolled</div>
-                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Edge Nodes Synced</div>
+              <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '1.25rem 1.5rem', border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>HOSTEL RESIDENTS</div>
+                <div style={{ fontSize: '1.75rem', fontWeight: 800, margin: '0.25rem 0', color: '#0369a1' }}>{hostelAllotments.length} Allotted</div>
+                <div style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 600 }}>Sardar Patel Hostel</div>
               </div>
 
-              <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '1.25rem 1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
-                <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>ACTIVE EDGE FLEET</div>
+              <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '1.25rem 1.5rem', border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>EDGE HARDWARE FLEET</div>
                 <div style={{ fontSize: '1.75rem', fontWeight: 800, margin: '0.25rem 0', color: '#16a34a' }}>{edgeNodes.length} Online</div>
                 <div style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 600 }}>● 28 Local Wi-Fi Clients</div>
               </div>
 
-              <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '1.25rem 1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
+              <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '1.25rem 1.5rem', border: '1px solid #e2e8f0' }}>
                 <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>VERIFIED CREDENTIALS</div>
                 <div style={{ fontSize: '1.75rem', fontWeight: 800, margin: '0.25rem 0', color: '#0369a1' }}>{credentialsList.length} Issued</div>
                 <div style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 600 }}>Ed25519 Tamper-Proof</div>
               </div>
             </div>
 
-            {/* Quick Actions & Demonstration Guide */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
               <div style={{ backgroundColor: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                 <h3 style={{ fontSize: '1rem', marginTop: 0, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span>📱</span> <span>Interactive Trainee PWA Preview</span>
+                  <span>🏢</span> <span>ERP Training & Hostel Logistics</span>
                 </h3>
                 <p style={{ color: '#475569', fontSize: '0.85rem', lineHeight: 1.5 }}>
-                  Launch the live Trainee Mobile Simulator directly within this portal. Simulate a complete rural offline scenario: disconnect simulated WAN, mark QR attendance, pass the quiz, and sync back to Central.
+                  Manage complete residential training operations: hostel room occupancy, classroom timetable schedules, mess nutrition adherence, and hardware edge kit dispatches.
                 </p>
                 <button
-                  onClick={() => setShowMobileSimulator(true)}
+                  onClick={() => setActiveTab('ERP_LOGISTICS')}
                   style={{ backgroundColor: '#0284c7', color: '#ffffff', border: 'none', padding: '0.55rem 1rem', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', marginTop: '0.5rem' }}
                 >
-                  Open Live Trainee Simulator →
+                  Open ERP Logistics Dashboard →
                 </button>
               </div>
 
               <div style={{ backgroundColor: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                 <h3 style={{ fontSize: '1rem', marginTop: 0, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span>⚡</span> <span>Hardware Edge Node Health</span>
+                  <span>🤖</span> <span>AI Career Counselor (सहकार मित्र)</span>
                 </h3>
                 <p style={{ color: '#475569', fontSize: '0.85rem', lineHeight: 1.5 }}>
-                  Monitor ARM64 edge node thermal health, SQLite WAL disk space, and captive portal traffic across training centers like RICM Bhopal and VAMNICOM Pune.
+                  AI-driven career guidance matching rural youth and certified candidates to 63,000 PACS openings, DCCB cooperative banks, and dairy federations like Amul.
                 </p>
                 <button
-                  onClick={() => setActiveTab('EDGE_NODES')}
+                  onClick={() => setActiveTab('EMPLOYMENT')}
                   style={{ backgroundColor: '#f1f5f9', color: '#0f172a', border: '1px solid #cbd5e1', padding: '0.55rem 1rem', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', marginTop: '0.5rem' }}
                 >
-                  View Edge Node Fleet →
+                  Consult Sahakar Mitra Chatbot →
                 </button>
               </div>
             </div>
@@ -743,15 +894,11 @@ export default function AdminDashboardPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
               {SEED_INSTITUTES.map((inst) => (
                 <div key={inst.id} style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '1.5rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                      <span style={{ fontSize: '0.75rem', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 700 }}>
-                        {inst.code}
-                      </span>
-                      <h3 style={{ margin: '0.5rem 0 0.25rem 0', fontSize: '1.1rem' }}>{inst.name}</h3>
-                      <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{inst.locationText}</div>
-                    </div>
-                  </div>
+                  <span style={{ fontSize: '0.75rem', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 700 }}>
+                    {inst.code}
+                  </span>
+                  <h3 style={{ margin: '0.5rem 0 0.25rem 0', fontSize: '1.1rem' }}>{inst.name}</h3>
+                  <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{inst.locationText}</div>
                   <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
                     <span style={{ color: '#16a34a', fontWeight: 600 }}>● Edge Gateway Online</span>
                     <span style={{ color: '#64748b' }}>Capacity: 120 Trainees</span>
@@ -915,7 +1062,7 @@ export default function AdminDashboardPage() {
         {/* Tab 5: Courses */}
         {activeTab === 'COURSES' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
               <div>
                 <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Curriculum & Offline Courseware Packages</h2>
                 <p style={{ margin: '0.25rem 0 0 0', color: '#64748b', fontSize: '0.85rem' }}>
@@ -1152,10 +1299,10 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* Tab 8: Employment */}
+        {/* Tab 8: Employment Opportunities & Explainable Skill Matching + AI Career Counselor */}
         {activeTab === 'EMPLOYMENT' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
               <div>
                 <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Cooperative Employment & Explainable Skill Matching</h2>
                 <p style={{ margin: '0.25rem 0 0 0', color: '#64748b', fontSize: '0.85rem' }}>
@@ -1238,10 +1385,281 @@ export default function AdminDashboardPage() {
                 );
               })}
             </div>
+
+            {/* AI Career & Scheme Counselor (सहकार मित्र) per PS 26087 */}
+            <div style={{ backgroundColor: '#ffffff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: '1.5rem', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#0284c7', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem' }}>
+                    🤖
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#0f172a', fontWeight: 800 }}>
+                      Sahakar Mitra (सहकार मित्र) — AI Career & Scheme Counselor
+                    </h3>
+                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                      Autonomous Career Guidance for Rural Youth & Certified PACS Personnel
+                    </div>
+                  </div>
+                </div>
+                <span style={{ fontSize: '0.72rem', backgroundColor: '#dcfce7', color: '#166534', padding: '0.25rem 0.6rem', borderRadius: '12px', fontWeight: 800 }}>
+                  ● AI Active
+                </span>
+              </div>
+
+              {/* Chat Message History */}
+              <div style={{ backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '1rem', minHeight: '220px', maxHeight: '340px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                {counselorMessages.map((msg, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      alignSelf: msg.sender === 'USER' ? 'flex-end' : 'flex-start',
+                      maxWidth: '85%',
+                      backgroundColor: msg.sender === 'USER' ? '#0284c7' : '#ffffff',
+                      color: msg.sender === 'USER' ? '#ffffff' : '#0f172a',
+                      padding: '0.85rem 1rem',
+                      borderRadius: '8px',
+                      border: msg.sender === 'USER' ? 'none' : '1px solid #e2e8f0',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                    }}
+                  >
+                    <div style={{ fontSize: '0.82rem', lineHeight: 1.5 }}>{msg.text}</div>
+                    {msg.tags && (
+                      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+                        {msg.tags.map((tg, tidx) => (
+                          <span key={tidx} style={{ fontSize: '0.68rem', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.15rem 0.45rem', borderRadius: '4px', fontWeight: 700 }}>
+                            🏷️ {tg}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <div style={{ fontSize: '0.65rem', color: msg.sender === 'USER' ? '#e0f2fe' : '#94a3b8', marginTop: '0.35rem', textAlign: 'right' }}>
+                      {msg.time}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Quick Suggestion Chips */}
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', margin: '0.85rem 0' }}>
+                <button
+                  onClick={() => handleSendCounselorMessage('What jobs can Anita Patel apply for with her verified PACS credentials?')}
+                  style={{ backgroundColor: '#f1f5f9', border: '1px solid #cbd5e1', color: '#0369a1', padding: '0.3rem 0.65rem', borderRadius: '16px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}
+                >
+                  💡 Anita's Job Recommendations
+                </button>
+                <button
+                  onClick={() => handleSendCounselorMessage('What is the eligibility for Amul dairy coordinator roles?')}
+                  style={{ backgroundColor: '#f1f5f9', border: '1px solid #cbd5e1', color: '#0369a1', padding: '0.3rem 0.65rem', borderRadius: '16px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}
+                >
+                  🥛 Amul Dairy Roles
+                </button>
+                <button
+                  onClick={() => handleSendCounselorMessage('Which Ministry of Cooperation schemes support rural cooperative startups?')}
+                  style={{ backgroundColor: '#f1f5f9', border: '1px solid #cbd5e1', color: '#0369a1', padding: '0.3rem 0.65rem', borderRadius: '16px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}
+                >
+                  📜 Yuva Sahakar Scheme Info
+                </button>
+              </div>
+
+              {/* Input Box */}
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <input
+                  type="text"
+                  value={counselorInput}
+                  onChange={(e) => setCounselorInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSendCounselorMessage();
+                  }}
+                  placeholder="Ask Sahakar Mitra about jobs, PACS recruitment rules, or cooperative schemes..."
+                  style={{ flex: 1, padding: '0.65rem 0.9rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                />
+                <button
+                  onClick={() => handleSendCounselorMessage()}
+                  style={{ backgroundColor: '#0284c7', color: '#ffffff', border: 'none', padding: '0.65rem 1.25rem', borderRadius: '6px', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}
+                >
+                  Ask AI →
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Tab 9: Edge Node Fleet Registry & Hardware Telemetry (05_HARDWARE_EDGE.md) */}
+        {/* Tab 9: ERP Logistics & Hostel Management (PS 26087) */}
+        {activeTab === 'ERP_LOGISTICS' && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <div>
+                <h2 style={{ fontSize: '1.25rem', margin: 0 }}>NCCT ERP Logistics, Timetable & Hostel Administration</h2>
+                <p style={{ margin: '0.25rem 0 0 0', color: '#64748b', fontSize: '0.85rem' }}>
+                  Integrated training center facilities management across VAMNICOM, RICMs, and ICMs
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                {(
+                  [
+                    { id: 'HOSTEL', label: 'Hostel Rooms' },
+                    { id: 'TIMETABLE', label: 'Lab & Timetable' },
+                    { id: 'MESS', label: 'Mess & Dining' },
+                    { id: 'HARDWARE_KITS', label: 'Edge Kits' },
+                  ] as const
+                ).map((sub) => (
+                  <button
+                    key={sub.id}
+                    onClick={() => setLogisticsSubTab(sub.id)}
+                    style={{
+                      padding: '0.4rem 0.8rem',
+                      borderRadius: '6px',
+                      border: '1px solid',
+                      borderColor: logisticsSubTab === sub.id ? '#0284c7' : '#cbd5e1',
+                      backgroundColor: logisticsSubTab === sub.id ? '#0284c7' : '#ffffff',
+                      color: logisticsSubTab === sub.id ? '#ffffff' : '#475569',
+                      fontSize: '0.8rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {sub.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Sub-view 1: Hostel Allotment */}
+            {logisticsSubTab === 'HOSTEL' && (
+              <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                <div style={{ padding: '1rem 1.5rem', backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>
+                    Residential Hostel Allotments (RICM Bhopal — Sardar Patel Hostel)
+                  </div>
+                  <span style={{ fontSize: '0.75rem', backgroundColor: '#dcfce7', color: '#166534', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 700 }}>
+                    42/60 Beds Occupied (18 Vacant)
+                  </span>
+                </div>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#64748b' }}>
+                      <th style={{ padding: '0.75rem 1.5rem' }}>Trainee Name</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Hostel Wing</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Room No.</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Bed Type</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Duration</th>
+                      <th style={{ padding: '0.75rem 1.5rem' }}>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {hostelAllotments.map((h) => (
+                      <tr key={h.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                        <td style={{ padding: '0.75rem 1.5rem', fontWeight: 600, color: '#0f172a' }}>{h.traineeName}</td>
+                        <td style={{ padding: '0.75rem 1rem', color: '#475569' }}>{h.hostelBlock}</td>
+                        <td style={{ padding: '0.75rem 1rem', fontWeight: 700, color: '#0369a1' }}>{h.roomNo}</td>
+                        <td style={{ padding: '0.75rem 1rem', color: '#64748b' }}>{h.bedType}</td>
+                        <td style={{ padding: '0.75rem 1rem', color: '#64748b', fontSize: '0.8rem' }}>
+                          {h.checkIn} to {h.checkOut}
+                        </td>
+                        <td style={{ padding: '0.75rem 1.5rem' }}>
+                          <span style={{ backgroundColor: '#dcfce7', color: '#166534', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 700 }}>
+                            {h.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Sub-view 2: Timetable & Classroom Allocation */}
+            {logisticsSubTab === 'TIMETABLE' && (
+              <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                <div style={{ padding: '1rem 1.5rem', backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontWeight: 700, fontSize: '0.9rem' }}>
+                  Daily Training Timetable & Facility Scheduling (RICM Bhopal)
+                </div>
+                <div style={{ padding: '1rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                  {timetableSchedule.map((slot) => (
+                    <div key={slot.id} style={{ padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <span style={{ fontSize: '0.75rem', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.15rem 0.45rem', borderRadius: '4px', fontWeight: 800 }}>
+                          {slot.timeSlot}
+                        </span>
+                        <h4 style={{ margin: '0.35rem 0 0.15rem 0', fontSize: '0.95rem', color: '#0f172a' }}>{slot.subject}</h4>
+                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Venue: <strong>{slot.venue}</strong> • Faculty: {slot.trainer}</div>
+                      </div>
+                      <span
+                        style={{
+                          fontSize: '0.75rem',
+                          fontWeight: 800,
+                          backgroundColor: slot.status === 'ACTIVE_NOW' ? '#fef3c7' : slot.status === 'COMPLETED_TODAY' ? '#dcfce7' : '#f1f5f9',
+                          color: slot.status === 'ACTIVE_NOW' ? '#92400e' : slot.status === 'COMPLETED_TODAY' ? '#166534' : '#64748b',
+                          padding: '0.25rem 0.6rem',
+                          borderRadius: '4px',
+                        }}
+                      >
+                        {slot.status === 'ACTIVE_NOW' ? '● IN PROGRESS' : slot.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Sub-view 3: Mess & Dining */}
+            {logisticsSubTab === 'MESS' && (
+              <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h3 style={{ margin: 0, fontSize: '1rem' }}>Institutional Mess Schedule (Wholesome Vegetarian Menu)</h3>
+                  <span style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 700 }}>✓ FSSAI & NCCT Approved</span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+                  {messMenu.map((m, idx) => (
+                    <div key={idx} style={{ padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                      <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#0369a1' }}>{m.meal}</div>
+                      <p style={{ fontSize: '0.85rem', color: '#334155', margin: '0.35rem 0 0.5rem 0' }}>{m.menu}</p>
+                      <span style={{ fontSize: '0.7rem', color: '#16a34a', fontWeight: 600 }}>● {m.adherence}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Sub-view 4: Hardware Edge Deployment Logistics */}
+            {logisticsSubTab === 'HARDWARE_KITS' && (
+              <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                <div style={{ padding: '1rem 1.5rem', backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontWeight: 700, fontSize: '0.9rem' }}>
+                  Field Edge Hardware Kits Dispatch Registry
+                </div>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#64748b' }}>
+                      <th style={{ padding: '0.75rem 1.5rem' }}>Kit Identifier</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Node Hardware Serial</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Assigned Venue</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Hardware Components</th>
+                      <th style={{ padding: '0.75rem 1.5rem' }}>Deployment Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {hardwareKits.map((k) => (
+                      <tr key={k.kitId} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                        <td style={{ padding: '0.75rem 1.5rem', fontWeight: 700, color: '#0369a1', fontFamily: 'monospace' }}>{k.kitId}</td>
+                        <td style={{ padding: '0.75rem 1rem', fontFamily: 'monospace', color: '#475569' }}>{k.nodeSerial}</td>
+                        <td style={{ padding: '0.75rem 1rem', fontWeight: 600 }}>{k.venue}</td>
+                        <td style={{ padding: '0.75rem 1rem', color: '#64748b', fontSize: '0.78rem' }}>{k.components}</td>
+                        <td style={{ padding: '0.75rem 1.5rem' }}>
+                          <span style={{ backgroundColor: '#dcfce7', color: '#166534', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 700 }}>
+                            {k.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tab 10: Edge Node Fleet Registry & Hardware Telemetry (05_HARDWARE_EDGE.md) */}
         {activeTab === 'EDGE_NODES' && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
@@ -1356,7 +1774,7 @@ export default function AdminDashboardPage() {
                       </div>
                     </div>
 
-                    {/* Node Controls: Heartbeat & WAN Partition Simulation */}
+                    {/* Node Controls */}
                     <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                       <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
                         Uptime: {node.uptime} • Events Queued: <strong style={{ color: node.queuedEvents > 0 ? '#ea580c' : '#16a34a' }}>{node.queuedEvents}</strong>
@@ -1392,7 +1810,7 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* Tab 10: Sync Monitor */}
+        {/* Tab 11: Sync Monitor */}
         {activeTab === 'SYNC_MONITOR' && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
@@ -1496,10 +1914,10 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* Tab 11: Audit Log */}
+        {/* Tab 12: Audit Log */}
         {activeTab === 'AUDIT_LOG' && (
           <div>
-            <h2 style={{ fontSize: '1.25rem', marginTop: 0, marginBottom: '0.5rem' }}>Security & Compliance Audit Trail</h2>
+            <h2 style={{ fontSize: '1.25rem', margin: 0, marginBottom: '0.5rem' }}>Security & Compliance Audit Trail</h2>
             <p style={{ margin: '0 0 1.5rem 0', color: '#64748b', fontSize: '0.85rem' }}>
               Immutable system record of administrative actions, attendance overrides, and credential issuances
             </p>
@@ -1570,7 +1988,6 @@ export default function AdminDashboardPage() {
               border: '8px solid #b45309',
             }}
           >
-            {/* Top Certificate Header Band */}
             <div style={{ backgroundColor: '#0f172a', padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#ffffff' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <span style={{ fontSize: '1.5rem' }}>🏛️</span>
@@ -1587,7 +2004,6 @@ export default function AdminDashboardPage() {
               </button>
             </div>
 
-            {/* Certificate Body (Official Styled Parchment) */}
             <div style={{ padding: '2.5rem', textAlign: 'center', backgroundColor: '#fffdfa', border: '2px solid #fde68a', margin: '1rem' }}>
               <div style={{ fontSize: '0.8rem', letterSpacing: '0.15em', fontWeight: 800, color: '#b45309', textTransform: 'uppercase' }}>
                 Autonomous Society Promoted by Ministry of Cooperation, Govt. of India
@@ -1613,7 +2029,6 @@ export default function AdminDashboardPage() {
                 </span>
               </div>
 
-              {/* Skills breakdown */}
               <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
                 {selectedCertificate.skills?.map((sk: string) => (
                   <span key={sk} style={{ backgroundColor: '#e0f2fe', color: '#0369a1', fontSize: '0.75rem', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: '4px' }}>
@@ -1622,7 +2037,6 @@ export default function AdminDashboardPage() {
                 ))}
               </div>
 
-              {/* Footnote & Cryptographic Seals */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px dashed #cbd5e1', textAlign: 'left', fontSize: '0.75rem' }}>
                 <div>
                   <div style={{ color: '#64748b', fontWeight: 700 }}>VENUE & INSTITUTE</div>
@@ -1648,7 +2062,6 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            {/* Bottom Actions */}
             <div style={{ padding: '1rem 2rem', backgroundColor: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 700 }}>
                 ✓ Tamper-evident • Verifiable without Internet connection via local Ed25519 public key
@@ -1689,7 +2102,6 @@ export default function AdminDashboardPage() {
             backdropFilter: 'blur(3px)',
           }}
         >
-          {/* Simulated Smartphone Shell */}
           <div
             style={{
               width: '390px',
@@ -1704,13 +2116,11 @@ export default function AdminDashboardPage() {
               position: 'relative',
             }}
           >
-            {/* Top Phone Speaker / Camera Notch */}
             <div style={{ position: 'absolute', top: '16px', left: '50%', transform: 'translateX(-50%)', width: '110px', height: '22px', backgroundColor: '#000000', borderRadius: '12px', zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <div style={{ width: '40px', height: '4px', backgroundColor: '#334155', borderRadius: '2px' }} />
               <div style={{ width: '8px', height: '8px', backgroundColor: '#1e293b', borderRadius: '50%', marginLeft: '8px' }} />
             </div>
 
-            {/* Inner Screen */}
             <div
               style={{
                 flex: 1,
@@ -1722,7 +2132,6 @@ export default function AdminDashboardPage() {
                 position: 'relative',
               }}
             >
-              {/* Phone Status Bar */}
               <div style={{ backgroundColor: '#ffffff', padding: '0.6rem 1.25rem 0.2rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.7rem', fontWeight: 800, color: '#0f172a' }}>
                 <span>09:41</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
@@ -1731,7 +2140,6 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              {/* Trainee PWA App Header */}
               <div style={{ backgroundColor: '#0284c7', color: '#ffffff', padding: '0.75rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <div style={{ fontSize: '0.65rem', color: '#bae6fd', fontWeight: 800 }}>NCCT TRAINEE MOBILE PWA</div>
@@ -1745,7 +2153,6 @@ export default function AdminDashboardPage() {
                 </button>
               </div>
 
-              {/* WAN Simulation Selector */}
               <div style={{ backgroundColor: simWanMode === 'OFFLINE' ? '#ea580c' : '#16a34a', color: '#ffffff', padding: '0.4rem 0.8rem', fontSize: '0.7rem', fontWeight: 700, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>{simWanMode === 'OFFLINE' ? '⚡ OFFLINE: Local Edge Mode' : '🌐 ONLINE: Cloud Sync Active'}</span>
                 <select
@@ -1758,9 +2165,7 @@ export default function AdminDashboardPage() {
                 </select>
               </div>
 
-              {/* Simulated Screen Body Content */}
               <div style={{ flex: 1, padding: '0.85rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {/* Attendance Check-in Card */}
                 <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '0.85rem', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.03)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>
                     <span>SESSION ATTENDANCE</span>
@@ -1791,7 +2196,6 @@ export default function AdminDashboardPage() {
                   </button>
                 </div>
 
-                {/* Course Modules Card */}
                 <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '0.85rem', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.03)' }}>
                   <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>COURSE MODULE PROGRESS</div>
                   <div style={{ fontSize: '0.85rem', fontWeight: 700, margin: '0.2rem 0' }}>
@@ -1818,7 +2222,6 @@ export default function AdminDashboardPage() {
                   </div>
                 </div>
 
-                {/* Offline Assessment Card */}
                 <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '0.85rem', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.03)' }}>
                   <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>STATUTORY EXAM</div>
                   <div style={{ fontSize: '0.85rem', fontWeight: 700, margin: '0.2rem 0' }}>
@@ -1844,7 +2247,6 @@ export default function AdminDashboardPage() {
                   </button>
                 </div>
 
-                {/* Local Sync Queue Inspector */}
                 <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '0.85rem', border: '1px solid #e2e8f0' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#334155', marginBottom: '0.4rem' }}>
                     <span>OFFLINE EVENT QUEUE</span>
@@ -1866,7 +2268,6 @@ export default function AdminDashboardPage() {
                     )}
                   </div>
 
-                  {/* Sync Trigger Button */}
                   <button
                     onClick={() => triggerCentralSyncFromSim()}
                     disabled={simQueuedEvents.length === 0}
@@ -1888,7 +2289,6 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              {/* Bottom Phone Bar */}
               <div style={{ padding: '0.5rem', backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', textAlign: 'center', fontSize: '0.65rem', color: '#64748b' }}>
                 Sahakar Edge Local Client • v1.0.0
               </div>

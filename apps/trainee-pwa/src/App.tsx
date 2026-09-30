@@ -60,6 +60,13 @@ const TRANSLATIONS = {
     simulateScanBtn: '⚡ Capture & Verify QR',
     queueDrawerTitle: 'Offline Local Event Journal (SQLite WAL)',
     queueDrawerSub: 'Events recorded on this device and buffered for central synchronization',
+    counselorBtn: '🤖 Sahakar Mitra AI',
+    counselorTitle: 'Sahakar Mitra (सहकार मित्र)',
+    counselorSubtitle: 'AI Career & Scheme Counselor',
+    counselorCardTitle: 'Sahakar Mitra (सहकार मित्र) — AI Career Counselor',
+    counselorCardSub: 'Get personalized career guidance on PACS recruitment, Amul opportunities & NCDC youth schemes.',
+    openCounselorBtn: 'Chat with Sahakar Mitra →',
+    askCounselorPlaceholder: 'Ask about 63,000 PACS jobs, Amul, subsidies...',
   },
   HI: {
     motto: 'एनसीटीसीटी सहकारी प्रशिक्षण',
@@ -105,6 +112,13 @@ const TRANSLATIONS = {
     simulateScanBtn: '⚡ क्यूआर स्कैन और सत्यापित करें',
     queueDrawerTitle: 'स्थानीय ऑफलाइन इवेंट जर्नल (SQLite WAL)',
     queueDrawerSub: 'इस डिवाइस पर दर्ज इवेंट जो केंद्रीय सिंक के लिए कतारबद्ध हैं',
+    counselorBtn: '🤖 सहकार मित्र AI',
+    counselorTitle: 'सहकार मित्र (Sahakar Mitra)',
+    counselorSubtitle: 'एआई सहकारी करियर एवं योजना सलाहकार',
+    counselorCardTitle: 'सहकार मित्र (Sahakar Mitra) — एआई करियर सलाहकार',
+    counselorCardSub: 'पैक्स भर्ती (63,000 पद), अमूल डेयरी और एनसीडीसी युवा सहकार योजनाओं पर व्यक्तिगत मार्गदर्शन प्राप्त करें।',
+    openCounselorBtn: 'सहकार मित्र से परामर्श लें →',
+    askCounselorPlaceholder: 'पैक्स भर्ती (63,000), अमूल, सब्सिडी के बारे में पूछें...',
   },
 };
 
@@ -129,7 +143,21 @@ export default function App() {
   const [isAssessmentOpen, setIsAssessmentOpen] = useState(false);
   const [isQrScannerOpen, setIsQrScannerOpen] = useState(false);
   const [isQueueDrawerOpen, setIsQueueDrawerOpen] = useState(false);
+  const [isCounselorOpen, setIsCounselorOpen] = useState(false);
   const [scanSuccessNotice, setScanSuccessNotice] = useState<string | null>(null);
+
+  const [counselorInput, setCounselorInput] = useState('');
+  const [counselorMessages, setCounselorMessages] = useState<
+    Array<{ sender: 'USER' | 'AI'; text: string; time: string; tags?: string[] }>
+  >([
+    {
+      sender: 'AI',
+      text:
+        'Namaste! I am Sahakar Mitra (सहकार मित्र), your AI Cooperative Career & Scheme Counselor. I can guide you on jobs in 63,000 computerized PACS, dairy cooperatives like Amul, and government subsidies like NCDC Yuva Sahakar. What would you like to know?',
+      time: 'Just now',
+      tags: ['63,000 PACS Drive', 'Amul Dairy Jobs', 'Yuva Sahakar Scheme'],
+    },
+  ]);
 
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
   const [quizResult, setQuizResult] = useState<{
@@ -215,6 +243,67 @@ export default function App() {
       setQuizAnswers({});
       setQuizResult(null);
     }
+  };
+
+  const handleSendCounselorMessage = (textToSend?: string) => {
+    const q = (textToSend || counselorInput).trim();
+    if (!q) return;
+
+    const userMsg = {
+      sender: 'USER' as const,
+      text: q,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    let reply = '';
+    let tags: string[] = [];
+
+    const lower = q.toLowerCase();
+    const isHindi = language === 'HI' || /[\u0900-\u097F]/.test(q);
+
+    if (lower.includes('pacs') || lower.includes('पैक्स') || lower.includes('secretary') || lower.includes('accounting') || lower.includes('लेखा')) {
+      if (isHindi) {
+        reply = 'सहकारिता मंत्रालय के 63,000 पैक्स कंप्यूटरीकरण अभियान के तहत, आपका Ed25519 प्रमाणित कौशल "पैक्स सचिव / कनिष्ठ लेखाकार" पद हेतु 95% उपयुक्त है। प्रारंभिक मानदेय ₹18,000 से ₹32,000/माह है। नाबार्ड के मानकों के अनुसार आपकी डे-बुक एवं वाउचर प्रविष्टि दक्षता को प्राथमिकता दी जाएगी।';
+        tags = ['63,000 पैक्स अभियान', 'नाबार्ड मानक', 'वाउचर प्रमाणित'];
+      } else {
+        reply = 'Under the Ministry of Cooperation nationwide 63,000 PACS computerization drive, your verified Ed25519 certification makes you directly eligible for "PACS Secretary / Junior Accountant" roles (₹18,000 - ₹32,000/month). Your double-entry ledger competency aligns 100% with NABARD standard guidelines.';
+        tags = ['63,000 PACS Drive', 'NABARD Guidelines', 'Day-Book Certified'];
+      }
+    } else if (lower.includes('amul') || lower.includes('dairy') || lower.includes('अमूल') || lower.includes('दूध') || lower.includes('डेयरी')) {
+      if (isHindi) {
+        reply = 'अमूल / जीसीएमएमएफ तथा राज्य दुग्ध संघों में "दुग्ध संकलन समन्वयक" और "कोल्ड चेन पर्यवेक्षक" के पद उपलब्ध हैं। आपका सहकारी उप-नियम और वित्तीय रिकॉर्ड प्रबंधन प्रमाण पत्र ग्रामीण संकलन केंद्रों के प्रबंधन के लिए पूरी तरह मान्य है।';
+        tags = ['अमूल / GCMMF', 'कोल्ड चेन प्रबंधन', 'दुग्ध परीक्षण'];
+      } else {
+        reply = 'For Dairy Cooperatives such as GCMMF / Amul, certified candidates are matched to "Dairy Procurement Coordinator" and "Cold Chain Supervisor" roles overseeing village-level Bulk Milk Chilling (BMC) units and computerized milk testing protocols.';
+        tags = ['GCMMF / Amul', 'Cold Chain Management', 'Milk Testing Protocol'];
+      }
+    } else if (lower.includes('scheme') || lower.includes('योजना') || lower.includes('subsidy') || lower.includes('startup') || lower.includes('अनुदान') || lower.includes('युवा')) {
+      if (isHindi) {
+        reply = 'एनसीडीसी की "युवा सहकार योजना" के अंतर्गत ग्रामीण युवाओं को नए सहकारी व्यवसाय शुरू करने हेतु 2% ब्याज अनुदान तथा ₹3 करोड़ तक की परियोजना वित्तीय सहायता मिलती है। साथ ही पैक्स बुनियादी ढांचा कोष से आधुनिक गोदाम और किसान सेवा केंद्र खोले जा सकते हैं।';
+        tags = ['युवा सहकार योजना', 'एनसीडीसी अनुदान', 'पैक्स गोदाम'];
+      } else {
+        reply = 'Under NCDC\'s "Yuva Sahakar Scheme", young cooperative entrepreneurs receive 2% interest subvention and project funding up to ₹3 Crores. You can also leverage the PACS Infrastructure Fund for modern grain storage and multi-service farmer centres.';
+        tags = ['Yuva Sahakar Scheme', 'NCDC Subventions', 'PACS Agro-Storage'];
+      }
+    } else {
+      if (isHindi) {
+        reply = `सहकारी रोजगार संबंधी प्रश्न के लिए धन्यवाद! आपकी वर्तमान योग्यता (पैक्स कंप्यूटरीकरण, वाउचर प्रविष्टि और ऑडिटिंग) के आधार पर प्राथमिक कृषि साख समितियों और जिला केंद्रीय सहकारी बैंकों में 95% उपयुक्तता है। क्या आप वर्तमान रिक्तियां देखना चाहते हैं?`;
+        tags = ['कौशल मिलान', 'एनसीटीसीटी मान्यता', 'रोजगार लिंक'];
+      } else {
+        reply = `Thank you for your query! Based on your verified skills in PACS Computerization, Voucher Entry, and Statutory Ledger Posting, you have a 95% match with open positions at Primary Agricultural Credit Societies and District Central Cooperative Banks. Would you like to view active vacancies?`;
+        tags = ['Tailored Pathway', 'NCCT Accreditation', 'Recruiter Connect'];
+      }
+    }
+
+    const aiMsg = {
+      sender: 'AI' as const,
+      text: reply,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      tags,
+    };
+
+    setCounselorMessages((prev) => [...prev, userMsg, aiMsg]);
+    setCounselorInput('');
   };
 
   const lessons = offlineStore.getLessons();
@@ -840,6 +929,60 @@ export default function App() {
         ======================================================== */}
         {activeTab === 'OPPORTUNITIES' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* Sahakar Mitra AI Counselor Spotlight Card */}
+            <div
+              style={{
+                backgroundColor: '#eff6ff',
+                border: '1px solid #bfdbfe',
+                borderRadius: '8px',
+                padding: '1rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.6rem',
+                boxShadow: '0 2px 4px rgba(2, 132, 199, 0.06)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontSize: '1.35rem' }}>🤖</span>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 800, color: '#1e40af' }}>
+                      {t.counselorCardTitle}
+                    </h3>
+                    <div style={{ fontSize: '0.7rem', color: '#0369a1', fontWeight: 600 }}>
+                      ● Online & Offline Advisory
+                    </div>
+                  </div>
+                </div>
+                <span style={{ fontSize: '0.68rem', backgroundColor: '#dcfce7', color: '#166534', padding: '0.2rem 0.5rem', borderRadius: '12px', fontWeight: 800 }}>
+                  Active
+                </span>
+              </div>
+              <p style={{ margin: 0, fontSize: '0.78rem', color: '#1e3a8a', lineHeight: 1.4 }}>
+                {t.counselorCardSub}
+              </p>
+              <button
+                onClick={() => setIsCounselorOpen(true)}
+                style={{
+                  alignSelf: 'flex-start',
+                  backgroundColor: '#0284c7',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '0.45rem 0.9rem',
+                  borderRadius: '6px',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                }}
+              >
+                <span>💬</span>
+                <span>{t.openCounselorBtn}</span>
+              </button>
+            </div>
+
             <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
               Cooperative society job postings matched to your verified credentials:
             </div>
@@ -1381,6 +1524,301 @@ export default function App() {
                   </button>
                 </>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Action Button for Sahakar Mitra AI */}
+      <button
+        onClick={() => setIsCounselorOpen(true)}
+        style={{
+          position: 'fixed',
+          bottom: '68px',
+          right: '16px',
+          backgroundColor: '#0284c7',
+          color: '#ffffff',
+          border: 'none',
+          borderRadius: '24px',
+          padding: '0.55rem 0.95rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.4rem',
+          boxShadow: '0 4px 16px rgba(2, 132, 199, 0.4)',
+          fontSize: '0.8rem',
+          fontWeight: 800,
+          cursor: 'pointer',
+          zIndex: 80,
+          transition: 'transform 0.15s ease',
+        }}
+      >
+        <span>🤖</span>
+        <span>{t.counselorBtn}</span>
+      </button>
+
+      {/* ========================================================
+          DRAWER / MODAL: Sahakar Mitra AI Career Counselor
+      ======================================================== */}
+      {isCounselorOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15,23,42,0.65)',
+            zIndex: 110,
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'center',
+            backdropFilter: 'blur(2px)',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: '#ffffff',
+              width: '100%',
+              maxWidth: '520px',
+              borderTopLeftRadius: '16px',
+              borderTopRightRadius: '16px',
+              maxHeight: '85vh',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 -10px 30px rgba(0,0,0,0.2)',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Header */}
+            <div
+              style={{
+                backgroundColor: '#0284c7',
+                color: '#ffffff',
+                padding: '0.85rem 1.15rem',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <div
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.25rem',
+                  }}
+                >
+                  🤖
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800 }}>
+                    {t.counselorTitle}
+                  </h3>
+                  <div style={{ fontSize: '0.7rem', color: '#bae6fd' }}>
+                    {t.counselorSubtitle} • ● AI Active
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsCounselorOpen(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#ffffff',
+                  fontSize: '1.4rem',
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Chat Messages */}
+            <div
+              style={{
+                flex: 1,
+                overflowY: 'auto',
+                padding: '1rem',
+                backgroundColor: '#f8fafc',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.75rem',
+                minHeight: '260px',
+                maxHeight: '380px',
+              }}
+            >
+              {counselorMessages.map((msg, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    alignSelf: msg.sender === 'USER' ? 'flex-end' : 'flex-start',
+                    maxWidth: '85%',
+                    backgroundColor: msg.sender === 'USER' ? '#0284c7' : '#ffffff',
+                    color: msg.sender === 'USER' ? '#ffffff' : '#0f172a',
+                    padding: '0.75rem 0.9rem',
+                    borderRadius: '10px',
+                    border: msg.sender === 'USER' ? 'none' : '1px solid #e2e8f0',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                  }}
+                >
+                  <div style={{ fontSize: '0.82rem', lineHeight: 1.5 }}>{msg.text}</div>
+                  {msg.tags && (
+                    <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', marginTop: '0.4rem' }}>
+                      {msg.tags.map((tg, tidx) => (
+                        <span
+                          key={tidx}
+                          style={{
+                            fontSize: '0.65rem',
+                            backgroundColor: '#e0f2fe',
+                            color: '#0369a1',
+                            padding: '0.1rem 0.4rem',
+                            borderRadius: '4px',
+                            fontWeight: 700,
+                          }}
+                        >
+                          🏷️ {tg}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div
+                    style={{
+                      fontSize: '0.62rem',
+                      color: msg.sender === 'USER' ? '#bae6fd' : '#94a3b8',
+                      marginTop: '0.3rem',
+                      textAlign: 'right',
+                    }}
+                  >
+                    {msg.time}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Quick Suggestion Chips */}
+            <div
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#ffffff',
+                borderTop: '1px solid #e2e8f0',
+                display: 'flex',
+                gap: '0.4rem',
+                overflowX: 'auto',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <button
+                onClick={() =>
+                  handleSendCounselorMessage(
+                    language === 'HI'
+                      ? '63,000 पैक्स भर्ती में मेरे लिए कौन से पद हैं?'
+                      : 'What jobs can I get in the 63,000 PACS drive?'
+                  )
+                }
+                style={{
+                  backgroundColor: '#f1f5f9',
+                  border: '1px solid #cbd5e1',
+                  color: '#0369a1',
+                  padding: '0.3rem 0.6rem',
+                  borderRadius: '14px',
+                  fontSize: '0.72rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                }}
+              >
+                💡 {language === 'HI' ? 'पैक्स भर्ती पद' : 'PACS Jobs (63k)'}
+              </button>
+              <button
+                onClick={() =>
+                  handleSendCounselorMessage(
+                    language === 'HI'
+                      ? 'अमूल डेयरी में नौकरी के लिए क्या योग्यता चाहिए?'
+                      : 'What are the Amul dairy job requirements?'
+                  )
+                }
+                style={{
+                  backgroundColor: '#f1f5f9',
+                  border: '1px solid #cbd5e1',
+                  color: '#0369a1',
+                  padding: '0.3rem 0.6rem',
+                  borderRadius: '14px',
+                  fontSize: '0.72rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                }}
+              >
+                🥛 {language === 'HI' ? 'अमूल डेयरी' : 'Amul Roles'}
+              </button>
+              <button
+                onClick={() =>
+                  handleSendCounselorMessage(
+                    language === 'HI'
+                      ? 'एनसीडीसी युवा सहकार योजना के क्या लाभ हैं?'
+                      : 'What benefits does Yuva Sahakar scheme provide?'
+                  )
+                }
+                style={{
+                  backgroundColor: '#f1f5f9',
+                  border: '1px solid #cbd5e1',
+                  color: '#0369a1',
+                  padding: '0.3rem 0.6rem',
+                  borderRadius: '14px',
+                  fontSize: '0.72rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                }}
+              >
+                📜 {language === 'HI' ? 'युवा सहकार योजना' : 'Yuva Sahakar'}
+              </button>
+            </div>
+
+            {/* Input Form */}
+            <div
+              style={{
+                padding: '0.75rem 1rem',
+                backgroundColor: '#ffffff',
+                borderTop: '1px solid #e2e8f0',
+                display: 'flex',
+                gap: '0.5rem',
+              }}
+            >
+              <input
+                type="text"
+                value={counselorInput}
+                onChange={(e) => setCounselorInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSendCounselorMessage();
+                }}
+                placeholder={t.askCounselorPlaceholder}
+                style={{
+                  flex: 1,
+                  padding: '0.55rem 0.75rem',
+                  borderRadius: '6px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '0.82rem',
+                }}
+              />
+              <button
+                onClick={() => handleSendCounselorMessage()}
+                style={{
+                  backgroundColor: '#0284c7',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '0.55rem 1rem',
+                  borderRadius: '6px',
+                  fontWeight: 700,
+                  fontSize: '0.82rem',
+                  cursor: 'pointer',
+                }}
+              >
+                {language === 'HI' ? 'पूछें →' : 'Ask →'}
+              </button>
             </div>
           </div>
         </div>
