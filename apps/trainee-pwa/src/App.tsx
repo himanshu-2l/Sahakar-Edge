@@ -23,23 +23,27 @@ import type { SyncEvent, Question, OralAssessmentResult } from '@sahakar/types';
 const TRANSLATIONS = {
   EN: {
     motto: 'NCCT Cooperative Training',
+    subMotto: 'Ministry of Cooperation • Govt of India',
     greeting: 'Namaste',
-    offlineBanner: 'Offline — Connected to Sahakar Edge Node',
+    offlineBanner: 'Offline Mode — Local Edge Node Buffered',
     onlineBanner: 'All records synchronized centrally',
     flakyBanner: 'Intermittent WAN — Local buffering active',
     enrolledProgram: 'Enrolled Programme',
     cohort: 'Cohort',
     venue: 'Venue',
+    venueDetail: 'RICM Bhopal Lab 1 (Attached PACS Hub)',
     todaysAttendance: "Today's Session Attendance",
-    activeStatus: 'Active',
-    qrCheckInBtn: '⚡ Local QR Check-in',
+    activeStatus: 'Active Session',
+    sessionTimings: 'Session Timings: 09:30 AM – 12:30 PM (Mandatory: 60 mins)',
+    qrCheckInBtn: 'Local QR Check-in',
+    faceCheckInBtn: 'Face Biometric Check-in',
     checkedInBadge: '✓ Checked-in',
     syllabusProgress: 'Course Syllabus Progress',
     complete: 'Complete',
     lessonsFinished: 'lessons finished',
-    openLessons: 'Open Lessons →',
-    certificationExam: 'Certification Exam',
-    launchExam: 'Launch Offline Exam',
+    openLessons: 'Open Lessons Overview →',
+    certificationExam: 'Statutory Certification Exam',
+    launchExam: 'Launch Offline Exam (3 Questions)',
     examDesc: 'Offline Examination • 3 Questions • Passing score: 75%',
     oralVivaTitle: 'Oral Viva Assessment (Voice AI)',
     launchOralViva: 'Launch Oral Viva Exam',
@@ -49,13 +53,32 @@ const TRANSLATIONS = {
     readLesson: 'Read Lesson Offline →',
     completedBadge: '✓ Completed',
     availableOffline: 'Available Offline',
+    manifestReady: 'Local Content Manifest Ready',
+    courseMeta: 'Language: Hindi / English • Version 1.0 • NCCT Approved',
+    lessonFormat: 'Format',
+    localAsset: 'Local Asset',
     overallProgress: 'Overall Competency Progress',
     completionStatus: 'Completion Status',
     completedModules: 'Completed Modules & Lessons',
     evalLog: 'Assessment Evaluation Log',
+    noExamAttempts: 'No exam attempts recorded yet. Launch the offline exam to test your competency.',
+    attempt: 'Attempt',
+    questionsCorrect: 'questions correct',
+    passedStatus: 'PASSED',
+    retakeStatus: 'NEEDS RETAKE',
+    doneBadge: '✓ Done',
+    pendingBadge: 'Pending',
     statutoryCred: 'Statutory Digital Credential (Ed25519)',
     certifiedBy: 'Certified by National Council for Cooperative Training (NCCT)',
     verifyQr: 'Scan QR at any cooperative bank or society for instant Ed25519 public key verification.',
+    awardedTo: 'Awarded to',
+    credentialId: 'Credential ID',
+    qrVerified: '🛡️ QR VERIFIED',
+    issuer: 'Issuer',
+    issuerValue: 'NCCT Apex Board',
+    algorithm: 'Algorithm',
+    algorithmValue: 'Ed25519 (Tamper-Proof)',
+    viewCertificateBtn: 'View & Print Official NCCT Certificate',
     tabs: {
       HOME: 'Home',
       LEARN: 'Learn',
@@ -65,37 +88,69 @@ const TRANSLATIONS = {
       PROFILE: 'Profile',
     },
     qrScannerTitle: 'Scan Session Dynamic QR',
-    qrScannerSub: 'Point camera at the Sahakar Edge venue screen or Trainer terminal',
-    simulateScanBtn: '⚡ Capture & Verify QR',
+    qrScannerSub: 'Align the camera within the optical reticle on the venue screen or trainer terminal',
+    simulateScanBtn: '⚡ Capture & Verify Optical QR',
+    faceScannerTitle: 'Biometric Face Verification',
+    faceScannerSub: 'Center your face within the optical guide. 3D anti-spoofing and liveness detection active.',
+    simulateFaceBtn: '👤 Verify Face & Record Attendance',
     queueDrawerTitle: 'Offline Local Event Journal (SQLite WAL)',
     queueDrawerSub: 'Events recorded on this device and buffered for central synchronization',
+    eventsBuffered: 'events buffered in SQLite WAL',
+    allEventsSynced: '✓ All events synchronized with Central Cloud API!',
+    journalUpToDate: '✓ Journal Up to Date',
+    pushSyncNow: '⚡ Push Sync Now',
     counselorBtn: '🤖 Sahakar Mitra AI',
     counselorTitle: 'Sahakar Mitra (सहकार मित्र)',
-    counselorSubtitle: 'AI Career & Scheme Counselor',
+    counselorSubtitle: 'AI Cooperative Career & Scheme Counselor',
     counselorCardTitle: 'Sahakar Mitra (सहकार मित्र) — AI Career Counselor',
-    counselorCardSub: 'Get personalized career guidance on PACS recruitment, Amul opportunities & NCDC youth schemes.',
+    counselorCardSub: 'Get personalized career guidance on PACS recruitment (63,000 posts), Amul opportunities & NCDC youth schemes.',
     openCounselorBtn: 'Chat with Sahakar Mitra →',
     askCounselorPlaceholder: 'Ask about 63,000 PACS jobs, Amul, subsidies...',
+    oppsHeader: 'Cooperative society job postings matched to your verified credentials:',
+    matchBadge: '95% Match',
+    locationLabel: 'Location',
+    applyBtn: 'Apply Now',
+    appSubmittedAlert: 'Application submitted for',
+    profileTitle: 'Trainee Profile & Device State',
+    fullNameLabel: 'Full Name',
+    contactLabel: 'Contact',
+    instituteLabel: 'Assigned Institute',
+    instituteValue: 'RICM Bhopal (Lab 1 - Attached PACS Hub)',
+    prefLangLabel: 'Preferred Language',
+    nodeConnLabel: 'Node Connection',
+    triggerSyncBtn: '⚡ Trigger Central Sync',
+    syncingBtn: '⏳ Syncing in Progress...',
+    resetDemoBtn: 'Reset Demo Data',
+    lessonReaderTitle: 'AUDIO-ENABLED COOPERATIVE LESSON',
+    stopNarration: '⏹️ Stop Narration',
+    listenNarration: '🔊 Listen (ऑडियो सुनें)',
+    markLessonComplete: '✓ Mark Lesson Completed',
+    examReturnBtn: 'Return to Learning',
+    examSubmitBtn: 'Submit Examination',
   },
   HI: {
     motto: 'एनसीटीसीटी सहकारी प्रशिक्षण',
+    subMotto: 'सहकारिता मंत्रालय • भारत सरकार',
     greeting: 'नमस्ते',
-    offlineBanner: 'ऑफलाइन — सहकार एज नोड से जुड़े हैं',
+    offlineBanner: 'ऑफलाइन मोड — स्थानीय एज नोड बफरिंग सक्रिय',
     onlineBanner: 'सभी रिकॉर्ड केंद्रीय रूप से सिंक हैं',
     flakyBanner: 'धीमा इंटरनेट — स्थानीय बफरिंग सक्रिय',
     enrolledProgram: 'नामांकित प्रशिक्षण कार्यक्रम',
     cohort: 'बैच',
     venue: 'प्रशिक्षण केंद्र',
+    venueDetail: 'आरआइसीएम भोपाल लैब 1 (संबद्ध पैक्स केंद्र)',
     todaysAttendance: 'आज के सत्र की उपस्थिति',
-    activeStatus: 'सक्रिय',
-    qrCheckInBtn: '⚡ स्थानीय क्यूआर उपस्थिति',
+    activeStatus: 'सक्रिय सत्र',
+    sessionTimings: 'सत्र समय: प्रातः 09:30 – दोपहर 12:30 (अनिवार्य: 60 मिनट)',
+    qrCheckInBtn: 'स्थानीय क्यूआर उपस्थिति',
+    faceCheckInBtn: 'चेहरा बायोमेट्रिक उपस्थिति',
     checkedInBadge: '✓ उपस्थिति दर्ज',
     syllabusProgress: 'पाठ्यक्रम प्रगति',
     complete: 'पूर्ण',
     lessonsFinished: 'पाठ संपन्न',
     openLessons: 'पाठ सूची देखें →',
-    certificationExam: 'प्रमाणन परीक्षा',
-    launchExam: 'ऑफलाइन परीक्षा शुरू करें',
+    certificationExam: 'वैधानिक प्रमाणन परीक्षा',
+    launchExam: 'ऑफलाइन परीक्षा शुरू करें (3 प्रश्न)',
     examDesc: 'ऑफलाइन परीक्षा • 3 प्रश्न • उत्तीर्ण अंक: 75%',
     oralVivaTitle: 'मौखिक परीक्षा (Voice AI मूल्यांकन)',
     launchOralViva: 'मौखिक परीक्षा शुरू करें',
@@ -105,13 +160,32 @@ const TRANSLATIONS = {
     readLesson: 'ऑफलाइन पाठ पढ़ें →',
     completedBadge: '✓ पूर्ण',
     availableOffline: 'ऑफलाइन उपलब्ध',
+    manifestReady: 'स्थानीय सामग्री मैनिफेस्ट तैयार',
+    courseMeta: 'भाषा: हिन्दी / अंग्रेजी • संस्करण 1.0 • एनसीटीसीटी अनुमोदित',
+    lessonFormat: 'प्रारूप',
+    localAsset: 'स्थानीय एसेट',
     overallProgress: 'समग्र योग्यता प्रगति',
     completionStatus: 'पूर्णता स्थिति',
     completedModules: 'पूर्ण मॉड्यूल और पाठ',
     evalLog: 'मूल्यांकन लॉग',
+    noExamAttempts: 'अभी कोई परीक्षा प्रयास दर्ज नहीं है। अपनी योग्यता जांचने हेतु ऑफलाइन परीक्षा शुरू करें।',
+    attempt: 'प्रयास',
+    questionsCorrect: 'प्रश्न सही',
+    passedStatus: 'उत्तीर्ण (PASSED)',
+    retakeStatus: 'पुनः प्रयास आवश्यक',
+    doneBadge: '✓ संपन्न',
+    pendingBadge: 'प्रतीक्षारत',
     statutoryCred: 'वैधानिक डिजिटल प्रमाण पत्र (Ed25519)',
     certifiedBy: 'राष्ट्रीय सहकारी प्रशिक्षण परिषद (NCCT) द्वारा प्रमाणित',
-    verifyQr: 'किसी भी सहकारी बैंक में तत्काल Ed25519 सत्यापन हेतु क्यूआर स्कैन करें।',
+    verifyQr: 'किसी भी सहकारी बैंक या समिति में तत्काल Ed25519 सत्यापन हेतु क्यूआर स्कैन करें।',
+    awardedTo: 'प्रदान किया गया',
+    credentialId: 'प्रमाणपत्र संख्या',
+    qrVerified: '🛡️ क्यूआर सत्यापित',
+    issuer: 'जारीकर्ता',
+    issuerValue: 'एनसीटीसीटी शीर्ष बोर्ड',
+    algorithm: 'एल्गोरिदम',
+    algorithmValue: 'Ed25519 (छेड़छाड़-मुक्त)',
+    viewCertificateBtn: 'आधिकारिक एनसीटीसीटी प्रमाणपत्र देखें व प्रिंट करें',
     tabs: {
       HOME: 'गृह',
       LEARN: 'अध्ययन',
@@ -121,10 +195,17 @@ const TRANSLATIONS = {
       PROFILE: 'प्रोफ़ाइल',
     },
     qrScannerTitle: 'सत्र डायनामिक क्यूआर स्कैन करें',
-    qrScannerSub: 'कैमरा सहकार एज वेन्यू स्क्रीन या ट्रेनर टर्मिनल की ओर रखें',
-    simulateScanBtn: '⚡ क्यूआर स्कैन और सत्यापित करें',
+    qrScannerSub: 'कैमरा वेन्यू स्क्रीन या ट्रेनर टर्मिनल के ऑप्टिकल फ्रेम में संरेखित करें',
+    simulateScanBtn: '⚡ ऑप्टिकल क्यूआर स्कैन और सत्यापित करें',
+    faceScannerTitle: 'बायोमेट्रिक चेहरा सत्यापन',
+    faceScannerSub: 'चेहरा ऑप्टिकल गाइड के केंद्र में रखें। 3डी एंटी-स्पूफिंग एवं सजीवता जांच सक्रिय है।',
+    simulateFaceBtn: '👤 चेहरा सत्यापित कर उपस्थिति दर्ज करें',
     queueDrawerTitle: 'स्थानीय ऑफलाइन इवेंट जर्नल (SQLite WAL)',
     queueDrawerSub: 'इस डिवाइस पर दर्ज इवेंट जो केंद्रीय सिंक के लिए कतारबद्ध हैं',
+    eventsBuffered: 'इवेंट SQLite WAL में सुरक्षित रूप से बफर हैं',
+    allEventsSynced: '✓ सभी इवेंट केंद्रीय क्लाउड एपीआई के साथ सिंक हो चुके हैं!',
+    journalUpToDate: '✓ जर्नल अद्यतन है',
+    pushSyncNow: '⚡ अभी केंद्रीय सिंक करें',
     counselorBtn: '🤖 सहकार मित्र AI',
     counselorTitle: 'सहकार मित्र (Sahakar Mitra)',
     counselorSubtitle: 'एआई सहकारी करियर एवं योजना सलाहकार',
@@ -132,6 +213,27 @@ const TRANSLATIONS = {
     counselorCardSub: 'पैक्स भर्ती (63,000 पद), अमूल डेयरी और एनसीडीसी युवा सहकार योजनाओं पर व्यक्तिगत मार्गदर्शन प्राप्त करें।',
     openCounselorBtn: 'सहकार मित्र से परामर्श लें →',
     askCounselorPlaceholder: 'पैक्स भर्ती (63,000), अमूल, सब्सिडी के बारे में पूछें...',
+    oppsHeader: 'आपकी सत्यापित योग्यताओं से मेल खाती सहकारी रोजगार रिक्तियां:',
+    matchBadge: '95% सुसंगत',
+    locationLabel: 'स्थान',
+    applyBtn: 'आवेदन करें',
+    appSubmittedAlert: 'सफलतापूर्वक आवेदन जमा हुआ',
+    profileTitle: 'प्रशिक्षु प्रोफ़ाइल एवं डिवाइस स्थिति',
+    fullNameLabel: 'पूरा नाम',
+    contactLabel: 'संपर्क',
+    instituteLabel: 'संबद्ध संस्थान',
+    instituteValue: 'आरआइसीएम भोपाल (लैब 1 - संबद्ध पैक्स हब)',
+    prefLangLabel: 'प्राथमिक भाषा',
+    nodeConnLabel: 'नोड कनेक्टिविटी',
+    triggerSyncBtn: '⚡ केंद्रीय सिंक प्रारंभ करें',
+    syncingBtn: '⏳ सिंक प्रक्रिया जारी है...',
+    resetDemoBtn: 'डेमो डेटा रीसेट करें',
+    lessonReaderTitle: 'ऑडियो-सक्षम सहकारी पाठ',
+    stopNarration: '⏹️ वाचन रोकें',
+    listenNarration: '🔊 पाठ सुनें (ऑडियो)',
+    markLessonComplete: '✓ पाठ पूर्ण चिह्नित करें',
+    examReturnBtn: 'पाठ्यक्रम पर वापस जाएं',
+    examSubmitBtn: 'परीक्षा जमा करें',
   },
 };
 
@@ -449,58 +551,66 @@ export default function App() {
     setCounselorInput('');
   };
 
-  const lessons = offlineStore.getLessons();
-  const questions = offlineStore.getQuestions();
+  const isOffline = wanMode === 'OFFLINE' || (!networkConnectivity.edgeOnline && !networkConnectivity.centralOnline);
+  const lessons = offlineStore.getManifest().lessons;
   const assessment = offlineStore.getAssessment();
-  const isOffline = wanMode === 'OFFLINE' || wanMode === 'FLAKY';
+  const questions = offlineStore.getQuestions();
 
-  // Circle progress calculation (r = 24, circumference = 2 * PI * 24 ≈ 150.8)
-  const radius = 24;
+  const radius = 28;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
 
   return (
     <div
       style={{
-        fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        maxWidth: '520px',
-        margin: '0 auto',
-        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
+        minHeight: '100vh',
+        maxWidth: '520px',
+        margin: '0 auto',
         backgroundColor: '#f8fafc',
-        color: '#0f172a',
-        boxShadow: '0 0 25px rgba(0,0,0,0.08)',
         position: 'relative',
+        boxShadow: '0 0 24px rgba(15, 23, 42, 0.08)',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Devanagari", Roboto, sans-serif',
       }}
     >
-      {/* Offline Status & WAN Simulation Banner */}
+      {/* Tricolor National Identity Ribbon */}
+      <div style={{ display: 'flex', height: '4px', width: '100%' }}>
+        <div style={{ flex: 1, backgroundColor: '#ea580c' }} />
+        <div style={{ flex: 1, backgroundColor: '#ffffff' }} />
+        <div style={{ flex: 1, backgroundColor: '#16a34a' }} />
+      </div>
+
+      {/* Top Network & Sync Status Banner */}
       <div
         style={{
-          backgroundColor: isOffline ? '#ea580c' : '#16a34a',
-          color: '#ffffff',
           padding: '0.65rem 1rem',
-          fontSize: '0.8rem',
-          fontWeight: 700,
+          backgroundColor: isOffline ? '#b45309' : '#15803d',
+          color: '#ffffff',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          transition: 'background-color 0.25s ease',
+          gap: '0.65rem',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-          <span>
-            {isSyncing
-              ? '🔄'
-              : networkConnectivity.edgeOnline
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
+          <span style={{ fontSize: '1rem' }}>
+            {isOffline
               ? '📡'
-              : networkConnectivity.centralOnline
-              ? '☁️'
-              : isOffline
+              : isSyncing
               ? '⚡'
               : '✓'}
           </span>
-          <span style={{ fontSize: '0.78rem' }}>
+          <span
+            style={{
+              fontSize: '0.8125rem',
+              fontWeight: 700,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
             {isSyncing
               ? syncNotice || 'Synchronizing with Gateway...'
               : networkConnectivity.edgeOnline
@@ -513,42 +623,49 @@ export default function App() {
           </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        {/* Top WAN Mode Selector & Queue Pill Button (Strict >= 44px) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
           <select
             value={wanMode}
             onChange={(e) => setWanMode(e.target.value as any)}
+            aria-label="WAN simulation mode"
             style={{
-              backgroundColor: 'rgba(255,255,255,0.22)',
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
               color: '#ffffff',
-              border: '1px solid rgba(255,255,255,0.4)',
-              borderRadius: '4px',
-              padding: '0.2rem 0.4rem',
-              fontSize: '0.68rem',
+              border: '1px solid rgba(255, 255, 255, 0.5)',
+              borderRadius: '8px',
+              minHeight: '44px',
+              padding: '0.45rem 0.65rem',
+              fontSize: '0.8125rem',
               fontWeight: 800,
               cursor: 'pointer',
+              outline: 'none',
             }}
           >
-            <option value="OFFLINE" style={{ color: '#000' }}>WAN: OFFLINE</option>
-            <option value="ONLINE" style={{ color: '#000' }}>WAN: ONLINE</option>
-            <option value="FLAKY" style={{ color: '#000' }}>WAN: FLAKY</option>
+            <option value="OFFLINE" style={{ color: '#0f172a' }}>WAN: OFFLINE</option>
+            <option value="ONLINE" style={{ color: '#0f172a' }}>WAN: ONLINE</option>
+            <option value="FLAKY" style={{ color: '#0f172a' }}>WAN: FLAKY</option>
           </select>
 
-          {/* Clickable Queue Pill -> Opens Queue Drawer */}
+          {/* Clickable Queue Pill -> Opens Queue Drawer (Strict >= 44px) */}
           <button
+            type="button"
             onClick={() => setIsQueueDrawerOpen(true)}
             title="Inspect pending offline events"
+            aria-label="Open offline event journal drawer"
             style={{
-              backgroundColor: 'rgba(0,0,0,0.3)',
+              backgroundColor: 'rgba(15, 23, 42, 0.4)',
               color: '#ffffff',
-              border: 'none',
-              padding: '0.2rem 0.55rem',
-              borderRadius: '12px',
-              fontSize: '0.72rem',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              minHeight: '44px',
+              padding: '0.45rem 0.85rem',
+              borderRadius: '22px',
+              fontSize: '0.8125rem',
               fontWeight: 800,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.25rem',
+              gap: '0.35rem',
             }}
           >
             <span>Q:</span>
@@ -557,21 +674,22 @@ export default function App() {
         </div>
       </div>
 
-      {/* Top Header with Bilingual Switcher */}
+      {/* Top Header with Ministry Branding and Bilingual Switcher */}
       <header
         style={{
-          padding: '0.85rem 1rem',
+          padding: '0.9rem 1rem',
           backgroundColor: '#ffffff',
           borderBottom: '1px solid #e2e8f0',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
+          gap: '0.75rem',
         }}
       >
         <div>
           <div
             style={{
-              fontSize: '0.68rem',
+              fontSize: '0.8125rem',
               color: '#0369a1',
               fontWeight: 800,
               textTransform: 'uppercase',
@@ -580,46 +698,68 @@ export default function App() {
           >
             {t.motto}
           </div>
-          <h1 style={{ fontSize: '1.2rem', margin: '0.15rem 0 0 0', color: '#0f172a', fontWeight: 800 }}>
+          <h1
+            style={{
+              fontSize: '1.25rem',
+              margin: '0.15rem 0 0 0',
+              color: '#0f172a',
+              fontWeight: 800,
+              lineHeight: 1.35,
+            }}
+          >
             {t.greeting}, {trainee.name.split(' ')[0]}
           </h1>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          {/* Language Switcher Button */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+          {/* Language Switcher Button (Strict >= 44px) */}
           <button
+            type="button"
             onClick={() => setLanguage(language === 'EN' ? 'HI' : 'EN')}
+            aria-label="Toggle language between English and Hindi"
             style={{
               backgroundColor: '#f1f5f9',
               border: '1px solid #cbd5e1',
               color: '#0f172a',
-              padding: '0.25rem 0.55rem',
-              borderRadius: '6px',
-              fontSize: '0.75rem',
+              minHeight: '44px',
+              padding: '0.45rem 0.85rem',
+              borderRadius: '8px',
+              fontSize: '0.875rem',
               fontWeight: 800,
               cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.35rem',
             }}
           >
-            {language === 'EN' ? '🇮🇳 हिन्दी' : '🌐 EN'}
+            <span>{language === 'EN' ? '🇮🇳 हिन्दी' : '🌐 English'}</span>
           </button>
 
           <div
             style={{
-              fontSize: '0.7rem',
+              fontSize: '0.8125rem',
               backgroundColor: '#e0f2fe',
               color: '#0369a1',
-              padding: '0.25rem 0.5rem',
-              borderRadius: '4px',
-              fontWeight: 700,
+              border: '1px solid #bae6fd',
+              minHeight: '44px',
+              padding: '0.45rem 0.65rem',
+              borderRadius: '8px',
+              fontWeight: 800,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textAlign: 'center',
+              lineHeight: 1.2,
             }}
           >
-            RICM Bhopal
+            RICM<br />Bhopal
           </div>
         </div>
       </header>
 
       {/* Main Screen Content */}
-      <main style={{ flex: 1, padding: '1rem', overflowY: 'auto' }}>
+      <main style={{ flex: 1, padding: '1rem', overflowY: 'auto', paddingBottom: '6rem' }}>
         {/* ========================================================
             TAB 1: HOME
         ======================================================== */}
@@ -629,22 +769,30 @@ export default function App() {
             <div
               style={{
                 backgroundColor: '#ffffff',
-                borderRadius: '10px',
-                padding: '1.15rem',
+                borderRadius: '12px',
+                padding: '1.25rem',
                 border: '1px solid #e2e8f0',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+                boxShadow: '0 1px 4px rgba(15, 23, 42, 0.05)',
               }}
             >
-              <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>
+              <div style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 {t.enrolledProgram}
               </div>
-              <h2 style={{ fontSize: '1.05rem', margin: '0.25rem 0 0.4rem 0', color: '#0369a1', lineHeight: '1.3', fontWeight: 800 }}>
+              <h2
+                style={{
+                  fontSize: '1.15rem',
+                  margin: '0.35rem 0 0.5rem 0',
+                  color: '#0369a1',
+                  lineHeight: 1.45,
+                  fontWeight: 800,
+                }}
+              >
                 {SEED_PROGRAMME.title}
               </h2>
-              <div style={{ fontSize: '0.8rem', color: '#475569', display: 'flex', gap: '0.5rem' }}>
-                <span>{t.cohort}: 2026-A</span>
+              <div style={{ fontSize: '0.875rem', color: '#475569', display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <span><strong>{t.cohort}:</strong> 2026-A</span>
                 <span>•</span>
-                <span>{t.venue}: RICM Bhopal Lab 1</span>
+                <span><strong>{t.venue}:</strong> {t.venueDetail}</span>
               </div>
             </div>
 
@@ -652,71 +800,87 @@ export default function App() {
             <div
               style={{
                 backgroundColor: '#ffffff',
-                borderRadius: '10px',
-                padding: '1.15rem',
+                borderRadius: '12px',
+                padding: '1.25rem',
                 border: '1px solid #e2e8f0',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+                boxShadow: '0 1px 4px rgba(15, 23, 42, 0.05)',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   {t.todaysAttendance}
                 </span>
-                <span style={{ fontSize: '0.7rem', backgroundColor: '#dcfce7', color: '#166534', padding: '0.15rem 0.45rem', borderRadius: '4px', fontWeight: 800 }}>
+                <span
+                  style={{
+                    fontSize: '0.8125rem',
+                    backgroundColor: '#dcfce7',
+                    color: '#15803d',
+                    padding: '0.25rem 0.65rem',
+                    borderRadius: '6px',
+                    fontWeight: 800,
+                  }}
+                >
                   {t.activeStatus}
                 </span>
               </div>
-              <h3 style={{ fontSize: '0.95rem', margin: '0.35rem 0 0.25rem 0', color: '#0f172a', fontWeight: 700 }}>
+
+              <h3 style={{ fontSize: '1.05rem', margin: '0.45rem 0 0.25rem 0', color: '#0f172a', fontWeight: 700, lineHeight: 1.4 }}>
                 {SEED_SESSION.title}
               </h3>
-              <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '0 0 0.75rem 0' }}>
-                Timings: 09:30 AM – 12:30 PM (Required: 60 mins)
+              <p style={{ fontSize: '0.8125rem', color: '#64748b', margin: '0 0 0.95rem 0', lineHeight: 1.5 }}>
+                {t.sessionTimings}
               </p>
 
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
                 <button
+                  type="button"
                   onClick={() => setIsQrScannerOpen(true)}
                   style={{
                     flex: 1,
-                    minWidth: '130px',
-                    backgroundColor: '#0284c7',
+                    minWidth: '140px',
+                    minHeight: '46px',
+                    backgroundColor: '#0369a1',
                     color: '#ffffff',
                     border: 'none',
-                    padding: '0.55rem 0.65rem',
-                    borderRadius: '6px',
-                    fontSize: '0.78rem',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
                     fontWeight: 800,
                     cursor: 'pointer',
-                    display: 'flex',
+                    display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '0.35rem',
+                    gap: '0.45rem',
+                    boxShadow: '0 1px 3px rgba(3, 105, 161, 0.25)',
                   }}
                 >
-                  <span>📷</span>
+                  <span style={{ fontSize: '1.1rem' }}>📷</span>
                   <span>{t.qrCheckInBtn}</span>
                 </button>
                 <button
+                  type="button"
                   onClick={() => setIsFaceScannerOpen(true)}
                   style={{
                     flex: 1,
-                    minWidth: '130px',
-                    backgroundColor: '#16a34a',
+                    minWidth: '140px',
+                    minHeight: '46px',
+                    backgroundColor: '#15803d',
                     color: '#ffffff',
                     border: 'none',
-                    padding: '0.55rem 0.65rem',
-                    borderRadius: '6px',
-                    fontSize: '0.78rem',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
                     fontWeight: 800,
                     cursor: 'pointer',
-                    display: 'flex',
+                    display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '0.35rem',
+                    gap: '0.45rem',
+                    boxShadow: '0 1px 3px rgba(21, 128, 61, 0.25)',
                   }}
                 >
-                  <span>👤</span>
-                  <span>{language === 'HI' ? 'फेस बायोमेट्रिक' : 'Face Biometric'}</span>
+                  <span style={{ fontSize: '1.1rem' }}>👤</span>
+                  <span>{t.faceCheckInBtn}</span>
                 </button>
               </div>
             </div>
@@ -725,34 +889,34 @@ export default function App() {
             <div
               style={{
                 backgroundColor: '#ffffff',
-                borderRadius: '10px',
-                padding: '1.15rem',
+                borderRadius: '12px',
+                padding: '1.25rem',
                 border: '1px solid #e2e8f0',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+                boxShadow: '0 1px 4px rgba(15, 23, 42, 0.05)',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>
+                  <div style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                     {t.syllabusProgress}
                   </div>
-                  <h3 style={{ fontSize: '1.05rem', margin: '0.2rem 0 0.35rem 0', color: '#0f172a', fontWeight: 800 }}>
+                  <h3 style={{ fontSize: '1.15rem', margin: '0.25rem 0 0.35rem 0', color: '#0f172a', fontWeight: 800 }}>
                     {progressPercent}% {t.complete}
                   </h3>
-                  <div style={{ fontSize: '0.8rem', color: '#475569' }}>
+                  <div style={{ fontSize: '0.875rem', color: '#475569' }}>
                     {completedLessonIds.length} of {lessons.length} {t.lessonsFinished}
                   </div>
                 </div>
 
                 {/* SVG Progress Dial */}
-                <div style={{ position: 'relative', width: '64px', height: '64px' }}>
-                  <svg width="64" height="64" viewBox="0 0 64 64" style={{ transform: 'rotate(-90deg)' }}>
+                <div style={{ position: 'relative', width: '68px', height: '68px' }}>
+                  <svg width="68" height="68" viewBox="0 0 64 64" style={{ transform: 'rotate(-90deg)' }}>
                     <circle cx="32" cy="32" r={radius} stroke="#e2e8f0" strokeWidth="6" fill="transparent" />
                     <circle
                       cx="32"
                       cy="32"
                       r={radius}
-                      stroke="#0284c7"
+                      stroke="#0369a1"
                       strokeWidth="6"
                       fill="transparent"
                       strokeDasharray={circumference}
@@ -761,23 +925,25 @@ export default function App() {
                       style={{ transition: 'stroke-dashoffset 0.5s ease' }}
                     />
                   </svg>
-                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 800, color: '#0284c7' }}>
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8125rem', fontWeight: 800, color: '#0369a1' }}>
                     {progressPercent}%
                   </div>
                 </div>
               </div>
 
-              <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'flex-end' }}>
+              <div style={{ marginTop: '1rem', paddingTop: '0.85rem', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'flex-end' }}>
                 <button
+                  type="button"
                   onClick={() => setActiveTab('LEARN')}
                   style={{
                     backgroundColor: '#f8fafc',
                     border: '1px solid #cbd5e1',
-                    padding: '0.35rem 0.85rem',
-                    borderRadius: '6px',
-                    fontSize: '0.78rem',
-                    fontWeight: 700,
-                    color: '#0284c7',
+                    minHeight: '44px',
+                    padding: '0.55rem 1.15rem',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    fontWeight: 800,
+                    color: '#0369a1',
                     cursor: 'pointer',
                   }}
                 >
@@ -790,36 +956,39 @@ export default function App() {
             <div
               style={{
                 backgroundColor: '#ffffff',
-                borderRadius: '10px',
-                padding: '1.15rem',
+                borderRadius: '12px',
+                padding: '1.25rem',
                 border: '1px solid #e2e8f0',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+                boxShadow: '0 1px 4px rgba(15, 23, 42, 0.05)',
               }}
             >
-              <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>
+              <div style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 {t.certificationExam}
               </div>
-              <h3 style={{ fontSize: '0.95rem', margin: '0.25rem 0 0.35rem 0', color: '#0f172a', fontWeight: 700 }}>
+              <h3 style={{ fontSize: '1.05rem', margin: '0.35rem 0 0.35rem 0', color: '#0f172a', fontWeight: 700, lineHeight: 1.4 }}>
                 {assessment.title}
               </h3>
-              <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '0 0 0.75rem 0' }}>
+              <p style={{ fontSize: '0.8125rem', color: '#64748b', margin: '0 0 0.95rem 0', lineHeight: 1.5 }}>
                 {t.examDesc}
               </p>
               <button
+                type="button"
                 onClick={() => {
                   setIsAssessmentOpen(true);
                   setQuizResult(null);
                 }}
                 style={{
                   width: '100%',
-                  backgroundColor: '#16a34a',
+                  minHeight: '46px',
+                  backgroundColor: '#15803d',
                   color: '#ffffff',
                   border: 'none',
-                  padding: '0.6rem',
-                  borderRadius: '6px',
-                  fontSize: '0.85rem',
+                  padding: '0.65rem 1rem',
+                  borderRadius: '8px',
+                  fontSize: '0.925rem',
                   fontWeight: 800,
                   cursor: 'pointer',
+                  boxShadow: '0 1px 3px rgba(21, 128, 61, 0.25)',
                 }}
               >
                 {t.launchExam}
@@ -830,56 +999,59 @@ export default function App() {
             <div
               style={{
                 backgroundColor: '#ffffff',
-                borderRadius: '10px',
-                padding: '1.15rem',
+                borderRadius: '12px',
+                padding: '1.25rem',
                 border: '1px solid #e2e8f0',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+                boxShadow: '0 1px 4px rgba(15, 23, 42, 0.05)',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ fontSize: '0.7rem', color: '#0284c7', fontWeight: 800, textTransform: 'uppercase' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div style={{ fontSize: '0.8125rem', color: '#0369a1', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   {t.oralVivaTitle}
                 </div>
                 {oralAssessmentResult?.passed && (
                   <span
                     style={{
-                      fontSize: '0.7rem',
+                      fontSize: '0.8125rem',
                       fontWeight: 800,
                       backgroundColor: '#dcfce7',
                       color: '#15803d',
-                      padding: '0.15rem 0.5rem',
-                      borderRadius: '4px',
+                      padding: '0.25rem 0.65rem',
+                      borderRadius: '6px',
                     }}
                   >
                     {t.oralVivaPassed} ({oralAssessmentResult.percentage}%)
                   </span>
                 )}
               </div>
-              <h3 style={{ fontSize: '0.95rem', margin: '0.25rem 0 0.35rem 0', color: '#0f172a', fontWeight: 700 }}>
+              <h3 style={{ fontSize: '1.05rem', margin: '0.35rem 0 0.35rem 0', color: '#0f172a', fontWeight: 700, lineHeight: 1.4 }}>
                 {SEED_ORAL_ASSESSMENT.title}
               </h3>
-              <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '0 0 0.75rem 0' }}>
+              <p style={{ fontSize: '0.8125rem', color: '#64748b', margin: '0 0 0.95rem 0', lineHeight: 1.5 }}>
                 {t.oralVivaDesc}
               </p>
               <button
+                type="button"
                 onClick={() => setIsOralAssessmentOpen(true)}
                 style={{
                   width: '100%',
-                  backgroundColor: '#0284c7',
+                  minHeight: '46px',
+                  backgroundColor: '#0369a1',
                   color: '#ffffff',
                   border: 'none',
-                  padding: '0.6rem',
-                  borderRadius: '6px',
-                  fontSize: '0.85rem',
+                  padding: '0.65rem 1rem',
+                  borderRadius: '8px',
+                  fontSize: '0.925rem',
                   fontWeight: 800,
                   cursor: 'pointer',
-                  display: 'flex',
+                  display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '0.4rem',
+                  gap: '0.5rem',
+                  boxShadow: '0 1px 3px rgba(3, 105, 161, 0.25)',
                 }}
               >
-                <span>🎙️</span>
+                <span style={{ fontSize: '1.15rem' }}>🎙️</span>
                 <span>{t.launchOralViva}</span>
               </button>
             </div>
@@ -894,27 +1066,34 @@ export default function App() {
             <div
               style={{
                 backgroundColor: '#ffffff',
-                borderRadius: '8px',
-                padding: '1rem',
+                borderRadius: '12px',
+                padding: '1.25rem',
                 border: '1px solid #e2e8f0',
+                boxShadow: '0 1px 4px rgba(15, 23, 42, 0.05)',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <span style={{ fontSize: '0.7rem', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.2rem 0.4rem', borderRadius: '4px', fontWeight: 700 }}>
-                    Local Content Manifest Ready
-                  </span>
-                  <h2 style={{ fontSize: '1rem', margin: '0.4rem 0 0.2rem 0', color: '#0f172a', fontWeight: 800 }}>
-                    {SEED_COURSE.title}
-                  </h2>
-                  <p style={{ fontSize: '0.75rem', color: '#64748b', margin: 0 }}>
-                    Language: Hindi/English • Version 1.0 • NCCT Approved
-                  </p>
-                </div>
-              </div>
+              <span
+                style={{
+                  fontSize: '0.8125rem',
+                  backgroundColor: '#e0f2fe',
+                  color: '#0369a1',
+                  padding: '0.3rem 0.65rem',
+                  borderRadius: '6px',
+                  fontWeight: 800,
+                  display: 'inline-block',
+                }}
+              >
+                {t.manifestReady}
+              </span>
+              <h2 style={{ fontSize: '1.15rem', margin: '0.5rem 0 0.35rem 0', color: '#0f172a', fontWeight: 800 }}>
+                {SEED_COURSE.title}
+              </h2>
+              <p style={{ fontSize: '0.8125rem', color: '#64748b', margin: 0, lineHeight: 1.5 }}>
+                {t.courseMeta}
+              </p>
             </div>
 
-            <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase' }}>
+            <div style={{ fontSize: '0.875rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               {t.moduleTitle}
             </div>
 
@@ -927,50 +1106,53 @@ export default function App() {
                   key={lesson.id}
                   style={{
                     backgroundColor: '#ffffff',
-                    borderRadius: '8px',
-                    padding: '1rem',
+                    borderRadius: '12px',
+                    padding: '1.25rem',
                     border: isDone ? '1px solid #bbf7d0' : '1px solid #e2e8f0',
+                    boxShadow: '0 1px 4px rgba(15, 23, 42, 0.05)',
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>
+                    <span style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 700 }}>
                       Lesson {idx + 1}
                     </span>
                     <span
                       style={{
-                        fontSize: '0.7rem',
-                        fontWeight: 700,
+                        fontSize: '0.8125rem',
+                        fontWeight: 800,
                         backgroundColor: isDone ? '#dcfce7' : '#f1f5f9',
-                        color: isDone ? '#166534' : '#64748b',
-                        padding: '0.15rem 0.4rem',
-                        borderRadius: '4px',
+                        color: isDone ? '#15803d' : '#64748b',
+                        padding: '0.25rem 0.55rem',
+                        borderRadius: '6px',
                       }}
                     >
                       {isDone ? t.completedBadge : t.availableOffline}
                     </span>
                   </div>
 
-                  <h3 style={{ fontSize: '0.9rem', margin: '0.4rem 0 0.35rem 0', color: '#0f172a', fontWeight: 700 }}>
+                  <h3 style={{ fontSize: '1.05rem', margin: '0.45rem 0 0.35rem 0', color: '#0f172a', fontWeight: 700, lineHeight: 1.4 }}>
                     {lesson.title}
                   </h3>
-                  <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '0 0 0.75rem 0' }}>
-                    Format: {lesson.type} • Local Asset: {lesson.localAssetRef}
+                  <p style={{ fontSize: '0.8125rem', color: '#64748b', margin: '0 0 0.95rem 0', lineHeight: 1.5 }}>
+                    {t.lessonFormat}: {lesson.type} • {t.localAsset}: <code>{lesson.localAssetRef}</code>
                   </p>
 
                   <button
+                    type="button"
                     onClick={() => {
                       if (detail) {
                         setActiveLesson(detail);
                       }
                     }}
                     style={{
-                      backgroundColor: '#0284c7',
+                      minHeight: '44px',
+                      backgroundColor: '#0369a1',
                       color: '#ffffff',
                       border: 'none',
-                      padding: '0.45rem 0.85rem',
-                      borderRadius: '6px',
-                      fontSize: '0.8rem',
-                      fontWeight: 700,
+                      padding: '0.55rem 1.15rem',
+                      borderRadius: '8px',
+                      fontSize: '0.875rem',
+                      fontWeight: 800,
                       cursor: 'pointer',
                     }}
                   >
@@ -990,31 +1172,33 @@ export default function App() {
             <div
               style={{
                 backgroundColor: '#ffffff',
-                borderRadius: '8px',
-                padding: '1.15rem',
+                borderRadius: '12px',
+                padding: '1.25rem',
                 border: '1px solid #e2e8f0',
+                boxShadow: '0 1px 4px rgba(15, 23, 42, 0.05)',
               }}
             >
-              <h2 style={{ fontSize: '0.95rem', margin: '0 0 0.5rem 0', fontWeight: 800 }}>{t.overallProgress}</h2>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.3rem' }}>
+              <h2 style={{ fontSize: '1.05rem', margin: '0 0 0.65rem 0', fontWeight: 800 }}>{t.overallProgress}</h2>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', marginBottom: '0.45rem' }}>
                 <span>{t.completionStatus}</span>
-                <span style={{ fontWeight: 800, color: '#0284c7' }}>{progressPercent}%</span>
+                <span style={{ fontWeight: 800, color: '#0369a1' }}>{progressPercent}%</span>
               </div>
-              <div style={{ width: '100%', height: '8px', backgroundColor: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
-                <div style={{ width: `${progressPercent}%`, height: '100%', backgroundColor: '#0284c7' }} />
+              <div style={{ width: '100%', height: '10px', backgroundColor: '#e2e8f0', borderRadius: '5px', overflow: 'hidden' }}>
+                <div style={{ width: `${progressPercent}%`, height: '100%', backgroundColor: '#0369a1', transition: 'width 0.4s ease' }} />
               </div>
             </div>
 
             <div
               style={{
                 backgroundColor: '#ffffff',
-                borderRadius: '8px',
-                padding: '1.15rem',
+                borderRadius: '12px',
+                padding: '1.25rem',
                 border: '1px solid #e2e8f0',
+                boxShadow: '0 1px 4px rgba(15, 23, 42, 0.05)',
               }}
             >
-              <h3 style={{ fontSize: '0.9rem', margin: '0 0 0.5rem 0', fontWeight: 800 }}>{t.completedModules}</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <h3 style={{ fontSize: '1rem', margin: '0 0 0.65rem 0', fontWeight: 800 }}>{t.completedModules}</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
                 {lessons.map((lesson) => {
                   const done = completedLessonIds.includes(lesson.id);
                   return (
@@ -1024,16 +1208,17 @@ export default function App() {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        padding: '0.5rem',
+                        padding: '0.65rem 0.85rem',
                         backgroundColor: done ? '#f0fdf4' : '#f8fafc',
-                        borderRadius: '6px',
-                        border: '1px solid #e2e8f0',
-                        fontSize: '0.8rem',
+                        borderRadius: '8px',
+                        border: done ? '1px solid #bbf7d0' : '1px solid #e2e8f0',
+                        fontSize: '0.875rem',
+                        gap: '0.5rem',
                       }}
                     >
-                      <span style={{ color: done ? '#166534' : '#64748b' }}>{lesson.title}</span>
-                      <span style={{ fontWeight: 700, color: done ? '#16a34a' : '#94a3b8' }}>
-                        {done ? '✓ Done' : 'Pending'}
+                      <span style={{ color: done ? '#15803d' : '#475569', fontWeight: 600 }}>{lesson.title}</span>
+                      <span style={{ fontWeight: 800, color: done ? '#15803d' : '#94a3b8', fontSize: '0.8125rem' }}>
+                        {done ? t.doneBadge : t.pendingBadge}
                       </span>
                     </div>
                   );
@@ -1045,47 +1230,49 @@ export default function App() {
             <div
               style={{
                 backgroundColor: '#ffffff',
-                borderRadius: '8px',
-                padding: '1.15rem',
+                borderRadius: '12px',
+                padding: '1.25rem',
                 border: '1px solid #e2e8f0',
+                boxShadow: '0 1px 4px rgba(15, 23, 42, 0.05)',
               }}
             >
-              <h3 style={{ fontSize: '0.9rem', margin: '0 0 0.5rem 0', fontWeight: 800 }}>{t.evalLog}</h3>
+              <h3 style={{ fontSize: '1rem', margin: '0 0 0.65rem 0', fontWeight: 800 }}>{t.evalLog}</h3>
               {attempts.length === 0 ? (
-                <div style={{ fontSize: '0.8rem', color: '#64748b', fontStyle: 'italic' }}>
-                  No exam attempts recorded yet. Launch the offline exam to test your competency.
+                <div style={{ fontSize: '0.875rem', color: '#64748b', fontStyle: 'italic', lineHeight: 1.5 }}>
+                  {t.noExamAttempts}
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
                   {attempts.map((att, idx) => (
                     <div
                       key={idx}
                       style={{
-                        padding: '0.6rem',
-                        borderRadius: '6px',
+                        padding: '0.75rem 1rem',
+                        borderRadius: '8px',
                         backgroundColor: att.passed ? '#f0fdf4' : '#fef2f2',
                         border: att.passed ? '1px solid #bbf7d0' : '1px solid #fecaca',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
+                        gap: '0.5rem',
                       }}
                     >
                       <div>
-                        <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#0f172a' }}>
-                          Attempt #{idx + 1} • {att.score}%
+                        <div style={{ fontSize: '0.875rem', fontWeight: 800, color: '#0f172a' }}>
+                          {t.attempt} #{idx + 1} • {att.score}%
                         </div>
-                        <div style={{ fontSize: '0.7rem', color: '#64748b' }}>
-                          {att.correctCount}/{att.totalQuestions} questions correct
+                        <div style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '0.2rem' }}>
+                          {att.correctCount}/{att.totalQuestions} {t.questionsCorrect}
                         </div>
                       </div>
                       <span
                         style={{
-                          fontSize: '0.75rem',
+                          fontSize: '0.8125rem',
                           fontWeight: 800,
                           color: att.passed ? '#15803d' : '#b91c1c',
                         }}
                       >
-                        {att.passed ? 'PASSED' : 'NEEDS RETAKE'}
+                        {att.passed ? t.passedStatus : t.retakeStatus}
                       </span>
                     </div>
                   ))}
@@ -1103,73 +1290,103 @@ export default function App() {
             <div
               style={{
                 backgroundColor: '#ffffff',
-                borderRadius: '10px',
-                padding: '1.25rem',
-                border: '2px solid #0284c7',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+                borderRadius: '12px',
+                padding: '1.35rem',
+                border: '2px solid #0369a1',
+                boxShadow: '0 2px 8px rgba(3, 105, 161, 0.08)',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#16a34a' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.8125rem', fontWeight: 800, color: '#15803d' }}>
                   ✓ ED25519 CRYPTOGRAPHICALLY SIGNED
                 </span>
-                <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>NCCT Official</span>
+                <span style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 700 }}>NCCT Official</span>
               </div>
 
-              <h2 style={{ fontSize: '1.05rem', margin: '0.5rem 0 0.25rem 0', color: '#0f172a', fontWeight: 800 }}>
+              <h2 style={{ fontSize: '1.15rem', margin: '0.5rem 0 0.35rem 0', color: '#0f172a', fontWeight: 800, lineHeight: 1.4 }}>
                 Certificate of Competency in PACS Ledgering & Governance
               </h2>
-              <div style={{ fontSize: '0.8rem', color: '#475569' }}>
-                Awarded to: <strong>{trainee.name}</strong>
+              <div style={{ fontSize: '0.875rem', color: '#475569' }}>
+                {t.awardedTo}: <strong style={{ color: '#0f172a' }}>{trainee.name}</strong>
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.2rem' }}>
-                Credential ID: <code>cred-pacs-2026-0814</code>
+              <div style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '0.25rem' }}>
+                {t.credentialId}: <code style={{ fontFamily: 'monospace', fontWeight: 700 }}>cred-pacs-2026-0814</code>
               </div>
 
               <div
                 style={{
-                  marginTop: '1rem',
-                  padding: '1rem',
+                  marginTop: '1.15rem',
+                  padding: '1.25rem',
                   backgroundColor: '#f8fafc',
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   border: '1px dashed #cbd5e1',
                   textAlign: 'center',
                 }}
               >
-                <div style={{ width: '100px', height: '100px', margin: '0 auto', backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '6px', fontSize: '0.8rem', color: '#0284c7', fontWeight: 800 }}>
-                  🛡️ QR VERIFIED
+                <div
+                  style={{
+                    width: '110px',
+                    height: '110px',
+                    margin: '0 auto',
+                    backgroundColor: '#e0f2fe',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    color: '#0369a1',
+                    fontWeight: 800,
+                    border: '1px solid #bae6fd',
+                  }}
+                >
+                  {t.qrVerified}
                 </div>
-                <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '0.5rem' }}>
+                <div style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '0.65rem', lineHeight: 1.5 }}>
                   {t.verifyQr}
                 </div>
               </div>
 
-              <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748b' }}>
-                <span>Issuer: NCCT Apex Board</span>
-                <span>Algorithm: Ed25519</span>
+              <div
+                style={{
+                  marginTop: '1.15rem',
+                  paddingTop: '0.85rem',
+                  borderTop: '1px solid #f1f5f9',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  fontSize: '0.8125rem',
+                  color: '#64748b',
+                  flexWrap: 'wrap',
+                  gap: '0.5rem',
+                }}
+              >
+                <span>{t.issuer}: {t.issuerValue}</span>
+                <span>{t.algorithm}: {t.algorithmValue}</span>
               </div>
 
               <button
+                type="button"
                 onClick={() => setShowCertModal(true)}
                 style={{
                   width: '100%',
-                  backgroundColor: '#0284c7',
+                  minHeight: '46px',
+                  backgroundColor: '#0369a1',
                   color: '#ffffff',
                   border: 'none',
-                  padding: '0.65rem',
-                  borderRadius: '6px',
-                  fontSize: '0.82rem',
+                  padding: '0.65rem 1rem',
+                  borderRadius: '8px',
+                  fontSize: '0.925rem',
                   fontWeight: 800,
                   cursor: 'pointer',
-                  marginTop: '0.85rem',
-                  display: 'flex',
+                  marginTop: '1rem',
+                  display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '0.4rem',
+                  gap: '0.5rem',
+                  boxShadow: '0 1px 3px rgba(3, 105, 161, 0.25)',
                 }}
               >
-                <span>🖨️</span>
-                <span>View & Print Official NCCT Certificate</span>
+                <span style={{ fontSize: '1.15rem' }}>🖨️</span>
+                <span>{t.viewCertificateBtn}</span>
               </button>
             </div>
           </div>
@@ -1185,48 +1402,50 @@ export default function App() {
               style={{
                 backgroundColor: '#eff6ff',
                 border: '1px solid #bfdbfe',
-                borderRadius: '8px',
-                padding: '1rem',
+                borderRadius: '12px',
+                padding: '1.25rem',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '0.6rem',
-                boxShadow: '0 2px 4px rgba(2, 132, 199, 0.06)',
+                gap: '0.65rem',
+                boxShadow: '0 1px 4px rgba(2, 132, 199, 0.08)',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '1.35rem' }}>🤖</span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                  <span style={{ fontSize: '1.5rem' }}>🤖</span>
                   <div>
-                    <h3 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 800, color: '#1e40af' }}>
+                    <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: '#1e40af' }}>
                       {t.counselorCardTitle}
                     </h3>
-                    <div style={{ fontSize: '0.7rem', color: '#0369a1', fontWeight: 600 }}>
+                    <div style={{ fontSize: '0.8125rem', color: '#0369a1', fontWeight: 700 }}>
                       ● Online & Offline Advisory
                     </div>
                   </div>
                 </div>
-                <span style={{ fontSize: '0.68rem', backgroundColor: '#dcfce7', color: '#166534', padding: '0.2rem 0.5rem', borderRadius: '12px', fontWeight: 800 }}>
+                <span style={{ fontSize: '0.8125rem', backgroundColor: '#dcfce7', color: '#15803d', padding: '0.25rem 0.65rem', borderRadius: '12px', fontWeight: 800 }}>
                   Active
                 </span>
               </div>
-              <p style={{ margin: 0, fontSize: '0.78rem', color: '#1e3a8a', lineHeight: 1.4 }}>
+              <p style={{ margin: 0, fontSize: '0.875rem', color: '#1e3a8a', lineHeight: 1.55 }}>
                 {t.counselorCardSub}
               </p>
               <button
+                type="button"
                 onClick={() => setIsCounselorOpen(true)}
                 style={{
                   alignSelf: 'flex-start',
-                  backgroundColor: '#0284c7',
+                  backgroundColor: '#0369a1',
                   color: '#ffffff',
                   border: 'none',
-                  padding: '0.45rem 0.9rem',
-                  borderRadius: '6px',
-                  fontSize: '0.8rem',
-                  fontWeight: 700,
+                  minHeight: '44px',
+                  padding: '0.55rem 1.15rem',
+                  borderRadius: '8px',
+                  fontSize: '0.875rem',
+                  fontWeight: 800,
                   cursor: 'pointer',
-                  display: 'flex',
+                  display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '0.35rem',
+                  gap: '0.45rem',
                 }}
               >
                 <span>💬</span>
@@ -1234,8 +1453,8 @@ export default function App() {
               </button>
             </div>
 
-            <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
-              Cooperative society job postings matched to your verified credentials:
+            <div style={{ fontSize: '0.875rem', color: '#475569', fontWeight: 600 }}>
+              {t.oppsHeader}
             </div>
 
             {SEED_JOB_OPPORTUNITIES.map((job) => (
@@ -1243,36 +1462,46 @@ export default function App() {
                 key={job.id}
                 style={{
                   backgroundColor: '#ffffff',
-                  borderRadius: '8px',
-                  padding: '1rem',
+                  borderRadius: '12px',
+                  padding: '1.25rem',
                   border: '1px solid #e2e8f0',
+                  boxShadow: '0 1px 4px rgba(15, 23, 42, 0.05)',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
                   <div>
-                    <h3 style={{ fontSize: '0.95rem', margin: 0, color: '#0f172a', fontWeight: 700 }}>{job.title}</h3>
-                    <div style={{ fontSize: '0.8rem', color: '#0284c7', fontWeight: 600 }}>{job.employerName}</div>
+                    <h3 style={{ fontSize: '1.05rem', margin: 0, color: '#0f172a', fontWeight: 700, lineHeight: 1.35 }}>
+                      {job.title}
+                    </h3>
+                    <div style={{ fontSize: '0.875rem', color: '#0369a1', fontWeight: 700, marginTop: '0.2rem' }}>
+                      {job.employerName}
+                    </div>
                   </div>
-                  <span style={{ fontSize: '0.7rem', backgroundColor: '#dcfce7', color: '#166534', padding: '0.15rem 0.4rem', borderRadius: '4px', fontWeight: 700 }}>
-                    95% Match
+                  <span style={{ fontSize: '0.8125rem', backgroundColor: '#dcfce7', color: '#15803d', padding: '0.25rem 0.55rem', borderRadius: '6px', fontWeight: 800, flexShrink: 0 }}>
+                    {t.matchBadge}
                   </span>
                 </div>
-                <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '0.5rem 0 0.75rem 0' }}>{job.description}</p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem' }}>
-                  <span style={{ color: '#64748b' }}>Location: {job.location}</span>
+                <p style={{ fontSize: '0.8125rem', color: '#475569', margin: '0.65rem 0 0.95rem 0', lineHeight: 1.55 }}>
+                  {job.description}
+                </p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8125rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <span style={{ color: '#64748b' }}><strong>{t.locationLabel}:</strong> {job.location}</span>
                   <button
-                    onClick={() => alert(`Application submitted for ${job.title}!`)}
+                    type="button"
+                    onClick={() => alert(`${t.appSubmittedAlert} ${job.title}!`)}
                     style={{
-                      backgroundColor: '#0284c7',
+                      minHeight: '44px',
+                      backgroundColor: '#0369a1',
                       color: '#ffffff',
                       border: 'none',
-                      padding: '0.35rem 0.75rem',
-                      borderRadius: '4px',
-                      fontWeight: 700,
+                      padding: '0.55rem 1.15rem',
+                      borderRadius: '8px',
+                      fontWeight: 800,
+                      fontSize: '0.875rem',
                       cursor: 'pointer',
                     }}
                   >
-                    Apply Now
+                    {t.applyBtn}
                   </button>
                 </div>
               </div>
@@ -1288,67 +1517,73 @@ export default function App() {
             <div
               style={{
                 backgroundColor: '#ffffff',
-                borderRadius: '8px',
-                padding: '1.25rem',
+                borderRadius: '12px',
+                padding: '1.35rem',
                 border: '1px solid #e2e8f0',
+                boxShadow: '0 1px 4px rgba(15, 23, 42, 0.05)',
               }}
             >
-              <h2 style={{ fontSize: '1.05rem', margin: '0 0 1rem 0', fontWeight: 800 }}>Trainee Profile</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', fontSize: '0.85rem' }}>
+              <h2 style={{ fontSize: '1.15rem', margin: '0 0 1.15rem 0', fontWeight: 800 }}>{t.profileTitle}</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.875rem' }}>
                 <div>
-                  <span style={{ color: '#64748b' }}>Full Name: </span>
-                  <strong>{trainee.name}</strong>
+                  <span style={{ color: '#64748b' }}>{t.fullNameLabel}: </span>
+                  <strong style={{ color: '#0f172a' }}>{trainee.name}</strong>
                 </div>
                 <div>
-                  <span style={{ color: '#64748b' }}>Contact: </span>
-                  <strong>{trainee.emailOrPhone}</strong>
+                  <span style={{ color: '#64748b' }}>{t.contactLabel}: </span>
+                  <strong style={{ color: '#0f172a' }}>{trainee.emailOrPhone}</strong>
                 </div>
                 <div>
-                  <span style={{ color: '#64748b' }}>Assigned Institute: </span>
-                  <strong>RICM Bhopal (Lab 1)</strong>
+                  <span style={{ color: '#64748b' }}>{t.instituteLabel}: </span>
+                  <strong style={{ color: '#0f172a' }}>{t.instituteValue}</strong>
                 </div>
                 <div>
-                  <span style={{ color: '#64748b' }}>Preferred Language: </span>
-                  <strong>{language === 'HI' ? 'हिन्दी (Hindi)' : 'English'}</strong>
+                  <span style={{ color: '#64748b' }}>{t.prefLangLabel}: </span>
+                  <strong style={{ color: '#0f172a' }}>{language === 'HI' ? 'हिन्दी (Hindi)' : 'English'}</strong>
                 </div>
                 <div>
-                  <span style={{ color: '#64748b' }}>Node Connection: </span>
-                  <strong style={{ color: '#16a34a' }}>sahakar.local (192.168.4.1)</strong>
+                  <span style={{ color: '#64748b' }}>{t.nodeConnLabel}: </span>
+                  <strong style={{ color: '#15803d' }}>sahakar.local (192.168.4.1)</strong>
                 </div>
               </div>
 
-              <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '0.5rem' }}>
+              <div style={{ marginTop: '1.75rem', paddingTop: '1.15rem', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
                 <button
+                  type="button"
                   onClick={handleSimulateSync}
                   disabled={isSyncing}
                   style={{
                     flex: 1,
-                    backgroundColor: isSyncing ? '#94a3b8' : '#0284c7',
+                    minWidth: '160px',
+                    minHeight: '46px',
+                    backgroundColor: isSyncing ? '#94a3b8' : '#0369a1',
                     color: '#ffffff',
                     border: 'none',
-                    padding: '0.5rem',
-                    borderRadius: '6px',
-                    fontSize: '0.8rem',
-                    fontWeight: 700,
+                    padding: '0.65rem 1rem',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    fontWeight: 800,
                     cursor: isSyncing ? 'wait' : 'pointer',
                   }}
                 >
-                  {isSyncing ? '⏳ Syncing in Progress...' : '⚡ Trigger Central Sync'}
+                  {isSyncing ? t.syncingBtn : t.triggerSyncBtn}
                 </button>
                 <button
+                  type="button"
                   onClick={handleResetData}
                   style={{
+                    minHeight: '46px',
                     backgroundColor: '#fee2e2',
                     color: '#991b1b',
                     border: '1px solid #fecaca',
-                    padding: '0.5rem 0.75rem',
-                    borderRadius: '6px',
-                    fontSize: '0.8rem',
-                    fontWeight: 700,
+                    padding: '0.65rem 1.15rem',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    fontWeight: 800,
                     cursor: 'pointer',
                   }}
                 >
-                  Reset Demo Data
+                  {t.resetDemoBtn}
                 </button>
               </div>
             </div>
@@ -1357,48 +1592,70 @@ export default function App() {
       </main>
 
       {/* ========================================================
-          MODAL: Interactive Realistic QR Scanner
+          MODAL: Clean Professional Optical QR Scanner (No Neon Laser)
       ======================================================== */}
       {isQrScannerOpen && (
         <div
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(0,0,0,0.85)',
+            backgroundColor: 'rgba(15, 23, 42, 0.94)',
             zIndex: 100,
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
-            padding: '1.5rem 1rem',
+            padding: '1.5rem 1.25rem',
             color: '#ffffff',
           }}
         >
-          {/* Top Bar */}
+          {/* Top Bar with Accessible Close Target */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ fontSize: '0.85rem', fontWeight: 800 }}>{t.qrScannerTitle}</div>
+            <div>
+              <div style={{ fontSize: '0.8125rem', color: '#38bdf8', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                OPTICAL SENSOR VIEW
+              </div>
+              <div style={{ fontSize: '1rem', fontWeight: 800, color: '#ffffff' }}>{t.qrScannerTitle}</div>
+            </div>
             <button
+              type="button"
               onClick={() => setIsQrScannerOpen(false)}
-              style={{ background: 'none', border: 'none', color: '#ffffff', fontSize: '1.5rem', cursor: 'pointer', fontWeight: 700 }}
+              style={{
+                width: '44px',
+                height: '44px',
+                minWidth: '44px',
+                minHeight: '44px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                border: 'none',
+                color: '#ffffff',
+                fontSize: '1.4rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              title="Close scanner"
+              aria-label="Close scanner"
             >
               ×
             </button>
           </div>
 
-          {/* Center Viewfinder */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+          {/* Center Viewfinder with Clean Optical Framing Reticle */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem' }}>
             <div
               style={{
-                width: '260px',
-                height: '260px',
+                width: '270px',
+                height: '270px',
                 borderRadius: '16px',
-                border: '3px solid #38bdf8',
+                border: '2px solid rgba(255, 255, 255, 0.3)',
                 position: 'relative',
                 overflow: 'hidden',
                 backgroundColor: '#000000',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 0 25px rgba(56,189,248,0.35)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6)',
               }}
             >
               {/* WebRTC Live Camera Stream */}
@@ -1417,64 +1674,66 @@ export default function App() {
 
               {/* Hardware Camera Fallback */}
               {!cameraActive && (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', color: '#94a3b8', zIndex: 1, padding: '0 1rem', textAlign: 'center' }}>
-                  <div style={{ fontSize: '3rem', opacity: 0.7 }}>📷</div>
-                  <span style={{ fontSize: '0.72rem', color: '#cbd5e1' }}>
-                    {cameraError || 'Live Optical Viewfinder Initialized'}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', zIndex: 1, padding: '0 1rem', textAlign: 'center' }}>
+                  <div style={{ fontSize: '3rem', opacity: 0.8 }}>📷</div>
+                  <span style={{ fontSize: '0.8125rem', color: '#cbd5e1', lineHeight: 1.4 }}>
+                    {cameraError || 'Live Optical Capture Aperture Active'}
                   </span>
                 </div>
               )}
 
-              {/* Corner Accents */}
-              <div style={{ position: 'absolute', top: '8px', left: '8px', width: '20px', height: '20px', borderTop: '4px solid #38bdf8', borderLeft: '4px solid #38bdf8', pointerEvents: 'none' }} />
-              <div style={{ position: 'absolute', top: '8px', right: '8px', width: '20px', height: '20px', borderTop: '4px solid #38bdf8', borderRight: '4px solid #38bdf8', pointerEvents: 'none' }} />
-              <div style={{ position: 'absolute', bottom: '8px', left: '8px', width: '20px', height: '20px', borderBottom: '4px solid #38bdf8', borderLeft: '4px solid #38bdf8', pointerEvents: 'none' }} />
-              <div style={{ position: 'absolute', bottom: '8px', right: '8px', width: '20px', height: '20px', borderBottom: '4px solid #38bdf8', borderRight: '4px solid #38bdf8', pointerEvents: 'none' }} />
+              {/* High-Contrast Precision Corner Reticles */}
+              <div style={{ position: 'absolute', top: '10px', left: '10px', width: '24px', height: '24px', borderTop: '3px solid #ffffff', borderLeft: '3px solid #ffffff', pointerEvents: 'none' }} />
+              <div style={{ position: 'absolute', top: '10px', right: '10px', width: '24px', height: '24px', borderTop: '3px solid #ffffff', borderRight: '3px solid #ffffff', pointerEvents: 'none' }} />
+              <div style={{ position: 'absolute', bottom: '10px', left: '10px', width: '24px', height: '24px', borderBottom: '3px solid #ffffff', borderLeft: '3px solid #ffffff', pointerEvents: 'none' }} />
+              <div style={{ position: 'absolute', bottom: '10px', right: '10px', width: '24px', height: '24px', borderBottom: '3px solid #ffffff', borderRight: '3px solid #ffffff', pointerEvents: 'none' }} />
 
-              {/* Scanning Laser Line */}
+              {/* Subtle Precision Target Reticle (No Sci-Fi Neon Glow) */}
               <div
                 style={{
                   position: 'absolute',
-                  width: '100%',
-                  height: '2px',
-                  backgroundColor: '#38bdf8',
-                  boxShadow: '0 0 10px #38bdf8',
-                  animation: 'pulse 1.5s infinite',
+                  width: '180px',
+                  height: '180px',
+                  border: '1px dashed rgba(255, 255, 255, 0.4)',
+                  borderRadius: '10px',
                   pointerEvents: 'none',
                 }}
               />
             </div>
 
-            <div style={{ fontSize: '0.8rem', color: '#94a3b8', textAlign: 'center', maxWidth: '280px', lineHeight: 1.4 }}>
+            <div style={{ fontSize: '0.875rem', color: '#cbd5e1', textAlign: 'center', maxWidth: '300px', lineHeight: 1.5 }}>
               {t.qrScannerSub}
               {cameraActive && (
-                <div style={{ color: '#4ade80', fontSize: '0.7rem', marginTop: '0.25rem', fontWeight: 700 }}>
-                  ● WebRTC Video Feed Active
+                <div style={{ color: '#4ade80', fontSize: '0.8125rem', marginTop: '0.35rem', fontWeight: 800 }}>
+                  ● Optical Sensor Active
                 </div>
               )}
             </div>
 
             {scanSuccessNotice && (
-              <div style={{ backgroundColor: '#16a34a', color: '#ffffff', padding: '0.5rem 1rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 800 }}>
+              <div style={{ backgroundColor: '#15803d', color: '#ffffff', padding: '0.65rem 1.25rem', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 800 }}>
                 ✓ {scanSuccessNotice}
               </div>
             )}
           </div>
 
-          {/* Bottom Trigger Button */}
+          {/* Bottom Trigger Button (Strict >= 44px) */}
           <div>
             <button
+              type="button"
               onClick={handleSimulateQrScan}
               style={{
                 width: '100%',
-                backgroundColor: '#0284c7',
+                minHeight: '48px',
+                backgroundColor: '#0369a1',
                 color: '#ffffff',
                 border: 'none',
-                padding: '0.75rem',
+                padding: '0.85rem',
                 borderRadius: '8px',
-                fontSize: '0.9rem',
+                fontSize: '0.95rem',
                 fontWeight: 800,
                 cursor: 'pointer',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
               }}
             >
               {t.simulateScanBtn}
@@ -1484,53 +1743,72 @@ export default function App() {
       )}
 
       {/* ========================================================
-          MODAL: Biometric Face Recognition Attendance Scanner
+          MODAL: Clean Professional Biometric Face Verification (No Neon)
       ======================================================== */}
       {isFaceScannerOpen && (
         <div
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(0,0,0,0.88)',
+            backgroundColor: 'rgba(15, 23, 42, 0.94)',
             zIndex: 100,
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
-            padding: '1.5rem 1rem',
+            padding: '1.5rem 1.25rem',
             color: '#ffffff',
           }}
         >
-          {/* Top Bar */}
+          {/* Top Bar with Accessible Close Target */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <span style={{ fontSize: '0.68rem', color: '#4ade80', fontWeight: 800 }}>AI BIOMETRIC VERIFICATION</span>
-              <div style={{ fontSize: '0.9rem', fontWeight: 800 }}>
-                {language === 'HI' ? 'चेहरा पहचान उपस्थिति सत्यापन' : 'Facial Recognition Biometric Check-in'}
+              <span style={{ fontSize: '0.8125rem', color: '#4ade80', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                AI BIOMETRIC SENSOR
+              </span>
+              <div style={{ fontSize: '1rem', fontWeight: 800, color: '#ffffff' }}>
+                {t.faceScannerTitle}
               </div>
             </div>
             <button
+              type="button"
               onClick={() => setIsFaceScannerOpen(false)}
-              style={{ background: 'none', border: 'none', color: '#ffffff', fontSize: '1.5rem', cursor: 'pointer', fontWeight: 700 }}
+              style={{
+                width: '44px',
+                height: '44px',
+                minWidth: '44px',
+                minHeight: '44px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                border: 'none',
+                color: '#ffffff',
+                fontSize: '1.4rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              title="Close scanner"
+              aria-label="Close scanner"
             >
               ×
             </button>
           </div>
 
           {/* Center Viewfinder with Biometric Oval Guide */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem' }}>
             <div
               style={{
-                width: '260px',
-                height: '260px',
+                width: '270px',
+                height: '270px',
                 borderRadius: '50%',
-                border: '4px solid #16a34a',
+                border: '3px solid #16a34a',
                 position: 'relative',
                 overflow: 'hidden',
                 backgroundColor: '#000000',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 0 30px rgba(22,163,74,0.4)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6)',
               }}
             >
               {/* WebRTC Live Camera Stream */}
@@ -1549,72 +1827,60 @@ export default function App() {
 
               {/* Camera Fallback */}
               {!cameraActive && (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', color: '#94a3b8', zIndex: 1, padding: '0 1rem', textAlign: 'center' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', zIndex: 1, padding: '0 1rem', textAlign: 'center' }}>
                   <div style={{ fontSize: '3.5rem', opacity: 0.8 }}>👤</div>
-                  <span style={{ fontSize: '0.72rem', color: '#cbd5e1' }}>
+                  <span style={{ fontSize: '0.8125rem', color: '#cbd5e1', lineHeight: 1.4 }}>
                     {cameraError || 'Biometric Face Aperture Ready'}
                   </span>
                 </div>
               )}
 
-              {/* Biometric Scanning Crosshair Ring */}
+              {/* Biometric Framing Guide (Crisp Dashed Ring) */}
               <div
                 style={{
                   position: 'absolute',
-                  inset: '12px',
+                  inset: '16px',
                   borderRadius: '50%',
-                  border: '2px dashed rgba(74,222,128,0.6)',
-                  pointerEvents: 'none',
-                }}
-              />
-
-              {/* Scanning Laser Line */}
-              <div
-                style={{
-                  position: 'absolute',
-                  width: '100%',
-                  height: '2px',
-                  backgroundColor: '#4ade80',
-                  boxShadow: '0 0 12px #4ade80',
-                  animation: 'pulse 1.2s infinite',
+                  border: '2px dashed rgba(255, 255, 255, 0.5)',
                   pointerEvents: 'none',
                 }}
               />
             </div>
 
-            <div style={{ fontSize: '0.8rem', color: '#94a3b8', textAlign: 'center', maxWidth: '300px', lineHeight: 1.4 }}>
-              {language === 'HI'
-                ? 'कृपया अपने चेहरे को वृत्त के केंद्र में रखें। 3डी एंटी-स्पूफिंग और जीवंतता (Liveness) सक्रिय है।'
-                : 'Center your face within the green biometric oval. 3D anti-spoofing and liveness detection active.'}
-              <div style={{ color: '#4ade80', fontSize: '0.72rem', marginTop: '0.35rem', fontWeight: 700 }}>
+            <div style={{ fontSize: '0.875rem', color: '#cbd5e1', textAlign: 'center', maxWidth: '320px', lineHeight: 1.55 }}>
+              {t.faceScannerSub}
+              <div style={{ color: '#4ade80', fontSize: '0.8125rem', marginTop: '0.45rem', fontWeight: 800 }}>
                 ✓ Liveness Confidence: 98.6% (Anti-Spoofing Passed)
               </div>
             </div>
 
             {scanSuccessNotice && (
-              <div style={{ backgroundColor: '#16a34a', color: '#ffffff', padding: '0.5rem 1rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 800 }}>
+              <div style={{ backgroundColor: '#15803d', color: '#ffffff', padding: '0.65rem 1.25rem', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 800 }}>
                 ✓ {scanSuccessNotice}
               </div>
             )}
           </div>
 
-          {/* Bottom Trigger Button */}
+          {/* Bottom Trigger Button (Strict >= 44px) */}
           <div>
             <button
+              type="button"
               onClick={handleSimulateFaceScan}
               style={{
                 width: '100%',
-                backgroundColor: '#16a34a',
+                minHeight: '48px',
+                backgroundColor: '#15803d',
                 color: '#ffffff',
                 border: 'none',
-                padding: '0.75rem',
+                padding: '0.85rem',
                 borderRadius: '8px',
-                fontSize: '0.9rem',
+                fontSize: '0.95rem',
                 fontWeight: 800,
                 cursor: 'pointer',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
               }}
             >
-              {language === 'HI' ? '👤 चेहरा सत्यापित करें एवं उपस्थिति दर्ज करें' : '👤 Verify Face & Check-in Offline'}
+              {t.simulateFaceBtn}
             </button>
           </div>
         </div>
@@ -1628,7 +1894,7 @@ export default function App() {
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(15,23,42,0.6)',
+            backgroundColor: 'rgba(15, 23, 42, 0.75)',
             zIndex: 100,
             display: 'flex',
             alignItems: 'flex-end',
@@ -1643,71 +1909,91 @@ export default function App() {
               borderTopLeftRadius: '16px',
               borderTopRightRadius: '16px',
               padding: '1.25rem',
-              maxHeight: '75vh',
+              maxHeight: '78vh',
               display: 'flex',
               flexDirection: 'column',
-              boxShadow: '0 -10px 25px rgba(0,0,0,0.15)',
+              boxShadow: '0 -10px 25px rgba(0, 0, 0, 0.2)',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
               <div>
-                <h3 style={{ margin: 0, fontSize: '1rem', color: '#0f172a', fontWeight: 800 }}>
+                <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#0f172a', fontWeight: 800 }}>
                   {t.queueDrawerTitle}
                 </h3>
-                <div style={{ fontSize: '0.72rem', color: '#64748b' }}>
-                  {queuedEvents.length} events buffered in SQLite WAL
+                <div style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '0.15rem' }}>
+                  {queuedEvents.length} {t.eventsBuffered}
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setIsQueueDrawerOpen(false)}
-                style={{ background: 'none', border: 'none', fontSize: '1.25rem', color: '#64748b', cursor: 'pointer', fontWeight: 700 }}
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  minWidth: '44px',
+                  minHeight: '44px',
+                  borderRadius: '50%',
+                  backgroundColor: '#f1f5f9',
+                  border: 'none',
+                  fontSize: '1.25rem',
+                  color: '#475569',
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                title="Close drawer"
+                aria-label="Close drawer"
               >
                 ×
               </button>
             </div>
 
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.65rem', marginBottom: '1rem' }}>
               {queuedEvents.map((ev) => (
                 <div
                   key={ev.id}
                   style={{
-                    padding: '0.65rem',
+                    padding: '0.75rem 0.95rem',
                     backgroundColor: '#f8fafc',
-                    borderRadius: '6px',
+                    borderRadius: '8px',
                     border: '1px solid #e2e8f0',
-                    fontSize: '0.78rem',
+                    fontSize: '0.8125rem',
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontWeight: 800, color: '#0369a1', fontFamily: 'monospace' }}>
                       {ev.eventType}
                     </span>
-                    <span style={{ fontSize: '0.68rem', color: '#64748b' }}>
+                    <span style={{ fontSize: '0.8125rem', color: '#64748b' }}>
                       {new Date(ev.occurredAt).toLocaleTimeString()}
                     </span>
                   </div>
-                  <div style={{ fontSize: '0.7rem', color: '#475569', marginTop: '0.2rem', fontFamily: 'monospace' }}>
-                    ID: {ev.id.slice(0, 16)}...
+                  <div style={{ fontSize: '0.8125rem', color: '#475569', marginTop: '0.25rem', fontFamily: 'monospace' }}>
+                    ID: {ev.id.slice(0, 20)}...
                   </div>
                 </div>
               ))}
               {queuedEvents.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '1.5rem', color: '#16a34a', fontSize: '0.85rem' }}>
-                  ✓ All events synchronized with Central Cloud API!
+                <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#15803d', fontSize: '0.925rem', fontWeight: 700 }}>
+                  {t.allEventsSynced}
                 </div>
               )}
             </div>
 
             <button
+              type="button"
               onClick={handleSimulateSync}
               disabled={isSyncing || queuedEvents.length === 0}
               style={{
-                backgroundColor: isSyncing || queuedEvents.length === 0 ? '#e2e8f0' : '#0284c7',
+                backgroundColor: isSyncing || queuedEvents.length === 0 ? '#e2e8f0' : '#0369a1',
                 color: isSyncing || queuedEvents.length === 0 ? '#94a3b8' : '#ffffff',
                 border: 'none',
-                padding: '0.65rem',
-                borderRadius: '6px',
-                fontSize: '0.85rem',
+                minHeight: '48px',
+                padding: '0.75rem 1rem',
+                borderRadius: '8px',
+                fontSize: '0.925rem',
                 fontWeight: 800,
                 cursor: isSyncing || queuedEvents.length === 0 ? 'default' : 'pointer',
               }}
@@ -1715,8 +2001,8 @@ export default function App() {
               {isSyncing
                 ? '⏳ Syncing Batch with Server...'
                 : queuedEvents.length === 0
-                ? '✓ Journal Up to Date'
-                : '⚡ Push Sync Now'}
+                ? t.journalUpToDate
+                : t.pushSyncNow}
             </button>
           </div>
         </div>
@@ -1730,7 +2016,7 @@ export default function App() {
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(15,23,42,0.6)',
+            backgroundColor: 'rgba(15, 23, 42, 0.75)',
             zIndex: 100,
             display: 'flex',
             alignItems: 'center',
@@ -1741,21 +2027,26 @@ export default function App() {
           <div
             style={{
               backgroundColor: '#ffffff',
-              borderRadius: '8px',
-              maxWidth: '480px',
+              borderRadius: '12px',
+              maxWidth: '520px',
               width: '100%',
-              maxHeight: '80vh',
+              maxHeight: '84vh',
               display: 'flex',
               flexDirection: 'column',
               overflow: 'hidden',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)',
             }}
           >
-            <div style={{ padding: '0.85rem 1rem', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ padding: '1rem 1.15rem', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.65rem' }}>
               <div>
-                <span style={{ fontSize: '0.68rem', color: '#0284c7', fontWeight: 800 }}>AUDIO-ENABLED LESSON</span>
-                <h3 style={{ margin: '0.1rem 0 0 0', fontSize: '0.95rem' }}>{activeLesson.title}</h3>
+                <span style={{ fontSize: '0.8125rem', color: '#0369a1', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  {t.lessonReaderTitle}
+                </span>
+                <h3 style={{ margin: '0.2rem 0 0 0', fontSize: '1.05rem', fontWeight: 800, color: '#0f172a' }}>
+                  {activeLesson.title}
+                </h3>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
                 <button
                   type="button"
                   onClick={() => {
@@ -1772,9 +2063,10 @@ export default function App() {
                     backgroundColor: isLessonAudioPlaying ? '#ea580c' : '#e0f2fe',
                     color: isLessonAudioPlaying ? '#ffffff' : '#0369a1',
                     border: '1px solid #bae6fd',
-                    padding: '0.3rem 0.65rem',
-                    borderRadius: '6px',
-                    fontSize: '0.75rem',
+                    minHeight: '44px',
+                    padding: '0.45rem 0.85rem',
+                    borderRadius: '8px',
+                    fontSize: '0.8125rem',
                     fontWeight: 700,
                     cursor: 'pointer',
                     display: 'flex',
@@ -1782,39 +2074,61 @@ export default function App() {
                     gap: '0.35rem',
                   }}
                 >
-                  <span>{isLessonAudioPlaying ? '⏹️ Stop Narration' : '🔊 Listen (ऑडियो सुनें)'}</span>
+                  <span>{isLessonAudioPlaying ? t.stopNarration : t.listenNarration}</span>
                 </button>
                 <button
+                  type="button"
                   onClick={() => {
                     speechService.stop();
                     setIsLessonAudioPlaying(false);
                     setActiveLesson(null);
                   }}
-                  style={{ background: 'none', border: 'none', fontSize: '1.25rem', color: '#64748b', cursor: 'pointer' }}
+                  style={{
+                    width: '44px',
+                    height: '44px',
+                    minWidth: '44px',
+                    minHeight: '44px',
+                    borderRadius: '50%',
+                    backgroundColor: '#f1f5f9',
+                    border: 'none',
+                    fontSize: '1.25rem',
+                    color: '#64748b',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  title="Close lesson reader"
+                  aria-label="Close lesson reader"
                 >
                   ×
                 </button>
               </div>
             </div>
-            <div style={{ padding: '1rem', overflowY: 'auto', flex: 1, fontSize: '0.85rem', lineHeight: 1.6 }}>
+
+            <div style={{ padding: '1.25rem', overflowY: 'auto', flex: 1, fontSize: '0.9375rem', lineHeight: 1.65, color: '#334155' }}>
               {activeLesson.fullContentMarkdown}
             </div>
-            <div style={{ padding: '0.75rem 1rem', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '0.5rem' }}>
+
+            <div style={{ padding: '0.85rem 1.15rem', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '0.5rem' }}>
               <button
+                type="button"
                 onClick={() => handleCompleteLesson(activeLesson.id)}
                 style={{
                   flex: 1,
-                  backgroundColor: '#16a34a',
+                  minHeight: '46px',
+                  backgroundColor: '#15803d',
                   color: '#ffffff',
                   border: 'none',
-                  padding: '0.55rem',
-                  borderRadius: '6px',
-                  fontSize: '0.85rem',
-                  fontWeight: 700,
+                  padding: '0.65rem 1rem',
+                  borderRadius: '8px',
+                  fontSize: '0.925rem',
+                  fontWeight: 800,
                   cursor: 'pointer',
+                  boxShadow: '0 1px 3px rgba(21, 128, 61, 0.25)',
                 }}
               >
-                ✓ Mark Lesson Completed
+                {t.markLessonComplete}
               </button>
             </div>
           </div>
@@ -1829,7 +2143,7 @@ export default function App() {
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(15,23,42,0.6)',
+            backgroundColor: 'rgba(15, 23, 42, 0.75)',
             zIndex: 100,
             display: 'flex',
             alignItems: 'center',
@@ -1840,75 +2154,97 @@ export default function App() {
           <div
             style={{
               backgroundColor: '#ffffff',
-              borderRadius: '8px',
-              maxWidth: '480px',
+              borderRadius: '12px',
+              maxWidth: '520px',
               width: '100%',
-              maxHeight: '85vh',
+              maxHeight: '88vh',
               display: 'flex',
               flexDirection: 'column',
               overflow: 'hidden',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)',
             }}
           >
-            <div style={{ padding: '1rem', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800 }}>{assessment.title}</h3>
+            <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#0f172a' }}>{assessment.title}</h3>
               <button
+                type="button"
                 onClick={() => setIsAssessmentOpen(false)}
-                style={{ background: 'none', border: 'none', fontSize: '1.25rem', color: '#64748b', cursor: 'pointer' }}
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  minWidth: '44px',
+                  minHeight: '44px',
+                  borderRadius: '50%',
+                  backgroundColor: '#f1f5f9',
+                  border: 'none',
+                  fontSize: '1.25rem',
+                  color: '#64748b',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                title="Close exam"
+                aria-label="Close exam"
               >
                 ×
               </button>
             </div>
 
-            <div style={{ padding: '1rem', overflowY: 'auto', flex: 1 }}>
+            <div style={{ padding: '1.25rem', overflowY: 'auto', flex: 1 }}>
               {quizResult ? (
                 <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
                   <div
                     style={{
-                      width: '64px',
-                      height: '64px',
+                      width: '68px',
+                      height: '68px',
                       borderRadius: '50%',
                       margin: '0 auto 1rem auto',
                       backgroundColor: quizResult.passed ? '#dcfce7' : '#fee2e2',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '1.75rem',
+                      fontSize: '2rem',
                     }}
                   >
                     {quizResult.passed ? '✓' : '✗'}
                   </div>
-                  <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.2rem', color: quizResult.passed ? '#15803d' : '#b91c1c', fontWeight: 800 }}>
+                  <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.3rem', color: quizResult.passed ? '#15803d' : '#b91c1c', fontWeight: 800 }}>
                     {quizResult.passed ? 'Assessment Passed!' : 'Assessment Not Passed'}
                   </h3>
-                  <div style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0.5rem 0', color: '#0f172a' }}>
+                  <div style={{ fontSize: '1.6rem', fontWeight: 900, margin: '0.5rem 0', color: '#0f172a' }}>
                     {quizResult.score}%
                   </div>
-                  <p style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                  <p style={{ fontSize: '0.875rem', color: '#64748b', lineHeight: 1.5 }}>
                     You answered {quizResult.correctCount} of {quizResult.total} questions correctly.
                   </p>
                   {quizResult.passed && (
-                    <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', padding: '0.75rem', borderRadius: '6px', fontSize: '0.8rem', color: '#166534', fontWeight: 700, marginTop: '1rem' }}>
+                    <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', padding: '0.85rem', borderRadius: '8px', fontSize: '0.875rem', color: '#15803d', fontWeight: 800, marginTop: '1rem', lineHeight: 1.4 }}>
                       ✓ Eligible for NCCT Ed25519 Tamper-Proof Digital Credential!
                     </div>
                   )}
                 </div>
               ) : (
-                <form id="quiz-form" onSubmit={handleQuizSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <form id="quiz-form" onSubmit={handleQuizSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
                   {questions.map((q, qIdx) => (
-                    <div key={q.id} style={{ padding: '0.75rem', backgroundColor: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                      <div style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.5rem', color: '#0f172a' }}>
+                    <div key={q.id} style={{ padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                      <div style={{ fontSize: '0.925rem', fontWeight: 800, marginBottom: '0.65rem', color: '#0f172a', lineHeight: 1.5 }}>
                         {qIdx + 1}. {q.prompt}
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                         {q.options.map((opt, optIdx) => (
                           <label
                             key={optIdx}
                             style={{
                               display: 'flex',
                               alignItems: 'center',
-                              gap: '0.5rem',
-                              fontSize: '0.8rem',
+                              gap: '0.65rem',
+                              fontSize: '0.875rem',
                               cursor: 'pointer',
+                              minHeight: '44px',
+                              padding: '0.4rem 0.65rem',
+                              borderRadius: '6px',
+                              backgroundColor: quizAnswers[q.id] === optIdx ? '#e0f2fe' : 'transparent',
                             }}
                           >
                             <input
@@ -1916,8 +2252,9 @@ export default function App() {
                               name={`question-${q.id}`}
                               checked={quizAnswers[q.id] === optIdx}
                               onChange={() => setQuizAnswers({ ...quizAnswers, [q.id]: optIdx })}
+                              style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                             />
-                            <span>{opt}</span>
+                            <span style={{ color: '#1e293b', lineHeight: 1.4 }}>{opt}</span>
                           </label>
                         ))}
                       </div>
@@ -1927,58 +2264,64 @@ export default function App() {
               )}
             </div>
 
-            <div style={{ padding: '0.75rem 1rem', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '0.5rem' }}>
+            <div style={{ padding: '0.85rem 1.25rem', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '0.65rem' }}>
               {quizResult ? (
                 <button
+                  type="button"
                   onClick={() => setIsAssessmentOpen(false)}
                   style={{
                     flex: 1,
-                    backgroundColor: '#0284c7',
+                    minHeight: '46px',
+                    backgroundColor: '#0369a1',
                     color: '#ffffff',
                     border: 'none',
-                    padding: '0.55rem',
-                    borderRadius: '6px',
-                    fontSize: '0.85rem',
-                    fontWeight: 700,
+                    padding: '0.65rem 1rem',
+                    borderRadius: '8px',
+                    fontSize: '0.925rem',
+                    fontWeight: 800,
                     cursor: 'pointer',
                   }}
                 >
-                  Return to Learning
+                  {t.examReturnBtn}
                 </button>
               ) : (
                 <>
                   <button
-                    type="submit"
-                    form="quiz-form"
+                    type="button"
+                    onClick={() => setIsAssessmentOpen(false)}
                     style={{
                       flex: 1,
-                      backgroundColor: '#16a34a',
-                      color: '#ffffff',
-                      border: 'none',
-                      padding: '0.55rem',
-                      borderRadius: '6px',
-                      fontSize: '0.85rem',
+                      minHeight: '46px',
+                      backgroundColor: '#f1f5f9',
+                      border: '1px solid #cbd5e1',
+                      color: '#475569',
+                      padding: '0.65rem 1rem',
+                      borderRadius: '8px',
+                      fontSize: '0.875rem',
                       fontWeight: 700,
                       cursor: 'pointer',
                     }}
                   >
-                    Submit Exam to Edge Node
+                    Cancel
                   </button>
                   <button
-                    type="button"
-                    onClick={() => setIsAssessmentOpen(false)}
+                    type="submit"
+                    form="quiz-form"
                     style={{
-                      backgroundColor: '#f1f5f9',
-                      color: '#475569',
+                      flex: 2,
+                      minHeight: '46px',
+                      backgroundColor: '#15803d',
+                      color: '#ffffff',
                       border: 'none',
-                      padding: '0.55rem 0.85rem',
-                      borderRadius: '6px',
-                      fontSize: '0.85rem',
-                      fontWeight: 600,
+                      padding: '0.65rem 1rem',
+                      borderRadius: '8px',
+                      fontSize: '0.925rem',
+                      fontWeight: 800,
                       cursor: 'pointer',
+                      boxShadow: '0 1px 3px rgba(21, 128, 61, 0.25)',
                     }}
                   >
-                    Cancel
+                    {t.examSubmitBtn}
                   </button>
                 </>
               )}
@@ -1987,54 +2330,59 @@ export default function App() {
         </div>
       )}
 
-      {/* Oral Viva Assessment Modal */}
+      {/* Oral Assessment Modal (Voice AI Player) */}
       <OralAssessmentModal
         isOpen={isOralAssessmentOpen}
-        onClose={() => setIsOralAssessmentOpen(false)}
+        onClose={() => {
+          setIsOralAssessmentOpen(false);
+          refreshState();
+        }}
         traineeId={trainee.id}
         initialLanguage={language}
-        onSubmitted={(res) => {
-          setOralAssessmentResult(res);
+        onSubmitted={() => {
           refreshState();
         }}
       />
 
-      {/* Floating Action Button for Sahakar Mitra AI */}
+      {/* Floating Action Button for Sahakar Mitra AI (Repositioned to bottom: 88px, right: 16px to prevent bottom nav overlap) */}
       <button
+        type="button"
         onClick={() => setIsCounselorOpen(true)}
         style={{
           position: 'fixed',
-          bottom: '68px',
+          bottom: '88px',
           right: '16px',
-          backgroundColor: '#0284c7',
+          backgroundColor: '#0369a1',
           color: '#ffffff',
           border: 'none',
-          borderRadius: '24px',
-          padding: '0.55rem 0.95rem',
+          borderRadius: '28px',
+          minHeight: '48px',
+          padding: '0.65rem 1.25rem',
           display: 'flex',
           alignItems: 'center',
-          gap: '0.4rem',
-          boxShadow: '0 4px 16px rgba(2, 132, 199, 0.4)',
-          fontSize: '0.8rem',
+          gap: '0.5rem',
+          boxShadow: '0 4px 16px rgba(3, 105, 161, 0.35)',
+          fontSize: '0.875rem',
           fontWeight: 800,
           cursor: 'pointer',
           zIndex: 80,
           transition: 'transform 0.15s ease',
         }}
+        aria-label="Open Sahakar Mitra AI counselor"
       >
-        <span>🤖</span>
+        <span style={{ fontSize: '1.25rem' }}>🤖</span>
         <span>{t.counselorBtn}</span>
       </button>
 
       {/* ========================================================
-          DRAWER / MODAL: Sahakar Mitra AI Career Counselor
+          DRAWER / MODAL: Sahakar Mitra AI Career Counselor Sheet
       ======================================================== */}
       {isCounselorOpen && (
         <div
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(15,23,42,0.65)',
+            backgroundColor: 'rgba(15, 23, 42, 0.75)',
             zIndex: 110,
             display: 'flex',
             alignItems: 'flex-end',
@@ -2049,58 +2397,70 @@ export default function App() {
               maxWidth: '520px',
               borderTopLeftRadius: '16px',
               borderTopRightRadius: '16px',
-              maxHeight: '85vh',
+              maxHeight: '88vh',
               display: 'flex',
               flexDirection: 'column',
-              boxShadow: '0 -10px 30px rgba(0,0,0,0.2)',
+              boxShadow: '0 -10px 30px rgba(0, 0, 0, 0.25)',
               overflow: 'hidden',
             }}
           >
             {/* Header */}
             <div
               style={{
-                backgroundColor: '#0284c7',
+                backgroundColor: '#0369a1',
                 color: '#ffffff',
-                padding: '0.85rem 1.15rem',
+                padding: '0.95rem 1.25rem',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
+                gap: '0.5rem',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                 <div
                   style={{
-                    width: '36px',
-                    height: '36px',
+                    width: '40px',
+                    height: '40px',
                     borderRadius: '50%',
-                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '1.25rem',
+                    fontSize: '1.35rem',
                   }}
                 >
                   🤖
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800 }}>
+                  <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800 }}>
                     {t.counselorTitle}
                   </h3>
-                  <div style={{ fontSize: '0.7rem', color: '#bae6fd' }}>
+                  <div style={{ fontSize: '0.8125rem', color: '#bae6fd' }}>
                     {t.counselorSubtitle} • ● AI Active
                   </div>
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setIsCounselorOpen(false)}
                 style={{
-                  background: 'none',
+                  width: '44px',
+                  height: '44px',
+                  minWidth: '44px',
+                  minHeight: '44px',
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
                   border: 'none',
                   color: '#ffffff',
                   fontSize: '1.4rem',
                   cursor: 'pointer',
                   fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
+                title="Close counselor"
+                aria-label="Close counselor"
               >
                 ×
               </button>
@@ -2111,13 +2471,13 @@ export default function App() {
               style={{
                 flex: 1,
                 overflowY: 'auto',
-                padding: '1rem',
+                padding: '1.15rem',
                 backgroundColor: '#f8fafc',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '0.75rem',
-                minHeight: '260px',
-                maxHeight: '380px',
+                gap: '0.85rem',
+                minHeight: '280px',
+                maxHeight: '400px',
               }}
             >
               {counselorMessages.map((msg, idx) => (
@@ -2126,26 +2486,26 @@ export default function App() {
                   style={{
                     alignSelf: msg.sender === 'USER' ? 'flex-end' : 'flex-start',
                     maxWidth: '85%',
-                    backgroundColor: msg.sender === 'USER' ? '#0284c7' : '#ffffff',
+                    backgroundColor: msg.sender === 'USER' ? '#0369a1' : '#ffffff',
                     color: msg.sender === 'USER' ? '#ffffff' : '#0f172a',
-                    padding: '0.75rem 0.9rem',
-                    borderRadius: '10px',
+                    padding: '0.85rem 1rem',
+                    borderRadius: '12px',
                     border: msg.sender === 'USER' ? 'none' : '1px solid #e2e8f0',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                    boxShadow: '0 1px 4px rgba(15, 23, 42, 0.05)',
                   }}
                 >
-                  <div style={{ fontSize: '0.82rem', lineHeight: 1.5 }}>{msg.text}</div>
+                  <div style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>{msg.text}</div>
                   {msg.tags && (
-                    <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', marginTop: '0.4rem' }}>
+                    <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', marginTop: '0.55rem' }}>
                       {msg.tags.map((tg, tidx) => (
                         <span
                           key={tidx}
                           style={{
-                            fontSize: '0.65rem',
+                            fontSize: '0.8125rem',
                             backgroundColor: '#e0f2fe',
                             color: '#0369a1',
-                            padding: '0.1rem 0.4rem',
-                            borderRadius: '4px',
+                            padding: '0.2rem 0.5rem',
+                            borderRadius: '6px',
                             fontWeight: 700,
                           }}
                         >
@@ -2159,9 +2519,9 @@ export default function App() {
                       display: 'flex',
                       justifyContent: msg.sender === 'AI' ? 'space-between' : 'flex-end',
                       alignItems: 'center',
-                      fontSize: '0.62rem',
+                      fontSize: '0.8125rem',
                       color: msg.sender === 'USER' ? '#bae6fd' : '#94a3b8',
-                      marginTop: '0.3rem',
+                      marginTop: '0.45rem',
                     }}
                   >
                     {msg.sender === 'AI' && (
@@ -2169,15 +2529,22 @@ export default function App() {
                         type="button"
                         onClick={() => speechService.speak(msg.text, language)}
                         style={{
-                          background: 'none',
-                          border: 'none',
+                          backgroundColor: '#f0f9ff',
+                          border: '1px solid #bae6fd',
+                          borderRadius: '6px',
                           cursor: 'pointer',
-                          fontSize: '0.72rem',
-                          color: '#0284c7',
-                          padding: '0.1rem 0.2rem',
+                          fontSize: '0.8125rem',
+                          color: '#0369a1',
+                          padding: '0.45rem 0.75rem',
+                          minHeight: '44px',
+                          minWidth: '44px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
                           fontWeight: 700,
                         }}
                         title="Listen (आवाज़ में सुनें)"
+                        aria-label="Listen to message in voice"
                       >
                         🔊 Listen
                       </button>
@@ -2188,19 +2555,20 @@ export default function App() {
               ))}
             </div>
 
-            {/* Quick Suggestion Chips */}
+            {/* Quick Suggestion Chips (Strict >= 44px) */}
             <div
               style={{
-                padding: '0.5rem 1rem',
+                padding: '0.65rem 1rem',
                 backgroundColor: '#ffffff',
                 borderTop: '1px solid #e2e8f0',
                 display: 'flex',
-                gap: '0.4rem',
+                gap: '0.5rem',
                 overflowX: 'auto',
                 whiteSpace: 'nowrap',
               }}
             >
               <button
+                type="button"
                 onClick={() =>
                   handleSendCounselorMessage(
                     language === 'HI'
@@ -2212,17 +2580,19 @@ export default function App() {
                   backgroundColor: '#f1f5f9',
                   border: '1px solid #cbd5e1',
                   color: '#0369a1',
-                  padding: '0.3rem 0.6rem',
-                  borderRadius: '14px',
-                  fontSize: '0.72rem',
-                  fontWeight: 600,
+                  minHeight: '44px',
+                  padding: '0.45rem 0.85rem',
+                  borderRadius: '16px',
+                  fontSize: '0.8125rem',
+                  fontWeight: 700,
                   cursor: 'pointer',
                   flexShrink: 0,
                 }}
               >
-                💡 {language === 'HI' ? 'पैक्स भर्ती पद' : 'PACS Jobs (63k)'}
+                💡 {language === 'HI' ? 'पैक्स भर्ती पद (63,000)' : 'PACS Jobs (63k)'}
               </button>
               <button
+                type="button"
                 onClick={() =>
                   handleSendCounselorMessage(
                     language === 'HI'
@@ -2234,17 +2604,19 @@ export default function App() {
                   backgroundColor: '#f1f5f9',
                   border: '1px solid #cbd5e1',
                   color: '#0369a1',
-                  padding: '0.3rem 0.6rem',
-                  borderRadius: '14px',
-                  fontSize: '0.72rem',
-                  fontWeight: 600,
+                  minHeight: '44px',
+                  padding: '0.45rem 0.85rem',
+                  borderRadius: '16px',
+                  fontSize: '0.8125rem',
+                  fontWeight: 700,
                   cursor: 'pointer',
                   flexShrink: 0,
                 }}
               >
-                🥛 {language === 'HI' ? 'अमूल डेयरी' : 'Amul Roles'}
+                🥛 {language === 'HI' ? 'अमूल डेयरी रिक्तियां' : 'Amul Roles'}
               </button>
               <button
+                type="button"
                 onClick={() =>
                   handleSendCounselorMessage(
                     language === 'HI'
@@ -2256,10 +2628,11 @@ export default function App() {
                   backgroundColor: '#f1f5f9',
                   border: '1px solid #cbd5e1',
                   color: '#0369a1',
-                  padding: '0.3rem 0.6rem',
-                  borderRadius: '14px',
-                  fontSize: '0.72rem',
-                  fontWeight: 600,
+                  minHeight: '44px',
+                  padding: '0.45rem 0.85rem',
+                  borderRadius: '16px',
+                  fontSize: '0.8125rem',
+                  fontWeight: 700,
                   cursor: 'pointer',
                   flexShrink: 0,
                 }}
@@ -2268,14 +2641,15 @@ export default function App() {
               </button>
             </div>
 
-            {/* Input Form */}
+            {/* Input Form with >=44px buttons */}
             <div
               style={{
-                padding: '0.75rem 1rem',
+                padding: '0.85rem 1rem',
                 backgroundColor: '#ffffff',
                 borderTop: '1px solid #e2e8f0',
                 display: 'flex',
-                gap: '0.5rem',
+                gap: '0.65rem',
+                alignItems: 'center',
               }}
             >
               <input
@@ -2288,15 +2662,21 @@ export default function App() {
                 placeholder={t.askCounselorPlaceholder}
                 style={{
                   flex: 1,
-                  padding: '0.55rem 0.75rem',
-                  borderRadius: '6px',
+                  minHeight: '44px',
+                  padding: '0.55rem 0.85rem',
+                  borderRadius: '8px',
                   border: '1px solid #cbd5e1',
-                  fontSize: '0.82rem',
+                  fontSize: '0.875rem',
+                  outline: 'none',
                 }}
               />
               <button
                 type="button"
                 onClick={() => {
+                  if (isVoiceListening) {
+                    setIsVoiceListening(false);
+                    return;
+                  }
                   speechService.startListening(
                     language,
                     (transcript) => {
@@ -2307,33 +2687,40 @@ export default function App() {
                   );
                 }}
                 title={language === 'HI' ? 'बोल कर पूछें (Voice Input)' : 'Speak your query'}
+                aria-label="Voice input"
                 style={{
-                  backgroundColor: isVoiceListening ? '#ef4444' : '#f1f5f9',
+                  backgroundColor: isVoiceListening ? '#dc2626' : '#f1f5f9',
                   color: isVoiceListening ? '#ffffff' : '#0f172a',
                   border: '1px solid #cbd5e1',
-                  borderRadius: '6px',
-                  padding: '0.5rem 0.75rem',
+                  borderRadius: '8px',
+                  minHeight: '44px',
+                  minWidth: '44px',
                   cursor: 'pointer',
-                  fontSize: '0.85rem',
+                  fontSize: '1.15rem',
                   fontWeight: 700,
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.25rem',
+                  justifyContent: 'center',
                 }}
               >
                 <span>{isVoiceListening ? '🎙️' : '🎤'}</span>
               </button>
               <button
+                type="button"
                 onClick={() => handleSendCounselorMessage()}
                 style={{
-                  backgroundColor: '#0284c7',
+                  backgroundColor: '#0369a1',
                   color: '#ffffff',
                   border: 'none',
-                  padding: '0.55rem 1rem',
-                  borderRadius: '6px',
-                  fontWeight: 700,
-                  fontSize: '0.82rem',
+                  minHeight: '44px',
+                  padding: '0.6rem 1.15rem',
+                  borderRadius: '8px',
+                  fontWeight: 800,
+                  fontSize: '0.875rem',
                   cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
               >
                 {language === 'HI' ? 'पूछें →' : 'Ask →'}
@@ -2366,16 +2753,24 @@ export default function App() {
       )}
 
       {/* ========================================================
-          BOTTOM NAVIGATION BAR (All 6 Tabs per 07_UI_UX_SPEC.md)
+          BOTTOM NAVIGATION BAR (All 6 Tabs, Strict >= 48px Touch Height)
       ======================================================== */}
       <nav
         style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          maxWidth: '520px',
+          margin: '0 auto',
+          height: '72px',
           display: 'grid',
           gridTemplateColumns: 'repeat(6, 1fr)',
           backgroundColor: '#ffffff',
           borderTop: '1px solid #e2e8f0',
-          padding: '0.5rem 0',
-          boxShadow: '0 -2px 6px rgba(0,0,0,0.03)',
+          boxShadow: '0 -2px 10px rgba(15, 23, 42, 0.06)',
+          zIndex: 90,
+          padding: '0 2px',
         }}
       >
         {(
@@ -2392,26 +2787,50 @@ export default function App() {
           return (
             <button
               key={tab.id}
+              type="button"
               onClick={() => setActiveTab(tab.id)}
               style={{
                 background: 'none',
                 border: 'none',
-                color: isActive ? '#0284c7' : '#64748b',
-                fontWeight: isActive ? 800 : 500,
-                fontSize: '0.68rem',
+                color: isActive ? '#0369a1' : '#64748b',
+                fontWeight: isActive ? 800 : 600,
+                fontSize: '0.8125rem',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
+                justifyContent: 'center',
                 gap: '0.15rem',
                 cursor: 'pointer',
-                padding: '0.2rem 0',
+                minHeight: '52px',
+                padding: '0.35rem 0.15rem',
                 transition: 'all 0.15s ease',
+                position: 'relative',
               }}
             >
-              <span style={{ fontSize: '1.1rem' }}>{tab.icon}</span>
-              <span>{tab.label}</span>
+              <span style={{ fontSize: '1.25rem', lineHeight: 1 }}>{tab.icon}</span>
+              <span
+                style={{
+                  fontSize: '0.8125rem',
+                  maxWidth: '100%',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  lineHeight: 1.2,
+                }}
+              >
+                {tab.label}
+              </span>
               {isActive && (
-                <div style={{ width: '16px', height: '3px', backgroundColor: '#0284c7', borderRadius: '2px', marginTop: '2px' }} />
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '2px',
+                    width: '24px',
+                    height: '3px',
+                    backgroundColor: '#0369a1',
+                    borderRadius: '2px',
+                  }}
+                />
               )}
             </button>
           );

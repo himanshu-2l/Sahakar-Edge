@@ -2,11 +2,66 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
     <meta name="theme-color" content="#0369a1" />
-    <meta name="description" content="Sahakar Edge — Offline-First Trainee Learning & Assessment Portal" />
+    <meta name="description" content="Sahakar Edge — Rural Trainee Learning, Offline Assessment & Credential Portal (Ministry of Cooperation & NCCT)" />
     <link rel="manifest" href="/manifest.json" />
-    <title>Sahakar Edge — Trainee Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <title>Sahakar Edge — Rural Trainee Portal | NCCT</title>
+    <style>
+      *, *::before, *::after {
+        box-sizing: border-box;
+      }
+      html, body {
+        margin: 0;
+        padding: 0;
+        min-height: 100%;
+        background-color: #f8fafc;
+        color: #0f172a;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Devanagari", Roboto, "Helvetica Neue", sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+        line-height: 1.55;
+        -webkit-tap-highlight-color: transparent;
+      }
+      button, input, select, textarea {
+        font-family: inherit;
+      }
+      @media print {
+        .no-print {
+          display: none !important;
+        }
+        body {
+          background-color: #ffffff !important;
+        }
+      }
+      @keyframes opticalPulse {
+        0%, 100% {
+          opacity: 0.35;
+          transform: scale(0.98);
+        }
+        50% {
+          opacity: 0.85;
+          transform: scale(1.02);
+        }
+      }
+      @keyframes reticleSweep {
+        0% {
+          top: 8%;
+          opacity: 0.8;
+        }
+        50% {
+          top: 90%;
+          opacity: 1;
+        }
+        100% {
+          top: 8%;
+          opacity: 0.8;
+        }
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
