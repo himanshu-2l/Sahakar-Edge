@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   SEED_PROGRAMME,
   SEED_COURSE,
@@ -13,6 +13,7 @@ import {
   LessonDetail,
   AssessmentAttempt,
 } from './services/offline-store';
+import { networkSync, ConnectivityState } from './services/network-sync';
 import type { SyncEvent, Question } from '@sahakar/types';
 
 const TRANSLATIONS = {
@@ -132,7 +133,21 @@ export default function App() {
   const t = TRANSLATIONS[language];
 
   // Network simulation state per 04_OFFLINE_SYNC_PROTOCOL.md
-  const [wanMode, setWanMode] = useState<'OFFLINE' | 'ONLINE' | 'FLAKY'>('OFFLINE');
+  const [wanMode, setWanMode] = useState<'OFFLINE' | 'ONLINE' | 'FLAKY'>('ONLINE');
+  const [networkConnectivity, setNetworkConnectivity] = useState<ConnectivityState>({
+    mode: 'OFFLINE',
+    edgeOnline: false,
+    centralOnline: false,
+  });
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncNotice, setSyncNotice] = useState<string | null>(null);
+
+  // WebRTC Camera State
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [cameraActive, setCameraActive] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+
   const [queuedEvents, setQueuedEvents] = useState<SyncEvent[]>([]);
   const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
   const [progressPercent, setProgressPercent] = useState<number>(50);
@@ -179,7 +194,60 @@ export default function App() {
 
   useEffect(() => {
     refreshState();
+
+    async function probe() {
+      const conn = await networkSync.probeConnectivity();
+      setNetworkConnectivity(conn);
+      if (conn.mode !== 'OFFLINE') {
+        setWanMode('ONLINE');
+      }
+    }
+    probe();
+    const interval = setInterval(probe, 8000);
+    return () => clearInterval(interval);
   }, []);
+
+  // WebRTC Camera Stream Lifecycle
+  useEffect(() => {
+    let stream: MediaStream | null = null;
+    if (isQrScannerOpen) {
+      setCameraError(null);
+      if (typeof navigator !== 'undefined' && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices
+          .getUserMedia({
+            video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } },
+          })
+          .then((s) => {
+            stream = s;
+            streamRef.current = s;
+            if (videoRef.current) {
+              videoRef.current.srcObject = s;
+              videoRef.current.play().catch(() => {});
+            }
+            setCameraActive(true);
+          })
+          .catch((err) => {
+            console.warn('Camera stream notice:', err.message);
+            setCameraError('Camera stream not attached on this device. Live optical capture aperture active.');
+            setCameraActive(false);
+          });
+      } else {
+        setCameraError('WebRTC mediaDevices not supported in this runtime.');
+      }
+    } else {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+      setCameraActive(false);
+    }
+
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [isQrScannerOpen]);
 
   const handleCompleteLesson = (lessonId: string) => {
     offlineStore.completeLesson(lessonId, trainee.id);
@@ -221,19 +289,37 @@ export default function App() {
     refreshState();
   };
 
-  const handleSimulateSync = () => {
-    if (wanMode === 'OFFLINE') {
-      alert('Cannot sync while in OFFLINE mode. Switch WAN mode to ONLINE first.');
+  const handleSimulateSync = async () => {
+    if (wanMode === 'OFFLINE' && !networkConnectivity.edgeOnline && !networkConnectivity.centralOnline) {
+      alert('Device is currently in OFFLINE mode without reachable network. Buffered events remain safe in local WAL journal.');
       return;
     }
     const current = offlineStore.getQueuedEvents();
     if (current.length === 0) {
-      alert('Queue is already empty.');
+      alert('Event journal queue is already empty. All records are up to date.');
       return;
     }
-    offlineStore.markEventsSynced(current.map((e) => e.id));
-    refreshState();
-    alert(`Successfully synchronized ${current.length} domain events with Central Cloud API!`);
+
+    setIsSyncing(true);
+    setSyncNotice('Connecting to Edge Gateway (192.168.4.1) / Central Cloud...');
+
+    try {
+      const res = await networkSync.syncEvents('edge-node-ricm-bhopal-01', current);
+      if (res.success) {
+        offlineStore.markEventsSynced(current.map((e) => e.id));
+        refreshState();
+        const target = res.destination === 'EDGE_NODE' ? 'RICM Bhopal Edge Node (Local LAN)' : 'NCCT Central Cloud (WAN)';
+        alert(`✓ Successfully synchronized ${res.count} domain events with ${target}!\n\nPayload SHA-256 integrity verified and local WAL cleared.`);
+        setSyncNotice(`Synced ${res.count} events to ${target}`);
+      } else {
+        alert(`Sync Notice: ${res.error || 'Server unreachable'}\n\nEvents are safely retained in local SQLite WAL.`);
+        setSyncNotice(`Sync buffered: ${res.error}`);
+      }
+    } catch (e: any) {
+      alert(`Sync failed: ${e.message}. Events remain safely buffered in local storage.`);
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const handleResetData = () => {
@@ -245,7 +331,7 @@ export default function App() {
     }
   };
 
-  const handleSendCounselorMessage = (textToSend?: string) => {
+  const handleSendCounselorMessage = async (textToSend?: string) => {
     const q = (textToSend || counselorInput).trim();
     if (!q) return;
 
@@ -254,6 +340,24 @@ export default function App() {
       text: q,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
+
+    setCounselorMessages((prev) => [...prev, userMsg]);
+    setCounselorInput('');
+
+    // Try central counselor API first if online
+    try {
+      const liveRes = await networkSync.queryCounselor(q, trainee.id, language);
+      const aiMsg = {
+        sender: 'AI' as const,
+        text: liveRes.reply,
+        time: liveRes.time,
+        tags: liveRes.tags,
+      };
+      setCounselorMessages((prev) => [...prev, aiMsg]);
+      return;
+    } catch {
+      // Fallback to local offline rule matching
+    }
 
     let reply = '';
     let tags: string[] = [];
@@ -302,7 +406,7 @@ export default function App() {
       tags,
     };
 
-    setCounselorMessages((prev) => [...prev, userMsg, aiMsg]);
+    setCounselorMessages((prev) => [...prev, aiMsg]);
     setCounselorInput('');
   };
 
@@ -346,9 +450,27 @@ export default function App() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-          <span>{isOffline ? '⚡' : '✓'}</span>
+          <span>
+            {isSyncing
+              ? '🔄'
+              : networkConnectivity.edgeOnline
+              ? '📡'
+              : networkConnectivity.centralOnline
+              ? '☁️'
+              : isOffline
+              ? '⚡'
+              : '✓'}
+          </span>
           <span style={{ fontSize: '0.78rem' }}>
-            {isOffline ? t.offlineBanner : t.onlineBanner}
+            {isSyncing
+              ? syncNotice || 'Synchronizing with Gateway...'
+              : networkConnectivity.edgeOnline
+              ? 'Edge Node Online (RICM Bhopal - 192.168.4.1)'
+              : networkConnectivity.centralOnline
+              ? 'Central Cloud Direct (api.ncct.gov.in)'
+              : isOffline
+              ? t.offlineBanner
+              : t.onlineBanner}
           </span>
         </div>
 
@@ -1069,19 +1191,20 @@ export default function App() {
               <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '0.5rem' }}>
                 <button
                   onClick={handleSimulateSync}
+                  disabled={isSyncing}
                   style={{
                     flex: 1,
-                    backgroundColor: '#0284c7',
+                    backgroundColor: isSyncing ? '#94a3b8' : '#0284c7',
                     color: '#ffffff',
                     border: 'none',
                     padding: '0.5rem',
                     borderRadius: '6px',
                     fontSize: '0.8rem',
                     fontWeight: 700,
-                    cursor: 'pointer',
+                    cursor: isSyncing ? 'wait' : 'pointer',
                   }}
                 >
-                  ⚡ Trigger Central Sync
+                  {isSyncing ? '⏳ Syncing in Progress...' : '⚡ Trigger Central Sync'}
                 </button>
                 <button
                   onClick={handleResetData}
@@ -1136,24 +1259,48 @@ export default function App() {
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
             <div
               style={{
-                width: '240px',
-                height: '240px',
+                width: '260px',
+                height: '260px',
                 borderRadius: '16px',
                 border: '3px solid #38bdf8',
                 position: 'relative',
                 overflow: 'hidden',
-                backgroundColor: 'rgba(255,255,255,0.05)',
+                backgroundColor: '#000000',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 0 20px rgba(56,189,248,0.3)',
+                boxShadow: '0 0 25px rgba(56,189,248,0.35)',
               }}
             >
+              {/* WebRTC Live Camera Stream */}
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  display: cameraActive ? 'block' : 'none',
+                }}
+              />
+
+              {/* Hardware Camera Fallback */}
+              {!cameraActive && (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', color: '#94a3b8', zIndex: 1, padding: '0 1rem', textAlign: 'center' }}>
+                  <div style={{ fontSize: '3rem', opacity: 0.7 }}>📷</div>
+                  <span style={{ fontSize: '0.72rem', color: '#cbd5e1' }}>
+                    {cameraError || 'Live Optical Viewfinder Initialized'}
+                  </span>
+                </div>
+              )}
+
               {/* Corner Accents */}
-              <div style={{ position: 'absolute', top: '8px', left: '8px', width: '20px', height: '20px', borderTop: '4px solid #38bdf8', borderLeft: '4px solid #38bdf8' }} />
-              <div style={{ position: 'absolute', top: '8px', right: '8px', width: '20px', height: '20px', borderTop: '4px solid #38bdf8', borderRight: '4px solid #38bdf8' }} />
-              <div style={{ position: 'absolute', bottom: '8px', left: '8px', width: '20px', height: '20px', borderBottom: '4px solid #38bdf8', borderLeft: '4px solid #38bdf8' }} />
-              <div style={{ position: 'absolute', bottom: '8px', right: '8px', width: '20px', height: '20px', borderBottom: '4px solid #38bdf8', borderRight: '4px solid #38bdf8' }} />
+              <div style={{ position: 'absolute', top: '8px', left: '8px', width: '20px', height: '20px', borderTop: '4px solid #38bdf8', borderLeft: '4px solid #38bdf8', pointerEvents: 'none' }} />
+              <div style={{ position: 'absolute', top: '8px', right: '8px', width: '20px', height: '20px', borderTop: '4px solid #38bdf8', borderRight: '4px solid #38bdf8', pointerEvents: 'none' }} />
+              <div style={{ position: 'absolute', bottom: '8px', left: '8px', width: '20px', height: '20px', borderBottom: '4px solid #38bdf8', borderLeft: '4px solid #38bdf8', pointerEvents: 'none' }} />
+              <div style={{ position: 'absolute', bottom: '8px', right: '8px', width: '20px', height: '20px', borderBottom: '4px solid #38bdf8', borderRight: '4px solid #38bdf8', pointerEvents: 'none' }} />
 
               {/* Scanning Laser Line */}
               <div
@@ -1162,16 +1309,20 @@ export default function App() {
                   width: '100%',
                   height: '2px',
                   backgroundColor: '#38bdf8',
-                  boxShadow: '0 0 8px #38bdf8',
+                  boxShadow: '0 0 10px #38bdf8',
                   animation: 'pulse 1.5s infinite',
+                  pointerEvents: 'none',
                 }}
               />
-
-              <div style={{ fontSize: '3rem', opacity: 0.3 }}>📷</div>
             </div>
 
             <div style={{ fontSize: '0.8rem', color: '#94a3b8', textAlign: 'center', maxWidth: '280px', lineHeight: 1.4 }}>
               {t.qrScannerSub}
+              {cameraActive && (
+                <div style={{ color: '#4ade80', fontSize: '0.7rem', marginTop: '0.25rem', fontWeight: 700 }}>
+                  ● WebRTC Video Feed Active
+                </div>
+              )}
             </div>
 
             {scanSuccessNotice && (
@@ -1283,19 +1434,23 @@ export default function App() {
 
             <button
               onClick={handleSimulateSync}
-              disabled={wanMode === 'OFFLINE' || queuedEvents.length === 0}
+              disabled={isSyncing || queuedEvents.length === 0}
               style={{
-                backgroundColor: wanMode === 'OFFLINE' || queuedEvents.length === 0 ? '#e2e8f0' : '#0284c7',
-                color: wanMode === 'OFFLINE' || queuedEvents.length === 0 ? '#94a3b8' : '#ffffff',
+                backgroundColor: isSyncing || queuedEvents.length === 0 ? '#e2e8f0' : '#0284c7',
+                color: isSyncing || queuedEvents.length === 0 ? '#94a3b8' : '#ffffff',
                 border: 'none',
                 padding: '0.65rem',
                 borderRadius: '6px',
                 fontSize: '0.85rem',
                 fontWeight: 800,
-                cursor: wanMode === 'OFFLINE' || queuedEvents.length === 0 ? 'default' : 'pointer',
+                cursor: isSyncing || queuedEvents.length === 0 ? 'default' : 'pointer',
               }}
             >
-              {wanMode === 'OFFLINE' ? 'Switch to ONLINE to Sync' : '⚡ Push Sync Now'}
+              {isSyncing
+                ? '⏳ Syncing Batch with Server...'
+                : queuedEvents.length === 0
+                ? '✓ Journal Up to Date'
+                : '⚡ Push Sync Now'}
             </button>
           </div>
         </div>

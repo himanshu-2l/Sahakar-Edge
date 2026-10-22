@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   SEED_INSTITUTES,
   SEED_INSTITUTE_RICM_BHOPAL,
@@ -15,6 +15,7 @@ import {
   SEED_JOB_REQUIRED_SKILLS,
 } from '@sahakar/test-fixtures';
 import { Programme, Batch, Enrollment, EnrollmentStatus, ProgrammeStatus } from '@sahakar/types';
+import { apiClient, BackendStatus } from '../services/api-client';
 
 export default function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState<
@@ -34,6 +35,13 @@ export default function AdminDashboardPage() {
 
   const [selectedCandidateId, setSelectedCandidateId] = useState<string>('dddd4444-4444-4444-4444-444444444441');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Live Backend Connection Status
+  const [backendStatus, setBackendStatus] = useState<BackendStatus>({
+    online: false,
+    url: apiClient.getBaseUrl(),
+    checkedAt: '',
+  });
 
   // Interactive state initialized with seed fixtures
   const [programmes, setProgrammes] = useState<Programme[]>([SEED_PROGRAMME]);
@@ -177,7 +185,7 @@ export default function AdminDashboardPage() {
     },
   ]);
 
-  const handleSendCounselorMessage = (textToSend?: string) => {
+  const handleSendCounselorMessage = async (textToSend?: string) => {
     const q = (textToSend || counselorInput).trim();
     if (!q) return;
 
@@ -187,33 +195,27 @@ export default function AdminDashboardPage() {
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
-    let reply = '';
-    let tags: string[] = [];
-
-    const lower = q.toLowerCase();
-    if (lower.includes('pacs') || lower.includes('पैक्स') || lower.includes('accounting')) {
-      reply = 'Based on the Ministry of Cooperation nationwide PACS Computerization drive (covering 63,000+ functional PACS), certified candidates like Anita Patel are directly eligible for "PACS Secretary / Junior Accountant" roles. Starting compensation ranges from ₹18,000 to ₹32,000/month. The NCCT Ed25519 credential serves as statutory proof of double-entry day-book proficiency under NABARD norms.';
-      tags = ['63,000 PACS Drive', 'NABARD Guidelines', 'Day-Book Certified'];
-    } else if (lower.includes('amul') || lower.includes('dairy') || lower.includes('अमूल')) {
-      reply = 'For Dairy Cooperatives (such as GCMMF / Amul and state milk federations), candidates with credentials in Cooperative Governance & Dairy Society Procurement are matched to "Dairy Procurement Coordinator" and "Cold Chain Supervisor" openings. The starting role oversees village-level Bulk Milk Chilling (BMC) units and testing.';
-      tags = ['GCMMF / Amul', 'Cold Chain Management', 'Milk Testing Protocol'];
-    } else if (lower.includes('scheme') || lower.includes('योजना') || lower.includes('subsidy') || lower.includes('startup')) {
-      reply = 'Under the Ministry of Cooperation and NCDC (National Cooperative Development Corporation), rural youth can access the "Yuva Sahakar Scheme" which provides 2% interest subvention for cooperative business ventures, plus NABARD PACS Infrastructure Development Fund providing capital support for grain storage and agro-logistics.';
-      tags = ['Yuva Sahakar Scheme', 'NCDC Subventions', 'PACS Agro-Storage'];
-    } else {
-      reply = `Thank you for your query regarding cooperative careers. For the selected candidate (${selectedCandidateId === 'dddd4444-4444-4444-4444-444444444441' ? 'Anita Patel' : 'Vikram Rao'}), their highest affinity match is currently with Primary Agricultural Credit Societies and District Central Cooperative Banks (95% skill overlap). Would you like to view open vacancies or explore specialized audit certifications?`;
-      tags = ['Tailored Pathway', 'NCCT Accreditation', 'Recruiter Connect'];
-    }
-
-    const aiMsg = {
-      sender: 'AI' as const,
-      text: reply,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      tags,
-    };
-
-    setCounselorMessages((prev) => [...prev, userMsg, aiMsg]);
+    setCounselorMessages((prev) => [...prev, userMsg]);
     setCounselorInput('');
+
+    try {
+      const res = await apiClient.queryCounselor(q, selectedCandidateId, 'EN');
+      const aiMsg = {
+        sender: 'AI' as const,
+        text: res.reply,
+        time: res.time,
+        tags: res.tags,
+      };
+      setCounselorMessages((prev) => [...prev, aiMsg]);
+    } catch {
+      const fallbackAiMsg = {
+        sender: 'AI' as const,
+        text: 'Based on the Ministry of Cooperation nationwide PACS Computerization drive, certified candidates are eligible for PACS Secretary / Junior Accountant roles.',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        tags: ['PACS Modernization', 'NCCT Accredited'],
+      };
+      setCounselorMessages((prev) => [...prev, fallbackAiMsg]);
+    }
   };
 
   // Attendance & Manual Override State (07_UI_UX_SPEC.md & 05_HARDWARE_EDGE.md)
@@ -379,6 +381,49 @@ export default function AdminDashboardPage() {
 
   const trainees = SEED_USERS.filter((u) => u.role === 'TRAINEE');
 
+  // Probe Central API and load live persistent state
+  useEffect(() => {
+    async function loadLiveBackendData() {
+      const status = await apiClient.checkHealth();
+      setBackendStatus(status);
+      if (status.online) {
+        apiClient.getProgrammes().then((progs) => {
+          if (progs && progs.length > 0) setProgrammes(progs);
+        });
+        apiClient.getBatches().then((b) => {
+          if (b && b.length > 0) setBatches(b);
+        });
+        apiClient.getEnrollments().then((e) => {
+          if (e && e.length > 0) setEnrollments(e);
+        });
+        apiClient.getHostels().then((h) => {
+          if (h && h.length > 0) setHostelAllotments(h);
+        });
+        apiClient.getTimetable().then((t) => {
+          if (t && t.length > 0) setTimetableSchedule(t);
+        });
+        apiClient.getHardwareKits().then((k) => {
+          if (k && k.length > 0) setHardwareKits(k);
+        });
+        apiClient.getAuditLogs().then((a) => {
+          if (a && a.length > 0) {
+            setAuditLogs(
+              a.map((log: any) => ({
+                id: log.id,
+                timestamp: log.timestamp,
+                actor: log.actor,
+                action: log.action,
+                entity: 'Central Authority / Audit Event',
+                details: log.details,
+              }))
+            );
+          }
+        });
+      }
+    }
+    loadLiveBackendData();
+  }, []);
+
   // Simulator Actions
   const handleSimAttendance = () => {
     if (simAttendanceCheckedIn) return;
@@ -515,30 +560,23 @@ export default function AdminDashboardPage() {
     );
   };
 
-  const handleCreateProgramme = (e: React.FormEvent) => {
+  const handleCreateProgramme = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
 
-    const newProg: Programme = {
-      id: `prog-${Date.now()}`,
+    const newProg = await apiClient.createProgramme({
       instituteId: SEED_INSTITUTE_RICM_BHOPAL.id,
       title: newTitle.trim(),
       description: newDesc.trim() || 'Cooperative capacity building training.',
-      startAt: new Date().toISOString(),
-      endAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       status: ProgrammeStatus.ACTIVE,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    });
 
-    const newBatch: Batch = {
-      id: `batch-${Date.now()}`,
+    const newBatch = await apiClient.createBatch({
       programmeId: newProg.id,
       name: `Batch 1: ${newProg.title.slice(0, 20)}`,
-      capacity: 30,
       trainerId: 'cccc3333-3333-3333-3333-333333333333',
-      createdAt: new Date().toISOString(),
-    };
+      capacity: 30,
+    });
 
     setProgrammes([newProg, ...programmes]);
     setBatches([newBatch, ...batches]);
@@ -560,7 +598,7 @@ export default function AdminDashboardPage() {
     ]);
   };
 
-  const handleEnrollTrainee = (e: React.FormEvent) => {
+  const handleEnrollTrainee = async (e: React.FormEvent) => {
     e.preventDefault();
     const existing = enrollments.find(
       (enr) => enr.traineeId === selectedTraineeId && enr.programmeId === selectedProgrammeId
@@ -571,14 +609,11 @@ export default function AdminDashboardPage() {
       return;
     }
 
-    const newEnrollment: Enrollment = {
-      id: `enr-${Date.now()}`,
-      traineeId: selectedTraineeId,
+    const newEnrollment = await apiClient.enrollTrainee({
       programmeId: selectedProgrammeId,
       batchId: selectedBatchId,
-      status: EnrollmentStatus.ACTIVE,
-      enrolledAt: new Date().toISOString(),
-    };
+      traineeId: selectedTraineeId,
+    });
 
     setEnrollments([...enrollments, newEnrollment]);
     const traineeName = trainees.find((t) => t.id === selectedTraineeId)?.name || 'Trainee';
@@ -692,6 +727,36 @@ export default function AdminDashboardPage() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+          {/* Live Central API Status Indicator */}
+          <div
+            title={`Central Backend: ${backendStatus.url} (${backendStatus.online ? 'Connected' : 'Offline / Standalone Cache'})`}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              backgroundColor: backendStatus.online ? 'rgba(34, 197, 94, 0.15)' : 'rgba(234, 179, 8, 0.15)',
+              border: `1px solid ${backendStatus.online ? '#22c55e' : '#eab308'}`,
+              padding: '0.35rem 0.75rem',
+              borderRadius: '9999px',
+              fontSize: '0.72rem',
+              fontWeight: 700,
+              color: backendStatus.online ? '#4ade80' : '#fde047',
+            }}
+          >
+            <span
+              style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                backgroundColor: backendStatus.online ? '#22c55e' : '#eab308',
+                boxShadow: backendStatus.online ? '0 0 8px #22c55e' : 'none',
+              }}
+            />
+            <span>
+              {backendStatus.online ? 'LIVE CENTRAL API' : 'LOCAL CACHE MODE'}
+            </span>
+          </div>
+
           <button
             onClick={() => setShowMobileSimulator(!showMobileSimulator)}
             style={{

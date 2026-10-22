@@ -121,6 +121,60 @@ export class EdgeJournalService {
   }
 
   /**
+   * Ingest an event from a local client (PWA, terminal) with deduplication (idempotent).
+   */
+  public ingestClientEvent(event: SyncEvent): void {
+    const existing = this.db
+      .prepare('SELECT id FROM local_event_journal WHERE id = ?')
+      .get(event.id);
+    if (existing) {
+      return; // Idempotent deduplication
+    }
+
+    const logicalSequence = this.getNextLogicalSequence();
+    const occurredAt = event.occurredAt || new Date().toISOString();
+    const hash =
+      event.hash ||
+      calculateEventHash(
+        event.aggregateType,
+        event.aggregateId,
+        event.eventType,
+        event.payload,
+        logicalSequence
+      );
+
+    this.db
+      .prepare(`
+        INSERT INTO local_event_journal (
+          id, node_id, aggregate_type, aggregate_id, event_type,
+          payload_json, schema_version, occurred_at, logical_sequence,
+          hash, sync_status, retry_count, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'QUEUED', 0, ?)
+      `)
+      .run(
+        event.id,
+        event.nodeId || this.nodeId,
+        event.aggregateType,
+        event.aggregateId,
+        event.eventType,
+        canonicalJsonStringify(event.payload),
+        event.schemaVersion || 1,
+        occurredAt,
+        logicalSequence,
+        hash,
+        occurredAt
+      );
+
+    this.db
+      .prepare(`
+        UPDATE edge_node_state
+        SET last_logical_sequence = ?, updated_at = ?
+        WHERE node_id = ?
+      `)
+      .run(logicalSequence, occurredAt, this.nodeId);
+  }
+
+  /**
    * Retrieves pending events waiting for WAN sync upload.
    */
   public getQueuedEvents(limit = 100): SyncEvent[] {
