@@ -15,6 +15,7 @@ import {
 } from './services/offline-store';
 import { networkSync, ConnectivityState } from './services/network-sync';
 import { speechService } from './services/speech-service';
+import { OfficialCertificateModal } from './components/OfficialCertificateModal';
 import type { SyncEvent, Question } from '@sahakar/types';
 
 const TRANSLATIONS = {
@@ -164,6 +165,7 @@ export default function App() {
   const [isQrScannerOpen, setIsQrScannerOpen] = useState(false);
   const [isQueueDrawerOpen, setIsQueueDrawerOpen] = useState(false);
   const [isCounselorOpen, setIsCounselorOpen] = useState(false);
+  const [showCertModal, setShowCertModal] = useState(false);
   const [scanSuccessNotice, setScanSuccessNotice] = useState<string | null>(null);
 
   const [counselorInput, setCounselorInput] = useState('');
@@ -1047,6 +1049,29 @@ export default function App() {
                 <span>Issuer: NCCT Apex Board</span>
                 <span>Algorithm: Ed25519</span>
               </div>
+
+              <button
+                onClick={() => setShowCertModal(true)}
+                style={{
+                  width: '100%',
+                  backgroundColor: '#0284c7',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '0.65rem',
+                  borderRadius: '6px',
+                  fontSize: '0.82rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  marginTop: '0.85rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.4rem',
+                }}
+              >
+                <span>🖨️</span>
+                <span>View & Print Official NCCT Certificate</span>
+              </button>
             </div>
           </div>
         )}
@@ -2068,6 +2093,28 @@ export default function App() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal: Official Printable NCCT Credential */}
+      {showCertModal && (
+        <OfficialCertificateModal
+          data={{
+            credentialId: 'cred-anita-pacs-2026',
+            traineeName: trainee.name,
+            programmeTitle: SEED_PROGRAMME.title,
+            institute: 'Regional Institute of Cooperative Management (RICM), Bhopal',
+            issuedAt: '2026-09-28T14:30:00.000Z',
+            issuer: 'National Council for Cooperative Training (NCCT)',
+            signatureHex: '9f8b4c7d01824a56e6d54f890123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+            skills: [
+              'PACS Computerization & Statutory Ledger Posting',
+              'Daybook (Rojnamcha) Reconciliations',
+              'Double-Entry Accounting & Statutory Reserve Compliance',
+              'Cooperative Bylaws & Democratic Governance',
+            ],
+          }}
+          onClose={() => setShowCertModal(false)}
+        />
       )}
 
       {/* ========================================================
