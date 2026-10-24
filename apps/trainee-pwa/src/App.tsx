@@ -14,6 +14,7 @@ import {
   AssessmentAttempt,
 } from './services/offline-store';
 import { networkSync, ConnectivityState } from './services/network-sync';
+import { speechService } from './services/speech-service';
 import type { SyncEvent, Question } from '@sahakar/types';
 
 const TRANSLATIONS = {
@@ -147,6 +148,10 @@ export default function App() {
   const streamRef = useRef<MediaStream | null>(null);
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+
+  // Audio Narration & Speech Recognition State
+  const [isLessonAudioPlaying, setIsLessonAudioPlaying] = useState(false);
+  const [isVoiceListening, setIsVoiceListening] = useState(false);
 
   const [queuedEvents, setQueuedEvents] = useState<SyncEvent[]>([]);
   const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
@@ -1484,14 +1489,51 @@ export default function App() {
               overflow: 'hidden',
             }}
           >
-            <div style={{ padding: '1rem', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontSize: '0.95rem' }}>{activeLesson.title}</h3>
-              <button
-                onClick={() => setActiveLesson(null)}
-                style={{ background: 'none', border: 'none', fontSize: '1.25rem', color: '#64748b', cursor: 'pointer' }}
-              >
-                ×
-              </button>
+            <div style={{ padding: '0.85rem 1rem', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <span style={{ fontSize: '0.68rem', color: '#0284c7', fontWeight: 800 }}>AUDIO-ENABLED LESSON</span>
+                <h3 style={{ margin: '0.1rem 0 0 0', fontSize: '0.95rem' }}>{activeLesson.title}</h3>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isLessonAudioPlaying) {
+                      speechService.stop();
+                      setIsLessonAudioPlaying(false);
+                    } else {
+                      speechService.speak(activeLesson.fullContentMarkdown, language, (playing) => {
+                        setIsLessonAudioPlaying(playing);
+                      });
+                    }
+                  }}
+                  style={{
+                    backgroundColor: isLessonAudioPlaying ? '#ea580c' : '#e0f2fe',
+                    color: isLessonAudioPlaying ? '#ffffff' : '#0369a1',
+                    border: '1px solid #bae6fd',
+                    padding: '0.3rem 0.65rem',
+                    borderRadius: '6px',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                  }}
+                >
+                  <span>{isLessonAudioPlaying ? '⏹️ Stop Narration' : '🔊 Listen (ऑडियो सुनें)'}</span>
+                </button>
+                <button
+                  onClick={() => {
+                    speechService.stop();
+                    setIsLessonAudioPlaying(false);
+                    setActiveLesson(null);
+                  }}
+                  style={{ background: 'none', border: 'none', fontSize: '1.25rem', color: '#64748b', cursor: 'pointer' }}
+                >
+                  ×
+                </button>
+              </div>
             </div>
             <div style={{ padding: '1rem', overflowY: 'auto', flex: 1, fontSize: '0.85rem', lineHeight: 1.6 }}>
               {activeLesson.fullContentMarkdown}
@@ -1841,13 +1883,33 @@ export default function App() {
                   )}
                   <div
                     style={{
+                      display: 'flex',
+                      justifyContent: msg.sender === 'AI' ? 'space-between' : 'flex-end',
+                      alignItems: 'center',
                       fontSize: '0.62rem',
                       color: msg.sender === 'USER' ? '#bae6fd' : '#94a3b8',
                       marginTop: '0.3rem',
-                      textAlign: 'right',
                     }}
                   >
-                    {msg.time}
+                    {msg.sender === 'AI' && (
+                      <button
+                        type="button"
+                        onClick={() => speechService.speak(msg.text, language)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontSize: '0.72rem',
+                          color: '#0284c7',
+                          padding: '0.1rem 0.2rem',
+                          fontWeight: 700,
+                        }}
+                        title="Listen (आवाज़ में सुनें)"
+                      >
+                        🔊 Listen
+                      </button>
+                    )}
+                    <span>{msg.time}</span>
                   </div>
                 </div>
               ))}
@@ -1959,6 +2021,35 @@ export default function App() {
                   fontSize: '0.82rem',
                 }}
               />
+              <button
+                type="button"
+                onClick={() => {
+                  speechService.startListening(
+                    language,
+                    (transcript) => {
+                      setCounselorInput(transcript);
+                      handleSendCounselorMessage(transcript);
+                    },
+                    (listening) => setIsVoiceListening(listening)
+                  );
+                }}
+                title={language === 'HI' ? 'बोल कर पूछें (Voice Input)' : 'Speak your query'}
+                style={{
+                  backgroundColor: isVoiceListening ? '#ef4444' : '#f1f5f9',
+                  color: isVoiceListening ? '#ffffff' : '#0f172a',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '6px',
+                  padding: '0.5rem 0.75rem',
+                  cursor: 'pointer',
+                  fontSize: '0.85rem',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.25rem',
+                }}
+              >
+                <span>{isVoiceListening ? '🎙️' : '🎤'}</span>
+              </button>
               <button
                 onClick={() => handleSendCounselorMessage()}
                 style={{
