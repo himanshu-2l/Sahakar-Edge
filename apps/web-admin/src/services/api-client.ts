@@ -360,6 +360,22 @@ class CentralApiClient {
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
   }
+
+  // --- Analytics Overview ---
+  public async getAnalyticsOverview(): Promise<any> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/analytics/overview`, {
+        headers: { Authorization: DEFAULT_AUTH_HEADER },
+        signal: AbortSignal.timeout(3000),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // Fallback
+    }
+    return null;
+  }
 }
 
 export const apiClient = new CentralApiClient();

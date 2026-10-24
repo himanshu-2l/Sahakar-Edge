@@ -133,4 +133,9 @@ export async function logisticsRoutes(fastify: FastifyInstance) {
     });
     return reply.status(201).send({ auditLog: entry });
   });
+
+  // Analytics Overview for NCCT Central Monitoring & Outreach (PS 26087)
+  fastify.get('/analytics/overview', async () => {
+    return centralStore.getAnalyticsOverview();
+  });
 }

@@ -42,6 +42,7 @@ export default function AdminDashboardPage() {
     url: apiClient.getBaseUrl(),
     checkedAt: '',
   });
+  const [analyticsOverview, setAnalyticsOverview] = useState<any | null>(null);
 
   // Interactive state initialized with seed fixtures
   const [programmes, setProgrammes] = useState<Programme[]>([SEED_PROGRAMME]);
@@ -404,6 +405,9 @@ export default function AdminDashboardPage() {
         });
         apiClient.getHardwareKits().then((k) => {
           if (k && k.length > 0) setHardwareKits(k);
+        });
+        apiClient.getAnalyticsOverview().then((analytics) => {
+          if (analytics) setAnalyticsOverview(analytics);
         });
         apiClient.getAuditLogs().then((a) => {
           if (a && a.length > 0) {
@@ -939,6 +943,63 @@ export default function AdminDashboardPage() {
                 >
                   Consult Sahakar Mitra Chatbot →
                 </button>
+              </div>
+            </div>
+
+            {/* National Outreach & Sector Distribution Section (PS 26087 Analytics) */}
+            <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+              <div style={{ backgroundColor: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h3 style={{ fontSize: '0.95rem', margin: 0, color: '#0f172a', fontWeight: 800 }}>
+                    📍 Nationwide NCCT Training Outreach by State
+                  </h3>
+                  <span style={{ fontSize: '0.7rem', color: '#16a34a', fontWeight: 700, backgroundColor: '#dcfce7', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>
+                    Central Monitored
+                  </span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                  {(analyticsOverview?.stateOutreach || [
+                    { state: 'Madhya Pradesh (RICM Bhopal)', activeCentres: 12, traineesTrained: 1840 },
+                    { state: 'Maharashtra (VAMNICOM Pune)', activeCentres: 18, traineesTrained: 2950 },
+                    { state: 'Gujarat (ICM Gandhinagar)', activeCentres: 14, traineesTrained: 2120 },
+                    { state: 'Uttar Pradesh (ICM Lucknow)', activeCentres: 16, traineesTrained: 2480 },
+                    { state: 'Karnataka (RICM Bengaluru)', activeCentres: 10, traineesTrained: 1690 },
+                  ]).map((st: any, idx: number) => (
+                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem', padding: '0.4rem 0.5rem', backgroundColor: '#f8fafc', borderRadius: '6px' }}>
+                      <span style={{ fontWeight: 600 }}>{st.state}</span>
+                      <span style={{ color: '#0369a1', fontWeight: 800 }}>{st.traineesTrained.toLocaleString()} Trainees ({st.activeCentres} Centres)</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ backgroundColor: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h3 style={{ fontSize: '0.95rem', margin: 0, color: '#0f172a', fontWeight: 800 }}>
+                    📊 Cooperative Sector Certification Breakdown
+                  </h3>
+                  <span style={{ fontSize: '0.7rem', color: '#0284c7', fontWeight: 700, backgroundColor: '#e0f2fe', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>
+                    100% NCCT Standards
+                  </span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                  {(analyticsOverview?.cooperativeSectorDistribution || [
+                    { sector: 'Primary Agricultural Credit Societies (PACS)', percentage: 55 },
+                    { sector: 'Dairy Cooperatives (Amul / State Federations)', percentage: 25 },
+                    { sector: 'District Central Cooperative Banks (DCCBs)', percentage: 12 },
+                    { sector: 'Agri-Marketing & SHG Federations', percentage: 8 },
+                  ]).map((sc: any, idx: number) => (
+                    <div key={idx}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', marginBottom: '0.25rem' }}>
+                        <span style={{ fontWeight: 600 }}>{sc.sector}</span>
+                        <span style={{ fontWeight: 800, color: '#0369a1' }}>{sc.percentage}%</span>
+                      </div>
+                      <div style={{ height: '8px', width: '100%', backgroundColor: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${sc.percentage}%`, backgroundColor: idx === 0 ? '#0284c7' : idx === 1 ? '#16a34a' : idx === 2 ? '#ca8a04' : '#8b5cf6' }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
