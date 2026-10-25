@@ -37,12 +37,15 @@ export async function registerSyncRoutes(app: FastifyInstance) {
   });
 
   // 2. Ingest Batch of Offline Events (04_OFFLINE_SYNC_PROTOCOL.md Step 3-6)
-  app.post<{
-    Body: {
-      nodeId: string;
-      events: SyncEvent[];
-    };
-  }>('/api/v1/sync/events', async (request, reply) => {
+  const handleSyncBatch = async (
+    request: import('fastify').FastifyRequest<{
+      Body: {
+        nodeId: string;
+        events: SyncEvent[];
+      };
+    }>,
+    reply: import('fastify').FastifyReply
+  ) => {
     const { nodeId, events } = request.body || {};
 
     if (!nodeId || !Array.isArray(events)) {
@@ -142,7 +145,10 @@ export async function registerSyncRoutes(app: FastifyInstance) {
       centralSequence: centralStore.getCentralSequence(),
       timestamp: new Date().toISOString(),
     });
-  });
+  };
+
+  app.post('/api/v1/sync/events', handleSyncBatch);
+  app.post('/api/v1/sync/ingest', handleSyncBatch);
 
   // 3. Node Fleet Status
   app.get<{ Params: { nodeId: string } }>('/api/v1/sync/status/:nodeId', async (request, reply) => {
