@@ -88,17 +88,26 @@ export type EnrollTraineeInput = z.infer<typeof enrollTraineeSchema>;
 // 3. Attendance Validation Schemas
 // ==========================================
 
+export const attendanceVerificationMethodSchema = z.nativeEnum(AttendanceVerificationMethod);
+
 export const recordAttendanceSchema = z.object({
   sessionId: z.string().uuid(),
   traineeId: z.string().uuid(),
   nodeId: z.string().uuid(),
-  method: z.nativeEnum(AttendanceVerificationMethod),
+  method: attendanceVerificationMethodSchema,
   result: z.nativeEnum(AttendanceResult).default(AttendanceResult.PRESENT),
   confidence: z.number().min(0).max(1).optional(),
   quality: z.number().min(0).max(1).optional(),
   occurredAt: z.string().datetime(),
 });
 export type RecordAttendanceInput = z.infer<typeof recordAttendanceSchema>;
+
+export const rfidAttendanceSchema = z.object({
+  cardUid: z.string().min(1, 'Card UID is required'),
+  sessionId: z.string().uuid().optional(),
+  traineeId: z.string().uuid().optional(),
+});
+export type RfidAttendanceInput = z.infer<typeof rfidAttendanceSchema>;
 
 export const overrideAttendanceSchema = z.object({
   attendanceId: z.string().uuid(),

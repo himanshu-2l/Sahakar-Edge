@@ -5,16 +5,19 @@ import { EdgeJournalService } from '../services/journal-service.js';
 import { EdgeAuthService } from '../services/edge-auth.js';
 import { EdgeAttendanceManager } from '../services/attendance-manager.js';
 import { AttendanceVerificationMethod } from '@sahakar/types';
+import { RfidSmartCardProvider } from '@sahakar/hardware-adapters';
 
 export async function registerAttendanceRoutes(
   app: FastifyInstance,
   db: DatabaseSync,
   journalService: EdgeJournalService,
   authService: EdgeAuthService,
-  attendanceManager?: EdgeAttendanceManager
+  attendanceManager?: EdgeAttendanceManager,
+  rfidProvider?: RfidSmartCardProvider
 ) {
   const manager =
     attendanceManager || new EdgeAttendanceManager(db, journalService, 'edge-node-ricm-bhopal-01');
+  const rfid = rfidProvider || new RfidSmartCardProvider();
 
   // Hardware Adapter Capture Endpoint (Simulated Face, QR)
   app.post<{
@@ -66,6 +69,106 @@ export async function registerAttendanceRoutes(
       evidence: result.evidence,
       event: result.event,
     });
+  });
+
+  // Edge Hardware Smart Card / RFID Tap Attendance Endpoint (ISO 14443A / KCC)
+  app.post<{
+    Body: {
+      cardUid: string;
+      sessionId?: string;
+      traineeId?: string;
+    };
+  }>('/api/v1/attendance/rfid', async (request, reply) => {
+    const { cardUid, sessionId, traineeId } = request.body || {};
+
+    if (!cardUid || typeof cardUid !== 'string' || cardUid.trim().length === 0) {
+      return reply.status(400).send({
+        error: 'BAD_REQUEST',
+        message: 'cardUid is required for RFID attendance tap',
+      });
+    }
+
+    try {
+      // Tap the RFID card through RfidSmartCardProvider with sub-50ms latency check
+      const tapResult = await rfid.tapCard(cardUid, sessionId, traineeId);
+
+      // Resolve session: use provided sessionId, or look up active local session, or fallback to default
+      let targetSessionId = sessionId;
+      if (!targetSessionId) {
+        const row = db
+          .prepare('SELECT id FROM local_sessions ORDER BY starts_at DESC LIMIT 1')
+          .get() as { id: string } | undefined;
+        targetSessionId = row?.id || '33333333-3333-3333-3333-333333333331';
+      }
+
+      const authUser = authService.authenticate(request);
+      const createdBy = authUser ? authUser.id : 'rfid-hub-acr122u';
+      const recordId = randomUUID();
+      const occurredAt = tapResult.timestamp;
+
+      const payload = {
+        recordId,
+        sessionId: targetSessionId,
+        traineeId: tapResult.traineeId,
+        method: AttendanceVerificationMethod.RFID,
+        result: 'PRESENT',
+        confidence: 1.0,
+        quality: 0.99,
+        createdBy,
+        occurredAt,
+        cardUid: tapResult.cardUid,
+        cardType: tapResult.cardType,
+        traineeName: tapResult.traineeName,
+        latencyMs: tapResult.latencyMs,
+      };
+
+      // Atomic transaction: local_attendance_records business state + local_event_journal WAL event
+      const event = journalService.appendEventInTransaction({
+        aggregateType: 'ATTENDANCE',
+        aggregateId: targetSessionId,
+        eventType: 'ATTENDANCE_RECORDED',
+        payload,
+        operationalCallback: (txDb) => {
+          txDb
+            .prepare(`
+              INSERT INTO local_attendance_records (
+                id, session_id, trainee_id, node_id, method, result,
+                confidence, quality, occurred_at, created_by
+              ) VALUES (?, ?, ?, 'edge-node-ricm-bhopal-01', ?, ?, ?, ?, ?, ?)
+            `)
+            .run(
+              recordId,
+              targetSessionId,
+              tapResult.traineeId,
+              AttendanceVerificationMethod.RFID,
+              'PRESENT',
+              1.0,
+              0.99,
+              occurredAt,
+              createdBy
+            );
+        },
+      });
+
+      return reply.status(201).send({
+        success: true,
+        latencyMs: tapResult.latencyMs,
+        cardUid: tapResult.cardUid,
+        cardType: tapResult.cardType,
+        trainee: {
+          id: tapResult.traineeId,
+          name: tapResult.traineeName,
+        },
+        record: payload,
+        event,
+      });
+    } catch (err: any) {
+      return reply.status(422).send({
+        success: false,
+        error: 'RFID_ATTENDANCE_FAILED',
+        message: err.message,
+      });
+    }
   });
 
   // Providers Health Check

@@ -10,6 +10,9 @@ import { registerAttendanceRoutes } from './routes/attendance.routes.js';
 import { registerLearningRoutes } from './routes/learning.routes.js';
 import { registerAssessmentRoutes } from './routes/assessments.routes.js';
 import { registerSyncRoutes } from './routes/sync.routes.js';
+import { registerHardwareRoutes } from './routes/hardware.routes.js';
+import { EdgeHealthDaemon } from './services/health-daemon.js';
+import { RfidSmartCardProvider } from '@sahakar/hardware-adapters';
 
 export interface EdgeServerConfig {
   nodeId: string;
@@ -17,12 +20,15 @@ export interface EdgeServerConfig {
   wanSimulationMode: 'online' | 'offline' | 'flaky';
   dbPath?: string;
   existingDb?: DatabaseSync;
+  rfidProvider?: RfidSmartCardProvider;
 }
 
 export interface EdgeServerInstance extends FastifyInstance {
   db: DatabaseSync;
   journalService: EdgeJournalService;
   authService: EdgeAuthService;
+  healthDaemon: EdgeHealthDaemon;
+  rfidProvider: RfidSmartCardProvider;
   nodeId: string;
   getWanMode: () => 'online' | 'offline' | 'flaky';
   setWanMode: (mode: 'online' | 'offline' | 'flaky') => void;
@@ -38,6 +44,14 @@ export async function buildEdgeServer(
   const db = config.existingDb || createEdgeDatabase(config.dbPath || ':memory:');
   const journalService = new EdgeJournalService(db, nodeId);
   const authService = new EdgeAuthService(db);
+  const rfidProvider = config.rfidProvider || new RfidSmartCardProvider();
+  const healthDaemon = new EdgeHealthDaemon({
+    db,
+    dbPath: config.dbPath,
+    nodeId,
+    rfidProvider,
+  });
+  healthDaemon.start();
 
   const app = Fastify({
     logger: false,
@@ -46,11 +60,17 @@ export async function buildEdgeServer(
   app.db = db;
   app.journalService = journalService;
   app.authService = authService;
+  app.healthDaemon = healthDaemon;
+  app.rfidProvider = rfidProvider;
   app.nodeId = nodeId;
   app.getWanMode = () => wanMode;
   app.setWanMode = (m) => {
     wanMode = m;
   };
+
+  app.addHook('onClose', async () => {
+    healthDaemon.stop();
+  });
 
   await app.register(cors, {
     origin: '*',
@@ -113,8 +133,9 @@ export async function buildEdgeServer(
   });
 
   // Register domain route modules
+  await registerHardwareRoutes(app, healthDaemon);
   await registerAuthRoutes(app, authService);
-  await registerAttendanceRoutes(app, db, journalService, authService);
+  await registerAttendanceRoutes(app, db, journalService, authService, undefined, rfidProvider);
   await registerLearningRoutes(app, db, journalService);
   await registerAssessmentRoutes(app, db, journalService);
   await registerSyncRoutes(app, journalService);

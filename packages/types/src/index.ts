@@ -246,6 +246,7 @@ export enum AttendanceVerificationMethod {
   SIMULATED_FACE = 'SIMULATED_FACE',
   QR = 'QR',
   NFC = 'NFC',
+  RFID = 'RFID',
   MANUAL_OVERRIDE = 'MANUAL_OVERRIDE',
 }
 
@@ -268,6 +269,46 @@ export interface AttendanceEvent {
   occurredAt: string;
   createdBy: string;
   overrideReason?: string;
+}
+
+export interface RfidTapResult {
+  cardUid: string;
+  cardType: 'ISO_14443A' | 'KISAN_CREDIT_CARD';
+  traineeId: string;
+  traineeName: string;
+  latencyMs: number;
+  timestamp: string;
+}
+
+export interface HotspotStatus {
+  ssid: string;
+  gatewayIp: string;
+  subnet: string;
+  activeClients: number;
+  interface: string;
+  status: 'ACTIVE' | 'INACTIVE' | 'DEGRADED';
+}
+
+export interface DeviceHealth {
+  status: 'HEALTHY' | 'DEGRADED' | 'FAILED';
+  providerName: string;
+  details: Record<string, unknown>;
+}
+
+export interface HardwareStatusResponse {
+  cpuTempC: number;
+  memoryUsageMb: number;
+  memoryTotalMb?: number;
+  memoryFreeMb?: number;
+  memoryUsagePercent: number;
+  sqliteJournalBytes: number;
+  sqliteJournalKb: number;
+  sqliteWalBytes?: number;
+  sqliteShmBytes?: number;
+  sqliteDbBytes?: number;
+  hotspot: HotspotStatus;
+  rfidReader: DeviceHealth;
+  timestamp: string;
 }
 
 // ==========================================
