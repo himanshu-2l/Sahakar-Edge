@@ -88,6 +88,9 @@ importers:
 
   apps/trainee-pwa:
     dependencies:
+      '@sahakar/sync-protocol':
+        specifier: workspace:*
+        version: link:../../packages/sync-protocol
       '@sahakar/test-fixtures':
         specifier: workspace:*
         version: link:../../packages/test-fixtures

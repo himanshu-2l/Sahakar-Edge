@@ -353,6 +353,47 @@ export interface AssessmentSubmission {
   nodeId: string;
 }
 
+export interface OralQuestion {
+  id: string;
+  topic: string;
+  prompt: string;
+  promptHi: string;
+  expectedKeywords: string[];
+  expectedKeywordsHi: string[];
+  passingKeywordThreshold: number;
+  explanation?: string;
+  explanationHi?: string;
+}
+
+export interface OralQuestionScore {
+  questionId: string;
+  prompt: string;
+  transcript: string;
+  matchedKeywords: string[];
+  missingKeywords: string[];
+  score: number;
+}
+
+export interface OralAssessmentResult {
+  assessmentId: string;
+  traineeId: string;
+  language: 'HI' | 'EN';
+  questions: OralQuestionScore[];
+  totalScore: number;
+  maxScore: number;
+  percentage: number;
+  passed: boolean;
+  completedAt: string;
+}
+
+export interface OralAssessmentSubmittedPayload extends OralAssessmentResult {
+  nodeId?: string;
+  score?: number;
+  correctCount?: number;
+  totalQuestions?: number;
+  answers?: Record<string, string>;
+}
+
 // ==========================================
 // 7. Skills & Credentials
 // ==========================================
@@ -517,6 +558,16 @@ export enum SyncStatus {
   SYNCING = 'SYNCING',
   SYNCED = 'SYNCED',
   FAILED = 'FAILED',
+}
+
+export enum SyncEventType {
+  ATTENDANCE_RECORDED = 'ATTENDANCE_RECORDED',
+  PROGRESS_RECORDED = 'PROGRESS_RECORDED',
+  ASSESSMENT_SUBMITTED = 'ASSESSMENT_SUBMITTED',
+  ORAL_ASSESSMENT_SUBMITTED = 'ORAL_ASSESSMENT_SUBMITTED',
+  SESSION_STARTED = 'SESSION_STARTED',
+  SESSION_ENDED = 'SESSION_ENDED',
+  HEALTH_RECORDED = 'HEALTH_RECORDED',
 }
 
 export interface SyncEvent<T = Record<string, unknown>> {

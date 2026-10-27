@@ -7,6 +7,7 @@ import {
   SEED_JOB_OPPORTUNITY,
   SEED_JOB_OPPORTUNITIES,
   SEED_JOB_REQUIRED_SKILLS,
+  SEED_ORAL_ASSESSMENT,
 } from '@sahakar/test-fixtures';
 import {
   offlineStore,
@@ -16,7 +17,8 @@ import {
 import { networkSync, ConnectivityState } from './services/network-sync';
 import { speechService } from './services/speech-service';
 import { OfficialCertificateModal } from './components/OfficialCertificateModal';
-import type { SyncEvent, Question } from '@sahakar/types';
+import { OralAssessmentModal } from './components/OralAssessmentModal';
+import type { SyncEvent, Question, OralAssessmentResult } from '@sahakar/types';
 
 const TRANSLATIONS = {
   EN: {
@@ -39,6 +41,10 @@ const TRANSLATIONS = {
     certificationExam: 'Certification Exam',
     launchExam: 'Launch Offline Exam',
     examDesc: 'Offline Examination • 3 Questions • Passing score: 75%',
+    oralVivaTitle: 'Oral Viva Assessment (Voice AI)',
+    launchOralViva: 'Launch Oral Viva Exam',
+    oralVivaDesc: 'Voice Examination • 3 Cooperative Accounting Questions • Real-Time Keyword Scoring • 70% to Pass',
+    oralVivaPassed: '✓ Oral Viva Passed',
     moduleTitle: 'Module 1: Daily Voucher Entry & Ledger Balancing',
     readLesson: 'Read Lesson Offline →',
     completedBadge: '✓ Completed',
@@ -91,6 +97,10 @@ const TRANSLATIONS = {
     certificationExam: 'प्रमाणन परीक्षा',
     launchExam: 'ऑफलाइन परीक्षा शुरू करें',
     examDesc: 'ऑफलाइन परीक्षा • 3 प्रश्न • उत्तीर्ण अंक: 75%',
+    oralVivaTitle: 'मौखिक परीक्षा (Voice AI मूल्यांकन)',
+    launchOralViva: 'मौखिक परीक्षा शुरू करें',
+    oralVivaDesc: 'ध्वनि आधारित परीक्षा • 3 सहकारी लेखा प्रश्न • रीयल-टाइम कीवर्ड स्कोरिंग • उत्तीर्ण अंक: 70%',
+    oralVivaPassed: '✓ मौखिक परीक्षा उत्तीर्ण',
     moduleTitle: 'मॉड्यूल 1: दैनिक वाउचर प्रविष्टि और बहीखाता संतुलन',
     readLesson: 'ऑफलाइन पाठ पढ़ें →',
     completedBadge: '✓ पूर्ण',
@@ -162,6 +172,8 @@ export default function App() {
   // Modals & Drawers
   const [activeLesson, setActiveLesson] = useState<LessonDetail | null>(null);
   const [isAssessmentOpen, setIsAssessmentOpen] = useState(false);
+  const [isOralAssessmentOpen, setIsOralAssessmentOpen] = useState(false);
+  const [oralAssessmentResult, setOralAssessmentResult] = useState<OralAssessmentResult | null>(null);
   const [isQrScannerOpen, setIsQrScannerOpen] = useState(false);
   const [isFaceScannerOpen, setIsFaceScannerOpen] = useState(false);
   const [isQueueDrawerOpen, setIsQueueDrawerOpen] = useState(false);
@@ -198,6 +210,7 @@ export default function App() {
     setCompletedLessonIds(offlineStore.getCompletedLessons());
     setProgressPercent(offlineStore.getProgressPercentage());
     setAttempts(offlineStore.getAssessmentAttempts());
+    setOralAssessmentResult(offlineStore.getLatestOralAssessment(trainee.id));
   };
 
   useEffect(() => {
@@ -810,6 +823,64 @@ export default function App() {
                 }}
               >
                 {t.launchExam}
+              </button>
+            </div>
+
+            {/* Oral Viva Assessment Card (Voice AI Player) */}
+            <div
+              style={{
+                backgroundColor: '#ffffff',
+                borderRadius: '10px',
+                padding: '1.15rem',
+                border: '1px solid #e2e8f0',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ fontSize: '0.7rem', color: '#0284c7', fontWeight: 800, textTransform: 'uppercase' }}>
+                  {t.oralVivaTitle}
+                </div>
+                {oralAssessmentResult?.passed && (
+                  <span
+                    style={{
+                      fontSize: '0.7rem',
+                      fontWeight: 800,
+                      backgroundColor: '#dcfce7',
+                      color: '#15803d',
+                      padding: '0.15rem 0.5rem',
+                      borderRadius: '4px',
+                    }}
+                  >
+                    {t.oralVivaPassed} ({oralAssessmentResult.percentage}%)
+                  </span>
+                )}
+              </div>
+              <h3 style={{ fontSize: '0.95rem', margin: '0.25rem 0 0.35rem 0', color: '#0f172a', fontWeight: 700 }}>
+                {SEED_ORAL_ASSESSMENT.title}
+              </h3>
+              <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '0 0 0.75rem 0' }}>
+                {t.oralVivaDesc}
+              </p>
+              <button
+                onClick={() => setIsOralAssessmentOpen(true)}
+                style={{
+                  width: '100%',
+                  backgroundColor: '#0284c7',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '0.6rem',
+                  borderRadius: '6px',
+                  fontSize: '0.85rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.4rem',
+                }}
+              >
+                <span>🎙️</span>
+                <span>{t.launchOralViva}</span>
               </button>
             </div>
           </div>
@@ -1915,6 +1986,18 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Oral Viva Assessment Modal */}
+      <OralAssessmentModal
+        isOpen={isOralAssessmentOpen}
+        onClose={() => setIsOralAssessmentOpen(false)}
+        traineeId={trainee.id}
+        initialLanguage={language}
+        onSubmitted={(res) => {
+          setOralAssessmentResult(res);
+          refreshState();
+        }}
+      />
 
       {/* Floating Action Button for Sahakar Mitra AI */}
       <button

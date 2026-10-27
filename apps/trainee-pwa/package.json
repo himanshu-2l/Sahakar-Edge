@@ -5,13 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "pnpm --filter \"@sahakar/types\" --filter \"@sahakar/validation\" --filter \"@sahakar/test-fixtures\" run build",
+    "prebuild": "pnpm --filter \"@sahakar/types\" --filter \"@sahakar/validation\" --filter \"@sahakar/test-fixtures\" --filter \"@sahakar/sync-protocol\" run build",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
     "lint": "echo trainee-pwa:lint-ok",
     "test": "echo trainee-pwa:test-ok"
   },
   "dependencies": {
+    "@sahakar/sync-protocol": "workspace:*",
     "@sahakar/test-fixtures": "workspace:*",
     "@sahakar/types": "workspace:*",
     "@sahakar/validation": "workspace:*",

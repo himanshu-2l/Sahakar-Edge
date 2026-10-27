@@ -6,8 +6,12 @@ import type {
   Question,
   SyncEvent,
   ContentManifest,
+  OralQuestion,
+  OralAssessmentResult,
+  OralQuestionScore,
+  OralAssessmentSubmittedPayload,
 } from '@sahakar/types';
-import { SyncStatus } from '@sahakar/types';
+import { SyncStatus, SyncEventType } from '@sahakar/types';
 import {
   SEED_COURSE,
   SEED_MODULE,
@@ -16,7 +20,14 @@ import {
   SEED_QUESTIONS,
   SEED_USERS,
   SEED_SESSION,
+  SEED_ORAL_ASSESSMENT,
+  SEED_ORAL_QUESTIONS,
 } from '@sahakar/test-fixtures';
+import {
+  calculateEventHash,
+  canonicalJsonStringify,
+  sha256Hex,
+} from '@sahakar/sync-protocol';
 
 export interface LessonDetail extends Lesson {
   fullContentMarkdown: string;
@@ -47,6 +58,7 @@ export interface LocalOfflineState {
   lessonsDetail: Record<string, LessonDetail>;
   completedLessonIds: string[];
   assessmentAttempts: AssessmentAttempt[];
+  oralAssessmentAttempts: OralAssessmentResult[];
   attendanceRecords: TraineeAttendanceRecord[];
   queuedEvents: SyncEvent[];
   lastSyncTimestamp: string | null;
@@ -147,14 +159,82 @@ function generateUUID(): string {
 }
 
 function computeSimpleHash(input: string): string {
-  let hash = 0;
-  for (let i = 0; i < input.length; i++) {
-    const char = input.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash |= 0;
+  return sha256Hex(input);
+}
+
+export interface SubmitOralAssessmentParams {
+  assessmentId?: string;
+  traineeId: string;
+  language?: 'HI' | 'EN';
+  responses: Array<{
+    questionId: string;
+    transcript: string;
+  }>;
+}
+
+/**
+ * Real-time keyword scoring engine for rural cooperative accounting oral viva.
+ * Evaluates trainee oral transcript against expected technical terms.
+ */
+export function evaluateOralQuestion(
+  question: OralQuestion,
+  rawTranscript: string,
+  language: 'HI' | 'EN' = 'EN'
+): OralQuestionScore {
+  const normalized = (rawTranscript || '').toLowerCase();
+
+  const primaryKeywords = language === 'HI' ? question.expectedKeywordsHi : question.expectedKeywords;
+  const secondaryKeywords = language === 'HI' ? question.expectedKeywords : question.expectedKeywordsHi;
+
+  const matchedKeywords: string[] = [];
+  const missingKeywords: string[] = [];
+
+  for (const kw of primaryKeywords) {
+    const cleanKw = kw.toLowerCase().trim();
+    if (!cleanKw) continue;
+    if (normalized.includes(cleanKw)) {
+      if (!matchedKeywords.includes(kw)) {
+        matchedKeywords.push(kw);
+      }
+    } else {
+      missingKeywords.push(kw);
+    }
   }
-  const hex = Math.abs(hash).toString(16).padStart(8, '0');
-  return `sha256_${hex}_simulated_${Date.now().toString(16)}`;
+
+  // Bilingual flexibility: if trainee used technical loanwords
+  for (const kw of secondaryKeywords) {
+    const cleanKw = kw.toLowerCase().trim();
+    if (!cleanKw) continue;
+    if (normalized.includes(cleanKw)) {
+      if (!matchedKeywords.includes(kw)) {
+        matchedKeywords.push(kw);
+      }
+    }
+  }
+
+  // Scoring rubric: passingKeywordThreshold (e.g. 2 keywords)
+  const threshold = Math.max(1, question.passingKeywordThreshold || 2);
+  const masteryTarget = Math.min(primaryKeywords.length, Math.max(threshold * 2, 4));
+  let score = 0;
+  if (matchedKeywords.length >= masteryTarget) {
+    score = 100;
+  } else if (matchedKeywords.length >= threshold) {
+    const ratio = (matchedKeywords.length - threshold) / Math.max(1, masteryTarget - threshold);
+    score = Math.min(100, Math.round(75 + ratio * 25));
+  } else if (matchedKeywords.length > 0) {
+    score = Math.round((matchedKeywords.length / threshold) * 50);
+  } else {
+    score = 0;
+  }
+
+  return {
+    questionId: question.id,
+    prompt: language === 'HI' ? question.promptHi : question.prompt,
+    transcript: rawTranscript,
+    matchedKeywords,
+    missingKeywords,
+    score,
+  };
 }
 
 class OfflineStore {
@@ -169,7 +249,11 @@ class OfflineStore {
       try {
         const raw = window.localStorage.getItem(STORAGE_KEY);
         if (raw) {
-          return JSON.parse(raw);
+          const parsed = JSON.parse(raw);
+          if (!parsed.oralAssessmentAttempts) {
+            parsed.oralAssessmentAttempts = [];
+          }
+          return parsed;
         }
       } catch (err) {
         console.warn('Failed to parse localStorage state:', err);
@@ -181,6 +265,7 @@ class OfflineStore {
       lessonsDetail: INITIAL_LESSONS_DETAIL,
       completedLessonIds: [SEED_LESSONS[0].id], // Seed with Lesson 1.1 already completed
       assessmentAttempts: [],
+      oralAssessmentAttempts: [],
       attendanceRecords: [
         {
           sessionId: SEED_SESSION.id,
@@ -443,6 +528,107 @@ class OfflineStore {
     this.saveToDisk();
 
     return { record, event };
+  }
+
+  /**
+   * Submits trainee oral viva assessment:
+   * - Evaluates keyword scoring for cooperative terminology across each question
+   * - Computes total score, percentage, and 70% passing threshold
+   * - Assembles SyncEvent with aggregateType 'ASSESSMENT' and eventType 'ORAL_ASSESSMENT_SUBMITTED'
+   * - Computes canonical RFC 8785 JSON SHA-256 hash
+   * - Appends to local offline journal (queuedEvents)
+   */
+  public submitOralAssessment(params: SubmitOralAssessmentParams): {
+    result: OralAssessmentResult;
+    event: SyncEvent<OralAssessmentSubmittedPayload>;
+  } {
+    const assessmentId = params.assessmentId || SEED_ORAL_ASSESSMENT.id;
+    const traineeId = params.traineeId;
+    const language = params.language || 'EN';
+    const responseMap = new Map(params.responses.map((r) => [r.questionId, r.transcript]));
+
+    const evaluatedQuestions: OralQuestionScore[] = SEED_ORAL_QUESTIONS.map((q) => {
+      const transcript = responseMap.get(q.id) || '';
+      return evaluateOralQuestion(q, transcript, language);
+    });
+
+    const totalScore = evaluatedQuestions.reduce((sum, q) => sum + q.score, 0);
+    const maxScore = evaluatedQuestions.length * 100;
+    const percentage = Math.round((totalScore / maxScore) * 100);
+    const passed = percentage >= 70;
+    const completedAt = new Date().toISOString();
+
+    const result: OralAssessmentResult = {
+      assessmentId,
+      traineeId,
+      language,
+      questions: evaluatedQuestions,
+      totalScore,
+      maxScore,
+      percentage,
+      passed,
+      completedAt,
+    };
+
+    if (!this.state.oralAssessmentAttempts) {
+      this.state.oralAssessmentAttempts = [];
+    }
+    this.state.oralAssessmentAttempts.push(result);
+
+    const eventId = generateUUID();
+    const seq = 100 + this.state.queuedEvents.length + 1;
+
+    const payload: OralAssessmentSubmittedPayload = {
+      ...result,
+      nodeId: this.state.edgeNodeId,
+      score: percentage,
+      correctCount: evaluatedQuestions.filter((q) => q.score >= 70).length,
+      totalQuestions: evaluatedQuestions.length,
+      answers: Object.fromEntries(responseMap),
+    };
+
+    // Calculate RFC 8785 canonical hash using isomorphic sha256Hex
+    const hash = calculateEventHash(
+      'ASSESSMENT',
+      assessmentId,
+      'ORAL_ASSESSMENT_SUBMITTED',
+      payload as unknown as Record<string, unknown>,
+      seq
+    );
+
+    const event: SyncEvent<OralAssessmentSubmittedPayload> = {
+      id: eventId,
+      nodeId: this.state.edgeNodeId,
+      aggregateType: 'ASSESSMENT',
+      aggregateId: assessmentId,
+      eventType: 'ORAL_ASSESSMENT_SUBMITTED',
+      payload,
+      schemaVersion: 1,
+      occurredAt: completedAt,
+      logicalSequence: seq,
+      hash,
+      syncStatus: SyncStatus.QUEUED,
+      retryCount: 0,
+    };
+
+    this.state.queuedEvents.push(event as unknown as SyncEvent);
+    this.saveToDisk();
+
+    return { result, event };
+  }
+
+  public getOralAssessmentAttempts(traineeId?: string): OralAssessmentResult[] {
+    const list = this.state.oralAssessmentAttempts || [];
+    if (traineeId) {
+      return list.filter((a) => a.traineeId === traineeId);
+    }
+    return [...list];
+  }
+
+  public getLatestOralAssessment(traineeId?: string): OralAssessmentResult | null {
+    const attempts = this.getOralAssessmentAttempts(traineeId);
+    if (attempts.length === 0) return null;
+    return attempts[attempts.length - 1];
   }
 
   public getAssessmentAttempts(): AssessmentAttempt[] {

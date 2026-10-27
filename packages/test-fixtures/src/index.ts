@@ -11,6 +11,7 @@ import {
   Lesson,
   Assessment,
   Question,
+  OralQuestion,
   Skill,
   JobOpportunity,
   JobRequiredSkill,
@@ -289,6 +290,120 @@ export const SEED_QUESTIONS: Question[] = [
     prompt: 'Can a trainee submit local attendance and quizzes offline on Sahakar Edge without an active WAN connection?',
     options: ['True', 'False'],
     correctAnswer: 0,
+  },
+];
+
+export const SEED_ORAL_ASSESSMENT: Assessment = {
+  id: 'aaaaaaaa-oral-aaaa-aaaa-aaaaaaaaaaaa',
+  courseId: SEED_COURSE.id,
+  title: 'PACS Cooperative Accounting Oral Viva Assessment (मौखिक परीक्षा)',
+  passingScore: 70,
+};
+
+export const SEED_ORAL_QUESTIONS: OralQuestion[] = [
+  {
+    id: 'oral-q-01-daybook-balancing',
+    topic: 'Daybook (Rojnamcha) & Cashbook Daily Balancing',
+    prompt:
+      'Explain the daily balancing procedure for the Daybook (Rojnamcha) and Cashbook in a PACS. How is the closing cash balance verified against physical vault cash before day-end closing?',
+    promptHi:
+      'पैक्स (PACS) में रोजनामचा (Daybook) और रोकड़बही (Cashbook) के दैनिक मिलान की प्रक्रिया समझाइए। दिन की समाप्ति से पूर्व तिजोरी में मौजूद भौतिक नकदी (Physical Vault Cash) से अंतिम शेष का मिलान कैसे किया जाता है?',
+    expectedKeywords: [
+      'daybook',
+      'rojnamcha',
+      'cashbook',
+      'vault cash',
+      'physical cash',
+      'reconciliation',
+      'closing balance',
+      'debit',
+      'credit',
+    ],
+    expectedKeywordsHi: [
+      'रोजनामचा',
+      'रोकड़बही',
+      'तिजोरी',
+      'भौतिक नकदी',
+      'रोकड़ मिलान',
+      'अंतिम शेष',
+      'जमा',
+      'नामे',
+    ],
+    passingKeywordThreshold: 2,
+    explanation:
+      'At the end of each business day, the cashier and secretary must tally total cash receipts and disbursements recorded in the Daybook and Cashbook against physical currency counted in the vault. Total receipts plus opening cash must equal disbursements plus closing physical vault cash.',
+    explanationHi:
+      'प्रत्येक कार्यदिवस की समाप्ति पर रोजनामचा और रोकड़बही में दर्ज सभी लेन-देन का योग तिजोरी में उपलब्ध भौतिक नकदी से अनिवार्य रूप से मिलाया जाता है। प्रारम्भिक शेष + कुल प्राप्तियां = कुल संवितरण + अंतिम तिजोरी रोकड़।',
+  },
+  {
+    id: 'oral-q-02-crop-loan-disbursement',
+    topic: 'Short-Term Crop Loan Disbursement Double-Entry Accounting',
+    prompt:
+      'Describe the double-entry accounting entry when a PACS disburses a Short-Term Crop Loan (KCC) to a farmer member. Which account is debited and which account is credited?',
+    promptHi:
+      'जब पैक्स किसी किसान सदस्य को अल्पकालिक फसल ऋण (KCC) वितरित करता है, तो दोहरी प्रविष्टि (Journal Entry) क्या होती है? कौन सा खाता नामे (Debit) और कौन सा खाता जमा (Credit) किया जाता है?',
+    expectedKeywords: [
+      'debit',
+      'credit',
+      'crop loan',
+      'loan asset',
+      'cash',
+      'bank',
+      'disbursement',
+      'member loan account',
+    ],
+    expectedKeywordsHi: [
+      'नामे',
+      'जमा',
+      'डेबिट',
+      'क्रेडिट',
+      'फसल ऋण',
+      'ऋण परिसंपत्ति',
+      'रोकड़',
+      'बैंक',
+      'वितरण',
+      'ऋण खाता',
+    ],
+    passingKeywordThreshold: 2,
+    explanation:
+      'Upon disbursing a Short-Term Crop Loan, Debit the Short-Term Crop Loan Asset Account (increasing society loan receivables) and Credit the Cash in Hand Account or Bank Account (decreasing liquid cash upon payout).',
+    explanationHi:
+      'फसल ऋण वितरित करते समय अल्पकालिक फसल ऋण परिसंपत्ति खाता नामे (Debit) किया जाता है क्योंकि समिति का ऋण लेना बढ़ता है, तथा रोकड़ खाता या बैंक खाता जमा (Credit) किया जाता है क्योंकि समिति से नकदी बाहर जाती है।',
+  },
+  {
+    id: 'oral-q-03-statutory-reserve-fund',
+    topic: 'Statutory Reserve Fund Mandate (25% Net Profit Transfer)',
+    prompt:
+      'Explain the statutory requirement regarding the Reserve Fund in a Primary Agricultural Credit Society. What percentage of net profit must be mandatorily transferred and why cannot it be distributed as dividends?',
+    promptHi:
+      'प्राथमिक कृषि ऋण समिति (PACS) में सांविधिक आरक्षित निधि (Statutory Reserve Fund) की कानूनी आवश्यकता समझाइए। शुद्ध लाभ का कितना प्रतिशत अनिवार्य रूप से स्थानांतरित किया जाता है और इसे लाभांश के रूप में क्यों नहीं वितरित किया जा सकता?',
+    expectedKeywords: [
+      '25%',
+      'statutory reserve fund',
+      'net profit',
+      'mandatory',
+      'buffer',
+      'bad debts',
+      'unforeseen losses',
+      'dividend',
+      'indivisible',
+    ],
+    expectedKeywordsHi: [
+      '25%',
+      'सांविधिक आरक्षित निधि',
+      'शुद्ध लाभ',
+      'अनिवार्य',
+      'बफर',
+      'डूबंत ऋण',
+      'अप्रत्याशित हानि',
+      'लाभांश',
+      'अविभाज्य',
+    ],
+    passingKeywordThreshold: 2,
+    explanation:
+      'Under cooperative legislation and NABARD guidelines, PACS must transfer a mandatory minimum of 25% of annual net profit into the Statutory Reserve Fund. This fund serves as a permanent, non-distributable buffer against unforeseen loan defaults and cannot be distributed as member dividends.',
+    explanationHi:
+      'सहकारी समिति अधिनियम और नाबार्ड दिशा-निर्देशों के अनुसार प्रत्येक पैक्स को अपने वार्षिक शुद्ध लाभ का कम से कम 25% अनिवार्य रूप से सांविधिक आरक्षित निधि में डालना होता है। यह एक स्थायी और अविभाज्य सुरक्षा कोष (Buffer) है जो डूबंत ऋणों से रक्षा करता है और इसे लाभांश के रूप में नहीं बांटा जा सकता।',
   },
 ];
 
