@@ -19,6 +19,13 @@ export const institutes = pgTable('institutes', {
   code: text('code').notNull().unique(),
   type: text('type').notNull(), // 'RICM', 'ICM', 'VAMNICOM'
   locationText: text('location_text').notNull(),
+  tier: integer('tier'),
+  parentInstituteId: text('parent_institute_id'),
+  state: text('state'),
+  zone: text('zone'),
+  latitude: real('latitude'),
+  longitude: real('longitude'),
+  pacsCount: integer('pacs_count').default(0),
   active: boolean('active').default(true).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

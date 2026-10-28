@@ -20,6 +20,10 @@ import {
   type JobOpportunity,
   type JobRequiredSkill,
   type SkillEvidence,
+  type FederationTierRollup,
+  type FederationAnalyticsResponse,
+  type GeoNode,
+  type FederationInstituteSummary,
 } from '@sahakar/types';
 import {
   SEED_INSTITUTES,
@@ -215,7 +219,23 @@ export class CentralMemoryStore {
   }
 
   private deserialize(data: any) {
-    if (data.institutes) this.institutes = new Map(data.institutes);
+    if (data.institutes) {
+      this.institutes = new Map(data.institutes);
+      for (const inst of SEED_INSTITUTES) {
+        const existing = this.institutes.get(inst.id);
+        if (!existing) {
+          this.institutes.set(inst.id, { ...inst });
+        } else {
+          if (existing.tier === undefined) existing.tier = inst.tier;
+          if (existing.state === undefined) existing.state = inst.state;
+          if (existing.zone === undefined) existing.zone = inst.zone;
+          if (existing.latitude === undefined) existing.latitude = inst.latitude;
+          if (existing.longitude === undefined) existing.longitude = inst.longitude;
+          if (existing.pacsCount === undefined) existing.pacsCount = inst.pacsCount;
+          if (existing.parentInstituteId === undefined) existing.parentInstituteId = inst.parentInstituteId;
+        }
+      }
+    }
     if (data.users) this.users = new Map(data.users);
     if (data.programmes) this.programmes = new Map(data.programmes);
     if (data.batches) this.batches = new Map(data.batches);
@@ -1048,6 +1068,152 @@ export class CentralMemoryStore {
         { sector: 'Agri-Marketing & SHG Federations', percentage: 8 },
       ],
       lastUpdated: new Date().toISOString(),
+    };
+  }
+
+  getFederationRollup(): FederationAnalyticsResponse {
+    if (this.institutes.size === 0) {
+      for (const inst of SEED_INSTITUTES) {
+        this.institutes.set(inst.id, { ...inst });
+      }
+    }
+
+    const institutesList = Array.from(this.institutes.values());
+
+    const tier1Institutes = institutesList.filter(
+      (inst) => inst.tier === 1 || inst.type === 'VAMNICOM'
+    );
+    const tier2Institutes = institutesList.filter(
+      (inst) => inst.tier === 2 || inst.type === 'RICM'
+    );
+    const tier3Institutes = institutesList.filter(
+      (inst) => inst.tier === 3 || inst.type === 'ICM'
+    );
+
+    const mapToSummary = (inst: Institute): FederationInstituteSummary => ({
+      id: inst.id,
+      name: inst.name,
+      code: inst.code,
+      locationText: inst.locationText,
+      state: inst.state || (inst.locationText.split(',')[1]?.trim() || 'National'),
+      zone: inst.zone || (inst.tier === 1 ? 'APEX' : 'CENTRAL'),
+      lat: inst.latitude || 23.2599,
+      lng: inst.longitude || 77.4126,
+    });
+
+    const geoNodes: GeoNode[] = [];
+
+    const getInstituteMetrics = (inst: Institute) => {
+      const instProgrammes = Array.from(this.programmes.values()).filter(
+        (p) => p.instituteId === inst.id
+      );
+      const programmeIds = new Set(instProgrammes.map((p) => p.id));
+      const instBatches = Array.from(this.batches.values()).filter(
+        (b) => programmeIds.has(b.programmeId)
+      );
+      const batchIds = new Set(instBatches.map((b) => b.id));
+
+      const liveEnrollments = Array.from(this.enrollments.values()).filter((e) =>
+        batchIds.has(e.batchId)
+      ).length;
+
+      const liveCredentials = Array.from(this.credentials.values()).filter((c) =>
+        c.instituteId === inst.id || (c.batchId && batchIds.has(c.batchId))
+      ).length;
+
+      const liveNodes = Array.from(this.edgeNodes.values()).filter(
+        (n) => n.instituteId === inst.id
+      ).length;
+
+      const tier = inst.tier || (inst.type === 'VAMNICOM' ? 1 : inst.type === 'RICM' ? 2 : 3);
+
+      const baseBatches = tier === 1 ? 4 : tier === 2 ? 3 : 2;
+      const baseTrainees = tier === 1 ? 160 : tier === 2 ? 240 : 120;
+      const baseCertified = tier === 1 ? 152 : tier === 2 ? 228 : 114;
+      const baseNodes = 1;
+      const pacs = inst.pacsCount ?? (tier === 2 ? 370 : tier === 3 ? 145 : 0);
+
+      const activeBatches = Math.max(instBatches.length, baseBatches);
+      const trainees = Math.max(liveEnrollments, baseTrainees);
+      const certified = Math.max(liveCredentials, baseCertified);
+      const activeEdgeNodes = Math.max(liveNodes, baseNodes);
+
+      return { activeBatches, trainees, certified, activeEdgeNodes, pacs };
+    };
+
+    const buildTierRollup = (tierNum: 1 | 2 | 3, name: string, insts: Institute[]): FederationTierRollup => {
+      let totalTrainees = 0;
+      let certifiedTrainees = 0;
+      let activeBatches = 0;
+      let attachedPacsCount = 0;
+      let activeEdgeNodes = 0;
+
+      for (const inst of insts) {
+        const metrics = getInstituteMetrics(inst);
+        totalTrainees += metrics.trainees;
+        certifiedTrainees += metrics.certified;
+        activeBatches += metrics.activeBatches;
+        attachedPacsCount += metrics.pacs;
+        activeEdgeNodes += metrics.activeEdgeNodes;
+
+        geoNodes.push({
+          id: inst.id,
+          name: inst.name,
+          code: inst.code,
+          tier: tierNum,
+          state: inst.state || (inst.locationText.split(',')[1]?.trim() || 'National'),
+          zone: inst.zone || (tierNum === 1 ? 'APEX' : 'CENTRAL'),
+          lat: inst.latitude || 23.2599,
+          lng: inst.longitude || 77.4126,
+          trainees: metrics.trainees,
+          certified: metrics.certified,
+          pacs: metrics.pacs,
+        });
+      }
+
+      return {
+        tier: tierNum,
+        name,
+        institutesCount: insts.length,
+        institutes: insts.map(mapToSummary),
+        totalTrainees,
+        certifiedTrainees,
+        activeBatches,
+        attachedPacsCount,
+        activeEdgeNodes,
+      };
+    };
+
+    const tier1_apex = buildTierRollup(1, 'Tier 1: Apex Governance (VAMNICOM / MoC)', tier1Institutes);
+    const tier2_regional = buildTierRollup(2, 'Tier 2: Regional Institutes (RICMs)', tier2Institutes);
+    const tier3_local = buildTierRollup(3, 'Tier 3: Local Institutes (ICMs & PACS)', tier3Institutes);
+
+    const totalInstitutes = institutesList.length;
+    const totalTrainees = tier1_apex.totalTrainees + tier2_regional.totalTrainees + tier3_local.totalTrainees;
+    const certifiedCount = tier1_apex.certifiedTrainees + tier2_regional.certifiedTrainees + tier3_local.certifiedTrainees;
+    const totalAttachedPacs = tier1_apex.attachedPacsCount + tier2_regional.attachedPacsCount + tier3_local.attachedPacsCount;
+    const totalEdgeNodes = tier1_apex.activeEdgeNodes + tier2_regional.activeEdgeNodes + tier3_local.activeEdgeNodes;
+    const certificationRate = totalTrainees > 0 ? Number(((certifiedCount / totalTrainees) * 100).toFixed(1)) : 0;
+
+    return {
+      summary: {
+        totalInstitutes,
+        totalTrainees,
+        certifiedCount,
+        certificationRate,
+        totalAttachedPacs,
+        totalEdgeNodes,
+        generatedAt: new Date().toISOString(),
+      },
+      tiers: {
+        tier1_apex,
+        tier2_regional,
+        tier3_local,
+        tier1: tier1_apex,
+        tier2: tier2_regional,
+        tier3: tier3_local,
+      },
+      geoNodes,
     };
   }
 

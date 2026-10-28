@@ -4,6 +4,11 @@ import { centralStore } from '../store/memory-store.js';
 import { authenticate, requirePermission } from '../auth/auth-service.js';
 
 export async function instituteRoutes(fastify: FastifyInstance) {
+  // National Multi-Tier Federation Analytics (Phase 9 Milestone 3)
+  fastify.get('/analytics/federation', async () => {
+    return centralStore.getFederationRollup();
+  });
+
   // List all institutes
   fastify.get('/institutes', async () => {
     return {

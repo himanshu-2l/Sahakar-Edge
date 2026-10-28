@@ -14,12 +14,22 @@ import {
   SEED_JOB_OPPORTUNITIES,
   SEED_JOB_REQUIRED_SKILLS,
 } from '@sahakar/test-fixtures';
-import { Programme, Batch, Enrollment, EnrollmentStatus, ProgrammeStatus } from '@sahakar/types';
+import {
+  Programme,
+  Batch,
+  Enrollment,
+  EnrollmentStatus,
+  ProgrammeStatus,
+  type FederationAnalyticsResponse,
+  type GeoNode,
+  type FederationTierRollup,
+} from '@sahakar/types';
 import { apiClient, BackendStatus } from '../services/api-client';
 
 export default function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState<
     | 'OVERVIEW'
+    | 'FEDERATION'
     | 'INSTITUTES'
     | 'PROGRAMMES'
     | 'BATCHES'
@@ -43,6 +53,10 @@ export default function AdminDashboardPage() {
     checkedAt: '',
   });
   const [analyticsOverview, setAnalyticsOverview] = useState<any | null>(null);
+  const [federationData, setFederationData] = useState<FederationAnalyticsResponse | null>(null);
+  const [selectedGeoNode, setSelectedGeoNode] = useState<GeoNode | null>(null);
+  const [tierFilter, setTierFilter] = useState<'ALL' | 1 | 2 | 3>('ALL');
+  const [selectedZone, setSelectedZone] = useState<string>('ALL');
 
   // Interactive state initialized with seed fixtures
   const [programmes, setProgrammes] = useState<Programme[]>([SEED_PROGRAMME]);
@@ -423,6 +437,24 @@ export default function AdminDashboardPage() {
             );
           }
         });
+        apiClient.getFederationAnalytics().then((fed) => {
+          if (fed) {
+            setFederationData(fed);
+            if (fed.geoNodes && fed.geoNodes.length > 0) {
+              setSelectedGeoNode((prev) => prev || fed.geoNodes[0]);
+            }
+          }
+        });
+      } else {
+        // Fallback offline data
+        apiClient.getFederationAnalytics().then((fed) => {
+          if (fed) {
+            setFederationData(fed);
+            if (fed.geoNodes && fed.geoNodes.length > 0) {
+              setSelectedGeoNode((prev) => prev || fed.geoNodes[0]);
+            }
+          }
+        });
       }
     }
     loadLiveBackendData();
@@ -800,6 +832,7 @@ export default function AdminDashboardPage() {
         {(
           [
             'OVERVIEW',
+            'FEDERATION',
             'INSTITUTES',
             'PROGRAMMES',
             'BATCHES',
@@ -831,7 +864,10 @@ export default function AdminDashboardPage() {
               gap: '0.35rem',
             }}
           >
-            <span>{tab === 'ERP_LOGISTICS' ? 'ERP LOGISTICS & HOSTEL' : tab.replace('_', ' ')}</span>
+            <span>{tab === 'FEDERATION' ? 'NATIONAL FEDERATION' : tab === 'ERP_LOGISTICS' ? 'ERP LOGISTICS & HOSTEL' : tab.replace('_', ' ')}</span>
+            {tab === 'FEDERATION' && (
+              <span style={{ fontSize: '0.65rem', backgroundColor: '#fef3c7', color: '#b45309', padding: '0.05rem 0.35rem', borderRadius: '4px', fontWeight: 800 }}>MULTI-TIER</span>
+            )}
             {tab === 'ERP_LOGISTICS' && (
               <span style={{ fontSize: '0.65rem', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.05rem 0.35rem', borderRadius: '4px', fontWeight: 800 }}>NEW</span>
             )}
@@ -1004,6 +1040,708 @@ export default function AdminDashboardPage() {
             </div>
           </div>
         )}
+
+        {/* Tab: National Multi-Tier Federation (Phase 9 Milestone 3) */}
+        {activeTab === 'FEDERATION' && (() => {
+          const fed = federationData || apiClient.getFallbackFederationAnalytics();
+          const allNodes = fed.geoNodes || [];
+          const activeNode = selectedGeoNode || allNodes[0] || null;
+
+          const filteredNodes = allNodes.filter((n) => {
+            if (tierFilter !== 'ALL' && n.tier !== tierFilter) return false;
+            if (selectedZone !== 'ALL' && n.zone !== selectedZone) return false;
+            if (searchQuery && !n.name.toLowerCase().includes(searchQuery.toLowerCase()) && !n.code.toLowerCase().includes(searchQuery.toLowerCase()) && !n.state.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+            return true;
+          });
+
+          const getSvgCoords = (lat: number, lng: number) => {
+            const x = Math.round(((lng - 68) / 30) * 580 + 60);
+            const y = Math.round(((37 - lat) / 29) * 640 + 55);
+            return { x, y };
+          };
+
+          const apexNode = allNodes.find((n) => n.tier === 1) || allNodes[0];
+          const apexCoords = apexNode ? getSvgCoords(apexNode.lat, apexNode.lng) : { x: 177, y: 462 };
+
+          const ricmNodes = allNodes.filter((n) => n.tier === 2);
+
+          return (
+            <div>
+              {/* Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.25rem' }}>
+                    <h2 style={{ fontSize: '1.35rem', margin: 0, color: '#0f172a', fontWeight: 800 }}>
+                      National Multi-Tier Federation & Hierarchy
+                    </h2>
+                    <span style={{ fontSize: '0.7rem', backgroundColor: '#fef3c7', color: '#b45309', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: 800, border: '1px solid #fde68a' }}>
+                      3-TIER APEX FEDERATION
+                    </span>
+                    <span style={{ fontSize: '0.7rem', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: 800 }}>
+                      SIH PS 26087
+                    </span>
+                  </div>
+                  <p style={{ margin: 0, color: '#64748b', fontSize: '0.85rem' }}>
+                    Ministry of Cooperation & National Council for Cooperative Training (NCCT) — Apex Policy (Tier 1) ──▶ Regional Hubs (Tier 2) ──▶ Local ICMs & 63,000 Field PACS (Tier 3)
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    onClick={async () => {
+                      const res = await apiClient.getFederationAnalytics();
+                      setFederationData(res);
+                      if (res.geoNodes.length > 0) setSelectedGeoNode(res.geoNodes[0]);
+                    }}
+                    style={{
+                      padding: '0.5rem 0.9rem',
+                      backgroundColor: '#0284c7',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '0.8rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                    }}
+                  >
+                    <span>🔄 Refresh Federation Rollup</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Top 4 KPI Metrics */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+                <div style={{ backgroundColor: '#ffffff', padding: '1.25rem', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>Total Active Centers</div>
+                  <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#0f172a', margin: '0.2rem 0' }}>
+                    {fed.summary.totalInstitutes} Institutes
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: '#0284c7', fontWeight: 700 }}>
+                    1 Apex (VAMNICOM) + 5 RICMs + 14 ICMs
+                  </div>
+                </div>
+
+                <div style={{ backgroundColor: '#ffffff', padding: '1.25rem', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>Attached Field PACS Covered</div>
+                  <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#16a34a', margin: '0.2rem 0' }}>
+                    {fed.summary.totalAttachedPacs.toLocaleString()} Societies
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: '#15803d', fontWeight: 700 }}>
+                    Direct Grassroots Computerization Reach
+                  </div>
+                </div>
+
+                <div style={{ backgroundColor: '#ffffff', padding: '1.25rem', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>National Trainee Throughput</div>
+                  <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#0284c7', margin: '0.2rem 0' }}>
+                    {fed.summary.totalTrainees.toLocaleString()} Enrolled
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: '#0369a1', fontWeight: 700 }}>
+                    {fed.summary.certifiedCount.toLocaleString()} Certified ({fed.summary.certificationRate}% Rate)
+                  </div>
+                </div>
+
+                <div style={{ backgroundColor: '#ffffff', padding: '1.25rem', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>Federated Edge Nodes</div>
+                  <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#ca8a04', margin: '0.2rem 0' }}>
+                    {fed.summary.totalEdgeNodes} / {fed.summary.totalInstitutes} Online
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: '#a16207', fontWeight: 700 }}>
+                    100% ARM64 Linux SBCs & WAL Synced
+                  </div>
+                </div>
+              </div>
+
+              {/* 3 Tier Rollup Architecture Cards */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+                {/* Tier 1 Card */}
+                <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', padding: '1.25rem', position: 'relative' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <span style={{ fontSize: '0.7rem', backgroundColor: '#fef3c7', color: '#b45309', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: 800, border: '1px solid #fde68a' }}>
+                      👑 TIER 1 — APEX GOVERNANCE
+                    </span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#b45309' }}>1 Apex Center</span>
+                  </div>
+                  <h3 style={{ fontSize: '1.05rem', margin: '0 0 0.35rem 0', color: '#92400e', fontWeight: 800 }}>
+                    {fed.tiers.tier1_apex.name}
+                  </h3>
+                  <p style={{ fontSize: '0.78rem', color: '#78350f', margin: '0 0 0.8rem 0', lineHeight: 1.4 }}>
+                    National policy formulation, curricular accreditation, Ed25519 root authority, and executive development.
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', backgroundColor: '#ffffff', padding: '0.75rem', borderRadius: '6px', border: '1px solid #fef3c7', textAlign: 'center' }}>
+                    <div>
+                      <div style={{ fontSize: '0.7rem', color: '#78350f' }}>Trainees</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#92400e' }}>{fed.tiers.tier1_apex.totalTrainees}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.7rem', color: '#78350f' }}>Certified</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#16a34a' }}>{fed.tiers.tier1_apex.certifiedTrainees}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.7rem', color: '#78350f' }}>Batches</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0284c7' }}>{fed.tiers.tier1_apex.activeBatches}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tier 2 Card */}
+                <div style={{ backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '8px', padding: '1.25rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <span style={{ fontSize: '0.7rem', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: 800, border: '1px solid #bae6fd' }}>
+                      🏢 TIER 2 — REGIONAL HUBS
+                    </span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0369a1' }}>5 RICMs</span>
+                  </div>
+                  <h3 style={{ fontSize: '1.05rem', margin: '0 0 0.35rem 0', color: '#075985', fontWeight: 800 }}>
+                    {fed.tiers.tier2_regional.name}
+                  </h3>
+                  <p style={{ fontSize: '0.78rem', color: '#0369a1', margin: '0 0 0.8rem 0', lineHeight: 1.4 }}>
+                    Bhopal, Gandhinagar, Kalyani, Patna, Bengaluru — Regional hardware hubs, kit staging, and master faculty induction.
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', backgroundColor: '#ffffff', padding: '0.75rem', borderRadius: '6px', border: '1px solid #e0f2fe', textAlign: 'center' }}>
+                    <div>
+                      <div style={{ fontSize: '0.7rem', color: '#0369a1' }}>Attached PACS</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0369a1' }}>{fed.tiers.tier2_regional.attachedPacsCount.toLocaleString()}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.7rem', color: '#0369a1' }}>Trainees</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0284c7' }}>{fed.tiers.tier2_regional.totalTrainees}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.7rem', color: '#0369a1' }}>Certified</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#16a34a' }}>{fed.tiers.tier2_regional.certifiedTrainees}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tier 3 Card */}
+                <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '1.25rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <span style={{ fontSize: '0.7rem', backgroundColor: '#dcfce7', color: '#166534', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: 800, border: '1px solid #bbf7d0' }}>
+                      🏫 TIER 3 — LOCAL GRASSROOTS
+                    </span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#166534' }}>14 ICMs & PACS</span>
+                  </div>
+                  <h3 style={{ fontSize: '1.05rem', margin: '0 0 0.35rem 0', color: '#166534', fontWeight: 800 }}>
+                    {fed.tiers.tier3_local.name}
+                  </h3>
+                  <p style={{ fontSize: '0.78rem', color: '#14532d', margin: '0 0 0.8rem 0', lineHeight: 1.4 }}>
+                    Grassroots training delivery across 14 state centers, field PACS computerization, offline SQLite WAL edge server deployment.
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', backgroundColor: '#ffffff', padding: '0.75rem', borderRadius: '6px', border: '1px solid #dcfce7', textAlign: 'center' }}>
+                    <div>
+                      <div style={{ fontSize: '0.7rem', color: '#166534' }}>Attached PACS</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#166534' }}>{fed.tiers.tier3_local.attachedPacsCount.toLocaleString()}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.7rem', color: '#166534' }}>Trainees</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0284c7' }}>{fed.tiers.tier3_local.totalTrainees}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.7rem', color: '#166534' }}>Certified</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#16a34a' }}>{fed.tiers.tier3_local.certifiedTrainees}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Filter Pills */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem', backgroundColor: '#ffffff', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b' }}>Filter By Tier:</span>
+                  {(
+                    [
+                      { label: `All 20 Centers (${allNodes.length})`, val: 'ALL' },
+                      { label: '👑 Tier 1: Apex (1)', val: 1 },
+                      { label: '🏢 Tier 2: RICMs (5)', val: 2 },
+                      { label: '🏫 Tier 3: ICMs (14)', val: 3 },
+                    ] as const
+                  ).map((f) => (
+                    <button
+                      key={String(f.val)}
+                      onClick={() => setTierFilter(f.val as any)}
+                      style={{
+                        padding: '0.35rem 0.75rem',
+                        borderRadius: '20px',
+                        border: tierFilter === f.val ? '1px solid #0284c7' : '1px solid #e2e8f0',
+                        backgroundColor: tierFilter === f.val ? '#e0f2fe' : '#ffffff',
+                        color: tierFilter === f.val ? '#0369a1' : '#475569',
+                        fontSize: '0.75rem',
+                        fontWeight: tierFilter === f.val ? 800 : 500,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b' }}>Zone:</span>
+                  <select
+                    value={selectedZone}
+                    onChange={(e) => setSelectedZone(e.target.value)}
+                    style={{
+                      padding: '0.35rem 0.6rem',
+                      borderRadius: '6px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      color: '#1e293b',
+                      backgroundColor: '#ffffff',
+                    }}
+                  >
+                    <option value="ALL">All National Zones</option>
+                    <option value="APEX">Apex (National)</option>
+                    <option value="CENTRAL">Central Zone</option>
+                    <option value="NORTH">North Zone</option>
+                    <option value="SOUTH">South Zone</option>
+                    <option value="EAST">East & North-East</option>
+                    <option value="WEST">West Zone</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Main Map + Node Drawer Split View */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.4fr) minmax(340px, 1fr)', gap: '1.25rem', marginBottom: '2rem' }}>
+                {/* Left: Interactive Vector SVG Map */}
+                <div style={{ backgroundColor: '#0f172a', borderRadius: '10px', padding: '1.5rem', border: '1px solid #1e293b', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid #1e293b', paddingBottom: '0.75rem' }}>
+                    <div>
+                      <div style={{ color: '#f8fafc', fontSize: '0.95rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <span>🗺️</span>
+                        <span>National Cooperative Federation Network Map</span>
+                      </div>
+                      <div style={{ color: '#94a3b8', fontSize: '0.72rem' }}>
+                        Real-time topological projection of all 20 NCCT centers & attached PACS
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.4rem', fontSize: '0.7rem' }}>
+                      <span style={{ color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>● Tier 1 (Apex)</span>
+                      <span style={{ color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>● Tier 2 (RICM)</span>
+                      <span style={{ color: '#4ade80', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>● Tier 3 (ICM)</span>
+                    </div>
+                  </div>
+
+                  {/* SVG Canvas */}
+                  <div style={{ position: 'relative', width: '100%', height: '560px', overflow: 'hidden', display: 'flex', justifyContent: 'center' }}>
+                    <svg viewBox="0 0 700 750" style={{ width: '100%', height: '100%', maxWidth: '640px' }}>
+                      <defs>
+                        {/* Glow Filter */}
+                        <filter id="glow-gold" x="-50%" y="-50%" width="200%" height="200%">
+                          <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+                          <feMerge>
+                            <feMergeNode in="coloredBlur" />
+                            <feMergeNode in="SourceGraphic" />
+                          </feMerge>
+                        </filter>
+                        <filter id="glow-blue" x="-50%" y="-50%" width="200%" height="200%">
+                          <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                          <feMerge>
+                            <feMergeNode in="coloredBlur" />
+                            <feMergeNode in="SourceGraphic" />
+                          </feMerge>
+                        </filter>
+                      </defs>
+
+                      {/* Geographic Grid Lines */}
+                      <g stroke="#1e293b" strokeWidth="1" strokeDasharray="3 3">
+                        <line x1="50" y1="150" x2="650" y2="150" />
+                        <line x1="50" y1="300" x2="650" y2="300" />
+                        <line x1="50" y1="450" x2="650" y2="450" />
+                        <line x1="50" y1="600" x2="650" y2="600" />
+                        <line x1="180" y1="50" x2="180" y2="700" />
+                        <line x1="330" y1="50" x2="330" y2="700" />
+                        <line x1="480" y1="50" x2="480" y2="700" />
+                      </g>
+
+                      {/* Stylized India Subcontinent Contour Outline */}
+                      <polygon
+                        points="
+                          240,75 285,110 325,120 345,160 380,200 450,230 520,240 590,260 
+                          610,290 560,320 480,340 450,380 440,430 420,500 370,570 320,630 
+                          250,710 220,670 190,570 170,490 140,400 110,360 130,310 160,260 
+                          200,200 220,130 240,75
+                        "
+                        fill="#131c31"
+                        stroke="#334155"
+                        strokeWidth="2"
+                        opacity="0.85"
+                      />
+
+                      {/* Regional Backbone Lines: Apex to RICMs */}
+                      {ricmNodes.map((ricm) => {
+                        const coords = getSvgCoords(ricm.lat, ricm.lng);
+                        return (
+                          <g key={`backbone-${ricm.id}`}>
+                            <line
+                              x1={apexCoords.x}
+                              y1={apexCoords.y}
+                              x2={coords.x}
+                              y2={coords.y}
+                              stroke="#f59e0b"
+                              strokeWidth="2"
+                              strokeDasharray="5 3"
+                              opacity="0.75"
+                            />
+                          </g>
+                        );
+                      })}
+
+                      {/* ICM to parent RICM links */}
+                      {allNodes.filter((n) => n.tier === 3).map((icm) => {
+                        const coords = getSvgCoords(icm.lat, icm.lng);
+                        // Connect to nearest RICM or Apex
+                        const parent = ricmNodes.find((r) => r.zone === icm.zone) || ricmNodes[0] || apexNode;
+                        const pCoords = parent ? getSvgCoords(parent.lat, parent.lng) : apexCoords;
+                        return (
+                          <line
+                            key={`feed-${icm.id}`}
+                            x1={pCoords.x}
+                            y1={pCoords.y}
+                            x2={coords.x}
+                            y2={coords.y}
+                            stroke="#38bdf8"
+                            strokeWidth="1"
+                            strokeDasharray="2 3"
+                            opacity="0.4"
+                          />
+                        );
+                      })}
+
+                      {/* Render Pinned Nodes */}
+                      {filteredNodes.map((node) => {
+                        const { x, y } = getSvgCoords(node.lat, node.lng);
+                        const isSelected = activeNode?.id === node.id;
+
+                        if (node.tier === 1) {
+                          // Tier 1: Apex Gold Star
+                          return (
+                            <g
+                              key={node.id}
+                              onClick={() => setSelectedGeoNode(node)}
+                              style={{ cursor: 'pointer' }}
+                            >
+                              {/* Pulse Aura */}
+                              <circle cx={x} cy={y} r={isSelected ? "22" : "18"} fill="none" stroke="#fbbf24" strokeWidth="2" opacity="0.6" filter="url(#glow-gold)">
+                                <animate attributeName="r" values="16;24;16" dur="2.5s" repeatCount="indefinite" />
+                                <animate attributeName="opacity" values="0.8;0.2;0.8" dur="2.5s" repeatCount="indefinite" />
+                              </circle>
+                              {/* Central Gold Node */}
+                              <circle cx={x} cy={y} r="10" fill="#f59e0b" stroke="#ffffff" strokeWidth="2.5" />
+                              {/* Crown / Star icon */}
+                              <text x={x} y={y + 3.5} textAnchor="middle" fontSize="9" fill="#78350f" fontWeight="900">★</text>
+                              {/* Text Label */}
+                              <text x={x} y={y - 14} textAnchor="middle" fontSize="10" fill="#fbbf24" fontWeight="800" filter="drop-shadow(0 1px 2px #000)">
+                                VAMNICOM (Apex)
+                              </text>
+                            </g>
+                          );
+                        }
+
+                        if (node.tier === 2) {
+                          // Tier 2: Royal Blue Diamond
+                          const city = node.name.split(',')[1]?.replace(')', '').trim() || node.code;
+                          return (
+                            <g
+                              key={node.id}
+                              onClick={() => setSelectedGeoNode(node)}
+                              style={{ cursor: 'pointer' }}
+                            >
+                              {isSelected && (
+                                <circle cx={x} cy={y} r="16" fill="none" stroke="#38bdf8" strokeWidth="2" opacity="0.8" filter="url(#glow-blue)" />
+                              )}
+                              {/* Diamond Marker */}
+                              <polygon
+                                points={`${x},${y - 8} ${x + 8},${y} ${x},${y + 8} ${x - 8},${y}`}
+                                fill="#0284c7"
+                                stroke="#ffffff"
+                                strokeWidth="2"
+                              />
+                              <text x={x} y={y + 16} textAnchor="middle" fontSize="8.5" fill="#bae6fd" fontWeight="700">
+                                RICM {city}
+                              </text>
+                            </g>
+                          );
+                        }
+
+                        // Tier 3: Emerald Green Circle
+                        const city = node.name.split(',')[1]?.replace(')', '').trim() || node.code;
+                        return (
+                          <g
+                            key={node.id}
+                            onClick={() => setSelectedGeoNode(node)}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            {isSelected && (
+                              <circle cx={x} cy={y} r="12" fill="none" stroke="#4ade80" strokeWidth="2" opacity="0.9" />
+                            )}
+                            <circle cx={x} cy={y} r="5.5" fill="#16a34a" stroke="#ffffff" strokeWidth="1.5" />
+                            <text x={x} y={y + 13} textAnchor="middle" fontSize="7.5" fill="#86efac" fontWeight="600">
+                              {city}
+                            </text>
+                          </g>
+                        );
+                      })}
+                    </svg>
+                  </div>
+
+                  {/* Topology Legend Footer */}
+                  <div style={{ marginTop: 'auto', paddingTop: '0.75rem', borderTop: '1px solid #1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem', color: '#94a3b8' }}>
+                    <div style={{ display: 'flex', gap: '0.75rem' }}>
+                      <span><strong style={{ color: '#fbbf24' }}>★ Tier 1:</strong> Apex VAMNICOM Pune</span>
+                      <span><strong style={{ color: '#38bdf8' }}>◆ Tier 2:</strong> 5 Zonal RICMs</span>
+                      <span><strong style={{ color: '#4ade80' }}>● Tier 3:</strong> 14 Local ICMs & PACS</span>
+                    </div>
+                    <div>Click any node to inspect center telemetry & attached PACS</div>
+                  </div>
+                </div>
+
+                {/* Right: Center Profile & Hardware Edge Inspector Drawer */}
+                {activeNode && (
+                  <div style={{ backgroundColor: '#ffffff', borderRadius: '10px', padding: '1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {/* Drawer Header */}
+                    <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '1rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <span
+                          style={{
+                            fontSize: '0.7rem',
+                            padding: '0.2rem 0.5rem',
+                            borderRadius: '4px',
+                            fontWeight: 800,
+                            backgroundColor: activeNode.tier === 1 ? '#fef3c7' : activeNode.tier === 2 ? '#e0f2fe' : '#dcfce7',
+                            color: activeNode.tier === 1 ? '#b45309' : activeNode.tier === 2 ? '#0369a1' : '#15803d',
+                            border: `1px solid ${activeNode.tier === 1 ? '#fde68a' : activeNode.tier === 2 ? '#bae6fd' : '#bbf7d0'}`,
+                          }}
+                        >
+                          {activeNode.tier === 1 ? '👑 TIER 1 — APEX AUTHORITY' : activeNode.tier === 2 ? '🏢 TIER 2 — REGIONAL HUB' : '🏫 TIER 3 — LOCAL DELIVERY'}
+                        </span>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b', backgroundColor: '#f1f5f9', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
+                          {activeNode.code}
+                        </span>
+                      </div>
+
+                      <h3 style={{ fontSize: '1.15rem', margin: '0.6rem 0 0.2rem 0', color: '#0f172a', fontWeight: 800 }}>
+                        {activeNode.name}
+                      </h3>
+                      <div style={{ fontSize: '0.8rem', color: '#64748b', display: 'flex', gap: '0.75rem' }}>
+                        <span>📍 {activeNode.state} ({activeNode.zone} Zone)</span>
+                        <span>🌐 {activeNode.lat.toFixed(4)}°N, {activeNode.lng.toFixed(4)}°E</span>
+                      </div>
+                    </div>
+
+                    {/* Operational Throughput Metrics */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
+                      <div style={{ backgroundColor: '#f8fafc', padding: '0.85rem', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>Attached Field PACS</div>
+                        <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#16a34a', margin: '0.15rem 0' }}>
+                          {activeNode.pacs > 0 ? activeNode.pacs.toLocaleString() : 'Apex Standard'}
+                        </div>
+                        <div style={{ fontSize: '0.68rem', color: '#64748b' }}>Primary societies in cluster</div>
+                      </div>
+
+                      <div style={{ backgroundColor: '#f8fafc', padding: '0.85rem', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>Trainees Certified</div>
+                        <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0284c7', margin: '0.15rem 0' }}>
+                          {activeNode.certified} / {activeNode.trainees}
+                        </div>
+                        <div style={{ fontSize: '0.68rem', color: '#16a34a', fontWeight: 700 }}>
+                          {activeNode.trainees > 0 ? `${((activeNode.certified / activeNode.trainees) * 100).toFixed(1)}% Completion` : '100%'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Hardware IoT & Edge Telemetry Card */}
+                    <div style={{ backgroundColor: '#f1f5f9', padding: '1rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#1e293b', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <span>⚡</span> Hardware Edge Node Telemetry
+                        </span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.7rem', color: '#166534', fontWeight: 800, backgroundColor: '#dcfce7', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
+                          <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#16a34a', display: 'inline-block' }} />
+                          ONLINE (SYNCED)
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontSize: '0.74rem', color: '#475569' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span>Hardware Model:</span>
+                          <span style={{ fontWeight: 700, color: '#0f172a' }}>ARM64 Linux SBC / RPi 4 (4GB RAM)</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span>Smart Card Reader:</span>
+                          <span style={{ fontWeight: 700, color: '#16a34a' }}>USB RFID ISO 14443A / KCC (&lt;50ms)</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span>Local Event Journal:</span>
+                          <span style={{ fontWeight: 700, color: '#0f172a' }}>SQLite WAL Mode (0 Backlog)</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span>Edge Hotspot SSID:</span>
+                          <span style={{ fontWeight: 700, color: '#0284c7' }}>SahakarEdge-{activeNode.code}-01</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Cooperative Federation Lineage */}
+                    <div style={{ backgroundColor: '#ffffff', padding: '0.9rem', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '0.75rem' }}>
+                      <div style={{ fontWeight: 700, color: '#334155', marginBottom: '0.4rem' }}>Federation Hierarchy Linkage:</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#64748b', fontSize: '0.72rem' }}>
+                        <span style={{ fontWeight: 700, color: '#b45309' }}>VAMNICOM (Apex)</span>
+                        <span>──▶</span>
+                        <span style={{ fontWeight: 700, color: '#0369a1' }}>
+                          {activeNode.tier === 1 ? 'Apex Central Authority' : activeNode.tier === 2 ? activeNode.code : 'Regional RICM'}
+                        </span>
+                        {activeNode.tier === 3 && (
+                          <>
+                            <span>──▶</span>
+                            <span style={{ fontWeight: 700, color: '#15803d' }}>{activeNode.name.split(',')[0]}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Quick Action Controls */}
+                    <div style={{ marginTop: 'auto', display: 'flex', gap: '0.5rem' }}>
+                      <button
+                        onClick={() => {
+                          setAssignmentNotice(`Triggered upstream sync request for edge node ${activeNode.code}`);
+                        }}
+                        style={{
+                          flex: 1,
+                          padding: '0.55rem',
+                          backgroundColor: '#0284c7',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: '6px',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        ⚡ Force Edge Sync
+                      </button>
+                      <button
+                        onClick={() => {
+                          setActiveTab('ATTENDANCE');
+                          setAssignmentNotice(`Navigated to attendance console for ${activeNode.name}`);
+                        }}
+                        style={{
+                          flex: 1,
+                          padding: '0.55rem',
+                          backgroundColor: '#f1f5f9',
+                          color: '#334155',
+                          border: '1px solid #cbd5e1',
+                          borderRadius: '6px',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        📋 View Attendance
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Comprehensive National Roster Data Table */}
+              <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <h3 style={{ fontSize: '0.95rem', margin: 0, color: '#0f172a', fontWeight: 800 }}>
+                      Complete 20-Node National Training Centers Directory
+                    </h3>
+                    <p style={{ margin: '0.2rem 0 0 0', color: '#64748b', fontSize: '0.75rem' }}>
+                      Hierarchical registry across Tier 1 (Apex), Tier 2 (Regional RICMs), and Tier 3 (Grassroots ICMs)
+                    </p>
+                  </div>
+                  <span style={{ fontSize: '0.75rem', color: '#0284c7', fontWeight: 700 }}>
+                    Showing {filteredNodes.length} of {allNodes.length} Centers
+                  </span>
+                </div>
+
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.8rem' }}>
+                    <thead>
+                      <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: '#475569' }}>
+                        <th style={{ padding: '0.75rem 1rem' }}>Code</th>
+                        <th style={{ padding: '0.75rem 1rem' }}>Institute Name</th>
+                        <th style={{ padding: '0.75rem 1rem' }}>Tier</th>
+                        <th style={{ padding: '0.75rem 1rem' }}>State & Zone</th>
+                        <th style={{ padding: '0.75rem 1rem' }}>Attached PACS</th>
+                        <th style={{ padding: '0.75rem 1rem' }}>Trainees</th>
+                        <th style={{ padding: '0.75rem 1rem' }}>Certified</th>
+                        <th style={{ padding: '0.75rem 1rem' }}>Node Status</th>
+                        <th style={{ padding: '0.75rem 1rem' }}>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredNodes.map((n) => (
+                        <tr
+                          key={n.id}
+                          style={{
+                            borderBottom: '1px solid #f1f5f9',
+                            backgroundColor: activeNode?.id === n.id ? '#f0f9ff' : 'transparent',
+                          }}
+                        >
+                          <td style={{ padding: '0.75rem 1rem', fontWeight: 800, color: '#0284c7' }}>{n.code}</td>
+                          <td style={{ padding: '0.75rem 1rem', fontWeight: 600, color: '#0f172a' }}>{n.name}</td>
+                          <td style={{ padding: '0.75rem 1rem' }}>
+                            <span
+                              style={{
+                                fontSize: '0.68rem',
+                                padding: '0.15rem 0.45rem',
+                                borderRadius: '4px',
+                                fontWeight: 800,
+                                backgroundColor: n.tier === 1 ? '#fef3c7' : n.tier === 2 ? '#e0f2fe' : '#dcfce7',
+                                color: n.tier === 1 ? '#b45309' : n.tier === 2 ? '#0369a1' : '#15803d',
+                              }}
+                            >
+                              Tier {n.tier}
+                            </span>
+                          </td>
+                          <td style={{ padding: '0.75rem 1rem', color: '#64748b' }}>{n.state} ({n.zone})</td>
+                          <td style={{ padding: '0.75rem 1rem', fontWeight: 700, color: '#16a34a' }}>
+                            {n.pacs > 0 ? n.pacs.toLocaleString() : 'Apex Policy'}
+                          </td>
+                          <td style={{ padding: '0.75rem 1rem' }}>{n.trainees}</td>
+                          <td style={{ padding: '0.75rem 1rem', fontWeight: 700, color: '#0284c7' }}>{n.certified}</td>
+                          <td style={{ padding: '0.75rem 1rem' }}>
+                            <span style={{ fontSize: '0.68rem', backgroundColor: '#dcfce7', color: '#166534', padding: '0.1rem 0.35rem', borderRadius: '4px', fontWeight: 700 }}>
+                              ONLINE (WAL)
+                            </span>
+                          </td>
+                          <td style={{ padding: '0.75rem 1rem' }}>
+                            <button
+                              onClick={() => setSelectedGeoNode(n)}
+                              style={{
+                                padding: '0.25rem 0.55rem',
+                                border: '1px solid #cbd5e1',
+                                borderRadius: '4px',
+                                backgroundColor: '#ffffff',
+                                color: '#0284c7',
+                                fontSize: '0.72rem',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              Inspect Node
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Tab 2: Institutes */}
         {activeTab === 'INSTITUTES' && (

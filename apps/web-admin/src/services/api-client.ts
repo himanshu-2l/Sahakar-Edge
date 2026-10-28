@@ -7,6 +7,9 @@ import {
   JobOpportunity,
   ProgrammeStatus,
   EnrollmentStatus,
+  type FederationAnalyticsResponse,
+  type GeoNode,
+  type FederationTierRollup,
 } from '@sahakar/types';
 import {
   SEED_PROGRAMME,
@@ -375,6 +378,119 @@ class CentralApiClient {
       // Fallback
     }
     return null;
+  }
+
+  // --- National Federation Analytics (Phase 9 Milestone 3) ---
+  public async getFederationAnalytics(): Promise<FederationAnalyticsResponse> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/analytics/federation`, {
+        headers: { Authorization: DEFAULT_AUTH_HEADER },
+        signal: AbortSignal.timeout(3000),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // Fallback
+    }
+    return this.getFallbackFederationAnalytics();
+  }
+
+  public getFallbackFederationAnalytics(): FederationAnalyticsResponse {
+    const tier1 = SEED_INSTITUTES.filter((i) => i.tier === 1 || i.type === 'VAMNICOM');
+    const tier2 = SEED_INSTITUTES.filter((i) => i.tier === 2 || i.type === 'RICM');
+    const tier3 = SEED_INSTITUTES.filter((i) => i.tier === 3 || i.type === 'ICM');
+
+    const geoNodes: GeoNode[] = [];
+
+    const buildTier = (tierNum: 1 | 2 | 3, name: string, list: typeof SEED_INSTITUTES): FederationTierRollup => {
+      let totalTrainees = 0;
+      let certifiedTrainees = 0;
+      let activeBatches = 0;
+      let attachedPacsCount = 0;
+      let activeEdgeNodes = 0;
+
+      for (const inst of list) {
+        const trainees = tierNum === 1 ? 160 : tierNum === 2 ? 240 : 120;
+        const certified = tierNum === 1 ? 152 : tierNum === 2 ? 228 : 114;
+        const batches = tierNum === 1 ? 4 : tierNum === 2 ? 3 : 2;
+        const pacs = inst.pacsCount ?? (tierNum === 2 ? 370 : tierNum === 3 ? 145 : 0);
+        const nodes = 1;
+
+        totalTrainees += trainees;
+        certifiedTrainees += certified;
+        activeBatches += batches;
+        attachedPacsCount += pacs;
+        activeEdgeNodes += nodes;
+
+        geoNodes.push({
+          id: inst.id,
+          name: inst.name,
+          code: inst.code,
+          tier: tierNum,
+          state: inst.state || (inst.locationText.split(',')[1]?.trim() || 'National'),
+          zone: inst.zone || (tierNum === 1 ? 'APEX' : 'CENTRAL'),
+          lat: inst.latitude || 23.2599,
+          lng: inst.longitude || 77.4126,
+          trainees,
+          certified,
+          pacs,
+        });
+      }
+
+      return {
+        tier: tierNum,
+        name,
+        institutesCount: list.length,
+        institutes: list.map((inst) => ({
+          id: inst.id,
+          name: inst.name,
+          code: inst.code,
+          locationText: inst.locationText,
+          state: inst.state || (inst.locationText.split(',')[1]?.trim() || 'National'),
+          zone: inst.zone || (tierNum === 1 ? 'APEX' : 'CENTRAL'),
+          lat: inst.latitude || 23.2599,
+          lng: inst.longitude || 77.4126,
+        })),
+        totalTrainees,
+        certifiedTrainees,
+        activeBatches,
+        attachedPacsCount,
+        activeEdgeNodes,
+      };
+    };
+
+    const tier1_apex = buildTier(1, 'Tier 1: Apex Governance (VAMNICOM / MoC)', tier1);
+    const tier2_regional = buildTier(2, 'Tier 2: Regional Institutes (RICMs)', tier2);
+    const tier3_local = buildTier(3, 'Tier 3: Local Institutes (ICMs & PACS)', tier3);
+
+    const totalInstitutes = SEED_INSTITUTES.length;
+    const totalTrainees = tier1_apex.totalTrainees + tier2_regional.totalTrainees + tier3_local.totalTrainees;
+    const certifiedCount = tier1_apex.certifiedTrainees + tier2_regional.certifiedTrainees + tier3_local.certifiedTrainees;
+    const totalAttachedPacs = tier1_apex.attachedPacsCount + tier2_regional.attachedPacsCount + tier3_local.attachedPacsCount;
+    const totalEdgeNodes = tier1_apex.activeEdgeNodes + tier2_regional.activeEdgeNodes + tier3_local.activeEdgeNodes;
+    const certificationRate = totalTrainees > 0 ? Number(((certifiedCount / totalTrainees) * 100).toFixed(1)) : 0;
+
+    return {
+      summary: {
+        totalInstitutes,
+        totalTrainees,
+        certifiedCount,
+        certificationRate,
+        totalAttachedPacs,
+        totalEdgeNodes,
+        generatedAt: new Date().toISOString(),
+      },
+      tiers: {
+        tier1_apex,
+        tier2_regional,
+        tier3_local,
+        tier1: tier1_apex,
+        tier2: tier2_regional,
+        tier3: tier3_local,
+      },
+      geoNodes,
+    };
   }
 }
 

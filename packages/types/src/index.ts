@@ -95,6 +95,13 @@ export interface Institute {
   code: string;
   type: string; // e.g., 'RICM', 'ICM', 'VAMNICOM'
   locationText: string;
+  tier?: 1 | 2 | 3;
+  parentInstituteId?: string | null;
+  state?: string;
+  zone?: 'APEX' | 'NORTH' | 'SOUTH' | 'EAST' | 'WEST' | 'CENTRAL';
+  latitude?: number;
+  longitude?: number;
+  pacsCount?: number;
   active: boolean;
   createdAt: string;
   updatedAt: string;
@@ -593,4 +600,66 @@ export interface AuditLog {
   entityId: string;
   metadata: Record<string, unknown>;
   occurredAt: string;
+}
+
+// ==========================================
+// 10. Multi-Tier Federation & National Rollup
+// ==========================================
+
+export interface FederationInstituteSummary {
+  id: string;
+  name: string;
+  code: string;
+  locationText: string;
+  state: string;
+  zone: string;
+  lat: number;
+  lng: number;
+}
+
+export interface FederationTierRollup {
+  tier: 1 | 2 | 3;
+  name: string;
+  institutesCount: number;
+  institutes: FederationInstituteSummary[];
+  totalTrainees: number;
+  certifiedTrainees: number;
+  activeBatches: number;
+  attachedPacsCount: number;
+  activeEdgeNodes: number;
+}
+
+export interface GeoNode {
+  id: string;
+  name: string;
+  code: string;
+  tier: number;
+  state: string;
+  zone: string;
+  lat: number;
+  lng: number;
+  trainees: number;
+  certified: number;
+  pacs: number;
+}
+
+export interface FederationAnalyticsResponse {
+  summary: {
+    totalInstitutes: number;
+    totalTrainees: number;
+    certifiedCount: number;
+    certificationRate: number;
+    totalAttachedPacs: number;
+    totalEdgeNodes: number;
+    generatedAt: string;
+  };
+  tiers: {
+    tier1_apex: FederationTierRollup;
+    tier2_regional: FederationTierRollup;
+    tier3_local: FederationTierRollup;
+    tier1?: FederationTierRollup;
+    tier2?: FederationTierRollup;
+    tier3?: FederationTierRollup;
+  };
+  geoNodes: GeoNode[];
 }
