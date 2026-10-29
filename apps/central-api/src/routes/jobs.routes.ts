@@ -2,7 +2,9 @@ import { FastifyInstance } from 'fastify';
 import { JobMatchingService } from '../services/job-matching-service.js';
 import { authenticate, requirePermission } from '../auth/auth-service.js';
 import { centralStore } from '../store/memory-store.js';
-import type { JobRequiredSkill } from '@sahakar/types';
+import { credentialService } from '../services/credential-service.js';
+import { updateApplicationStatusSchema, issueOfferLetterSchema } from '@sahakar/validation';
+import type { JobRequiredSkill, JobApplicationStatus, UpdateApplicationStatusDto, IssueOfferLetterDto } from '@sahakar/types';
 
 export const jobMatchingService = new JobMatchingService(centralStore);
 
@@ -285,5 +287,175 @@ export async function registerJobRoutes(app: FastifyInstance) {
       explanation:
         'Compares naive keyword matching baseline against weighted verified skill overlap model.',
     });
+  });
+
+  // ==========================================
+  // Recruiter Pipeline & Digital Offer Letters (M4)
+  // ==========================================
+
+  // List all job applications with optional filtering
+  app.get<{
+    Querystring: { jobId?: string; candidateId?: string; status?: JobApplicationStatus };
+  }>('/api/v1/jobs/applications', async (request, reply) => {
+    const { jobId, candidateId, status } = request.query;
+    const applications = centralStore.listJobApplications({ jobId, candidateId, status });
+    return reply.send({ count: applications.length, applications });
+  });
+
+  // Get specific job application by ID
+  app.get<{ Params: { id: string } }>('/api/v1/jobs/applications/:id', async (request, reply) => {
+    const application = centralStore.getJobApplication(request.params.id);
+    if (!application) {
+      return reply.status(404).send({ error: 'NOT_FOUND', message: 'Job application not found' });
+    }
+    return reply.send({ application });
+  });
+
+  // Submit new job application
+  app.post<{
+    Body: {
+      jobId: string;
+      candidateId: string;
+      interviewDate?: string;
+      interviewVenue?: string;
+      interviewNotes?: string;
+    };
+  }>('/api/v1/jobs/applications', async (request, reply) => {
+    const { jobId, candidateId, interviewDate, interviewVenue, interviewNotes } = request.body || {};
+    if (!jobId || !candidateId) {
+      return reply.status(400).send({ error: 'BAD_REQUEST', message: 'jobId and candidateId are required' });
+    }
+
+    const job = centralStore.getJobOpportunity(jobId);
+    if (!job) {
+      return reply.status(404).send({ error: 'NOT_FOUND', message: 'Job opportunity not found' });
+    }
+
+    const candidate = centralStore.getUser(candidateId);
+    if (!candidate) {
+      return reply.status(404).send({ error: 'NOT_FOUND', message: 'Candidate user not found' });
+    }
+
+    // Calculate match score
+    let matchScore = 75;
+    try {
+      const match = jobMatchingService.matchTraineeToJob(candidateId, jobId);
+      matchScore = Math.round(match.matchScore * 100);
+    } catch {
+      // default
+    }
+
+    const application = centralStore.createJobApplication({
+      jobId,
+      jobTitle: job.title,
+      employerId: job.employerId,
+      employerName: job.employerName || 'Cooperative Employer',
+      candidateId,
+      candidateName: candidate.name,
+      status: 'APPLIED',
+      matchScore,
+      interviewDate,
+      interviewVenue,
+      interviewNotes,
+    });
+
+    return reply.status(201).send({ success: true, application });
+  });
+
+  // Update application status (SCHEDULED, OFFERED, PLACED, REJECTED)
+  app.post<{
+    Params: { id: string };
+    Body: UpdateApplicationStatusDto;
+  }>('/api/v1/jobs/applications/:id/status', async (request, reply) => {
+    const parseResult = updateApplicationStatusSchema.safeParse(request.body);
+    if (!parseResult.success) {
+      return reply.status(400).send({
+        error: 'VALIDATION_ERROR',
+        message: 'Invalid status update payload',
+        details: parseResult.error.format(),
+      });
+    }
+
+    const { status, interviewDate, interviewVenue, interviewNotes } = parseResult.data;
+    const existing = centralStore.getJobApplication(request.params.id);
+    if (!existing) {
+      return reply.status(404).send({ error: 'NOT_FOUND', message: 'Job application not found' });
+    }
+
+    try {
+      const updated = centralStore.updateJobApplicationStatus(
+        request.params.id,
+        status as JobApplicationStatus,
+        {
+          interviewDate,
+          interviewVenue,
+          interviewNotes,
+        }
+      );
+      return reply.send({ success: true, application: updated });
+    } catch (err: any) {
+      return reply.status(400).send({ error: 'BAD_REQUEST', message: err.message });
+    }
+  });
+
+  // Issue Ed25519-signed digital offer letter
+  app.post<{
+    Body: IssueOfferLetterDto;
+  }>('/api/v1/jobs/offers/issue', async (request, reply) => {
+    const parseResult = issueOfferLetterSchema.safeParse(request.body);
+    if (!parseResult.success) {
+      return reply.status(400).send({
+        error: 'VALIDATION_ERROR',
+        message: 'Invalid offer letter payload',
+        details: parseResult.error.format(),
+      });
+    }
+
+    try {
+      const result = credentialService.issueOfferLetter(parseResult.data);
+      return reply.status(201).send({
+        success: true,
+        offer: result.offer,
+        signatureHex: result.signatureHex,
+        verificationUrl: result.verificationUrl,
+      });
+    } catch (err: any) {
+      return reply.status(400).send({
+        error: 'OFFER_ISSUANCE_FAILED',
+        message: err.message,
+      });
+    }
+  });
+
+  // Retrieve digital offer letter by ID
+  app.get<{ Params: { id: string } }>('/api/v1/jobs/offers/:id', async (request, reply) => {
+    const offer = centralStore.getOfferLetter(request.params.id);
+    if (!offer) {
+      return reply.status(404).send({ error: 'NOT_FOUND', message: 'Digital offer letter not found' });
+    }
+    return reply.send({ offer });
+  });
+
+  // Cryptographically verify a digital offer letter
+  app.post<{
+    Body: {
+      offerId?: string;
+      payload?: any;
+      signatureHex?: string;
+      publicKeyPem?: string;
+    };
+  }>('/api/v1/jobs/offers/verify', async (request, reply) => {
+    const { offerId, payload, signatureHex, publicKeyPem } = request.body || {};
+    const result = credentialService.verifyOfferLetter({
+      offerId,
+      payload,
+      signatureHex,
+      publicKeyPem,
+    });
+
+    if (!result.valid) {
+      return reply.status(400).send(result);
+    }
+    return reply.send(result);
   });
 }

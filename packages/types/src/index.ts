@@ -663,3 +663,93 @@ export interface FederationAnalyticsResponse {
   };
   geoNodes: GeoNode[];
 }
+
+// ==========================================
+// 12. Recruiter Pipeline & Digital Offer Letters (M4)
+// ==========================================
+
+export type JobApplicationStatus = 'APPLIED' | 'SCHEDULED' | 'OFFERED' | 'PLACED' | 'REJECTED';
+
+export interface JobApplication {
+  id: string;
+  jobId: string;
+  jobTitle: string;
+  employerId: string;
+  employerName: string;
+  candidateId: string;
+  candidateName: string;
+  status: JobApplicationStatus;
+  matchScore: number;
+  matchedSkills?: Array<{ skillCode: string; skillName: string; traineeLevel: number; requiredLevel: number }>;
+  missingSkills?: Array<{ skillCode: string; skillName: string; requiredLevel: number }>;
+  interviewDate?: string;
+  interviewVenue?: string;
+  interviewNotes?: string;
+  offerLetterId?: string;
+  appliedAt: string;
+  updatedAt: string;
+}
+
+export interface CanonicalOfferPayload {
+  offerId: string;
+  applicationId: string;
+  jobId: string;
+  jobTitle: string;
+  employer: {
+    id: string;
+    name: string;
+    authorizedSignatory: string;
+  };
+  candidate: {
+    id: string;
+    name: string;
+    emailOrPhone: string;
+  };
+  designation: string;
+  annualCompensationLPA: number;
+  monthlyStipendOrSalary: number;
+  joiningDate: string;
+  postingLocation: string;
+  terms: string[];
+  issuedAt: string;
+  schemaVersion: number;
+}
+
+export type DigitalOfferLetterPayload = CanonicalOfferPayload;
+
+export interface DigitalOfferLetter {
+  id: string;
+  applicationId: string;
+  jobId: string;
+  candidateId: string;
+  payload: CanonicalOfferPayload;
+  signatureHex: string; // Ed25519 signature hex
+  signature?: string; // Alias for backward compatibility
+  issuerKeyId: string; // Key ID of issuing authority
+  publicKey?: string; // PEM or raw public key of issuer
+  canonicalDigest?: string; // SHA-256 over canonical JSON
+  verificationUrl: string;
+  compactQr?: string;
+  status: 'ISSUED' | 'ACCEPTED' | 'DECLINED' | 'REVOKED';
+  issuedAt: string;
+}
+
+export interface UpdateApplicationStatusDto {
+  status: JobApplicationStatus;
+  interviewDate?: string;
+  interviewVenue?: string;
+  interviewNotes?: string;
+}
+
+export interface IssueOfferLetterDto {
+  applicationId: string;
+  designation: string;
+  annualCompensationLPA: number;
+  monthlyStipendOrSalary: number;
+  joiningDate: string;
+  postingLocation: string;
+  terms?: string[];
+  authorizedSignatory?: string;
+}
+
+

@@ -251,6 +251,37 @@ export const jobRequiredSkills = pgTable('job_required_skills', {
   weight: real('weight').default(1.0).notNull(),
 });
 
+export const jobApplications = pgTable('job_applications', {
+  id: text('id').primaryKey(),
+  jobId: text('job_id').references(() => jobOpportunities.id).notNull(),
+  jobTitle: text('job_title').notNull(),
+  employerId: text('employer_id').references(() => users.id).notNull(),
+  employerName: text('employer_name').notNull(),
+  candidateId: text('candidate_id').references(() => users.id).notNull(),
+  candidateName: text('candidate_name').notNull(),
+  status: text('status').default('APPLIED').notNull(),
+  matchScore: real('match_score').default(0).notNull(),
+  interviewDate: timestamp('interview_date'),
+  interviewVenue: text('interview_venue'),
+  interviewNotes: text('interview_notes'),
+  offerLetterId: text('offer_letter_id'),
+  appliedAt: timestamp('applied_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const jobOfferLetters = pgTable('job_offer_letters', {
+  id: text('id').primaryKey(),
+  applicationId: text('application_id').references(() => jobApplications.id).notNull(),
+  jobId: text('job_id').references(() => jobOpportunities.id).notNull(),
+  candidateId: text('candidate_id').references(() => users.id).notNull(),
+  payload: jsonb('payload').notNull(),
+  signatureHex: text('signature_hex').notNull(),
+  issuerKeyId: text('issuer_key_id').notNull(),
+  verificationUrl: text('verification_url').notNull(),
+  status: text('status').default('ISSUED').notNull(),
+  issuedAt: timestamp('issued_at').defaultNow().notNull(),
+});
+
 // ==========================================
 // 7. Edge Nodes, Sync Events & Audit
 // ==========================================

@@ -24,6 +24,10 @@ import {
   type FederationAnalyticsResponse,
   type GeoNode,
   type FederationInstituteSummary,
+  type JobApplication,
+  type JobApplicationStatus,
+  type DigitalOfferLetter,
+  type CanonicalOfferPayload,
 } from '@sahakar/types';
 import {
   SEED_INSTITUTES,
@@ -38,6 +42,9 @@ import {
   SEED_ASSESSMENT,
   SEED_QUESTIONS,
   SEED_SKILLS,
+  SEED_JOB_OPPORTUNITY,
+  SEED_JOB_DAIRY_COORDINATOR,
+  SEED_JOB_DCCB_SECRETARY,
   SEED_JOB_OPPORTUNITIES,
   SEED_JOB_REQUIRED_SKILLS,
   SEED_TRAINEE_SKILL_EVIDENCES,
@@ -117,6 +124,10 @@ export class CentralMemoryStore {
   private jobOpportunities: Map<string, JobOpportunity> = new Map();
   private jobRequiredSkills: Map<string, JobRequiredSkill[]> = new Map();
   private skillEvidences: Map<string, SkillEvidence> = new Map();
+
+  // Recruiter Pipeline & Digital Offer Letters (Phase 9 Milestone 4)
+  private jobApplications: Map<string, JobApplication> = new Map();
+  private offerLetters: Map<string, DigitalOfferLetter> = new Map();
 
   // NCCT ERP Training Logistics
   private hostelAllotments: Map<string, HostelAllotment> = new Map();
@@ -208,6 +219,8 @@ export class CentralMemoryStore {
       jobOpportunities: Array.from(this.jobOpportunities.entries()),
       jobRequiredSkills: Array.from(this.jobRequiredSkills.entries()),
       skillEvidences: Array.from(this.skillEvidences.entries()),
+      jobApplications: Array.from(this.jobApplications.entries()),
+      offerLetters: Array.from(this.offerLetters.entries()),
       hostelAllotments: Array.from(this.hostelAllotments.entries()),
       timetableSchedule: Array.from(this.timetableSchedule.entries()),
       messMenu: this.messMenu,
@@ -255,6 +268,13 @@ export class CentralMemoryStore {
     if (data.jobOpportunities) this.jobOpportunities = new Map(data.jobOpportunities);
     if (data.jobRequiredSkills) this.jobRequiredSkills = new Map(data.jobRequiredSkills);
     if (data.skillEvidences) this.skillEvidences = new Map(data.skillEvidences);
+    if (data.jobApplications) this.jobApplications = new Map(data.jobApplications);
+    if (data.offerLetters) this.offerLetters = new Map(data.offerLetters);
+    if (this.jobApplications.size === 0) {
+      for (const a of this.getDefaultJobApplications()) {
+        this.jobApplications.set(a.id, a);
+      }
+    }
     if (data.hostelAllotments) this.hostelAllotments = new Map(data.hostelAllotments);
     if (data.timetableSchedule) this.timetableSchedule = new Map(data.timetableSchedule);
     if (data.messMenu) this.messMenu = data.messMenu;
@@ -280,6 +300,8 @@ export class CentralMemoryStore {
     this.jobOpportunities.clear();
     this.jobRequiredSkills.clear();
     this.skillEvidences.clear();
+    this.jobApplications.clear();
+    this.offerLetters.clear();
     this.hostelAllotments.clear();
     this.timetableSchedule.clear();
     this.hardwareKits.clear();
@@ -452,6 +474,71 @@ export class CentralMemoryStore {
         actor: 'director@ricm-bhopal.gov.in',
         details: 'Ed25519 Statutory Certificate issued to Anita Patel (95% passing grade)',
         timestamp: new Date().toISOString(),
+      },
+    ];
+
+    // Seed Recruiter Job Applications (Phase 9 Milestone 4)
+    for (const a of this.getDefaultJobApplications()) {
+      this.jobApplications.set(a.id, a);
+    }
+  }
+
+  private getDefaultJobApplications(): JobApplication[] {
+    return [
+      {
+        id: 'app-anita-amul-01',
+        jobId: SEED_JOB_OPPORTUNITY.id,
+        jobTitle: SEED_JOB_OPPORTUNITY.title,
+        employerId: SEED_JOB_OPPORTUNITY.employerId,
+        employerName: SEED_JOB_OPPORTUNITY.employerName || 'Anand Milk Union (Amul) Talent Network',
+        candidateId: 'dddd4444-4444-4444-4444-444444444441',
+        candidateName: 'Anita Patel',
+        status: 'SCHEDULED',
+        matchScore: 95,
+        matchedSkills: [
+          { skillCode: 'PACS_ACCOUNTING', skillName: 'PACS Double-Entry Accounting', traineeLevel: 2, requiredLevel: 1 },
+          { skillCode: 'VOUCHER_ENTRY', skillName: 'Daybook & Voucher Posting', traineeLevel: 2, requiredLevel: 1 },
+        ],
+        missingSkills: [],
+        interviewDate: '2026-11-05T10:00:00.000Z',
+        interviewVenue: 'Amul Dairy HQ / Virtual Boardroom (Room 4)',
+        interviewNotes: 'Shortlisted based on 95% PACS Double-Entry Accounting and NCCT Credential',
+        appliedAt: '2026-10-15T09:30:00.000Z',
+        updatedAt: '2026-10-20T11:00:00.000Z',
+      },
+      {
+        id: 'app-vikram-gcmmf-02',
+        jobId: SEED_JOB_DAIRY_COORDINATOR.id,
+        jobTitle: SEED_JOB_DAIRY_COORDINATOR.title,
+        employerId: SEED_JOB_DAIRY_COORDINATOR.employerId,
+        employerName: SEED_JOB_DAIRY_COORDINATOR.employerName || 'Gujarat Cooperative Milk Marketing Federation (GCMMF)',
+        candidateId: 'dddd4444-4444-4444-4444-444444444442',
+        candidateName: 'Vikram Singh',
+        status: 'APPLIED',
+        matchScore: 80,
+        matchedSkills: [
+          { skillCode: 'COOP_GOVERNANCE', skillName: 'Cooperative Governance & Compliance', traineeLevel: 2, requiredLevel: 1 },
+        ],
+        missingSkills: [],
+        appliedAt: '2026-10-18T14:20:00.000Z',
+        updatedAt: '2026-10-18T14:20:00.000Z',
+      },
+      {
+        id: 'app-sunita-dccb-03',
+        jobId: SEED_JOB_DCCB_SECRETARY.id,
+        jobTitle: SEED_JOB_DCCB_SECRETARY.title,
+        employerId: SEED_JOB_DCCB_SECRETARY.employerId,
+        employerName: SEED_JOB_DCCB_SECRETARY.employerName || 'Bhopal District Central Cooperative Bank (DCCB)',
+        candidateId: 'dddd4444-4444-4444-4444-444444444443',
+        candidateName: 'Sunita Devi',
+        status: 'APPLIED',
+        matchScore: 65,
+        matchedSkills: [
+          { skillCode: 'COOP_GOVERNANCE', skillName: 'Cooperative Governance & Compliance', traineeLevel: 1, requiredLevel: 1 },
+        ],
+        missingSkills: [],
+        appliedAt: '2026-10-22T16:00:00.000Z',
+        updatedAt: '2026-10-22T16:00:00.000Z',
       },
     ];
   }
@@ -921,6 +1008,91 @@ export class CentralMemoryStore {
     this.skillEvidences.set(id, evidence);
     this.saveToDisk();
     return evidence;
+  }
+
+  // --- Job Applications (Phase 9 Milestone 4) ---
+  listJobApplications(filters?: { jobId?: string; candidateId?: string; status?: JobApplicationStatus | string }): JobApplication[] {
+    let apps = Array.from(this.jobApplications.values());
+    if (filters?.jobId) {
+      apps = apps.filter((a) => a.jobId === filters.jobId);
+    }
+    if (filters?.candidateId) {
+      apps = apps.filter((a) => a.candidateId === filters.candidateId);
+    }
+    if (filters?.status) {
+      apps = apps.filter((a) => a.status === filters.status);
+    }
+    return apps.sort((a, b) => new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime());
+  }
+
+  getJobApplication(id: string): JobApplication | undefined {
+    return this.jobApplications.get(id);
+  }
+
+  createJobApplication(
+    data: Omit<JobApplication, 'id' | 'appliedAt' | 'updatedAt'> & { id?: string; appliedAt?: string; updatedAt?: string }
+  ): JobApplication {
+    const id = data.id || `app-${randomUUID()}`;
+    const now = new Date().toISOString();
+    const app: JobApplication = {
+      ...data,
+      id,
+      appliedAt: data.appliedAt || now,
+      updatedAt: data.updatedAt || now,
+    };
+    this.jobApplications.set(id, app);
+    this.saveToDisk();
+    return app;
+  }
+
+  updateJobApplicationStatus(
+    id: string,
+    status: JobApplicationStatus,
+    details?: {
+      interviewDate?: string;
+      interviewVenue?: string;
+      interviewNotes?: string;
+      offerLetterId?: string;
+    }
+  ): JobApplication {
+    const existing = this.jobApplications.get(id);
+    if (!existing) {
+      throw new Error(`Job application ${id} not found`);
+    }
+    const updated: JobApplication = {
+      ...existing,
+      status,
+      interviewDate: details?.interviewDate !== undefined ? details.interviewDate : existing.interviewDate,
+      interviewVenue: details?.interviewVenue !== undefined ? details.interviewVenue : existing.interviewVenue,
+      interviewNotes: details?.interviewNotes !== undefined ? details.interviewNotes : existing.interviewNotes,
+      offerLetterId: details?.offerLetterId !== undefined ? details.offerLetterId : existing.offerLetterId,
+      updatedAt: new Date().toISOString(),
+    };
+    this.jobApplications.set(id, updated);
+    this.saveToDisk();
+    return updated;
+  }
+
+  // --- Digital Offer Letters (Phase 9 Milestone 4) ---
+  saveOfferLetter(offer: DigitalOfferLetter): DigitalOfferLetter {
+    this.offerLetters.set(offer.id, offer);
+    if (offer.applicationId && this.jobApplications.has(offer.applicationId)) {
+      const app = this.jobApplications.get(offer.applicationId)!;
+      app.offerLetterId = offer.id;
+      app.status = 'OFFERED';
+      app.updatedAt = new Date().toISOString();
+      this.jobApplications.set(app.id, app);
+    }
+    this.saveToDisk();
+    return offer;
+  }
+
+  getOfferLetter(id: string): DigitalOfferLetter | undefined {
+    return this.offerLetters.get(id);
+  }
+
+  listOfferLetters(): DigitalOfferLetter[] {
+    return Array.from(this.offerLetters.values());
   }
 
   // --- ERP Logistics (Hostel, Timetable, Mess, Kits) ---

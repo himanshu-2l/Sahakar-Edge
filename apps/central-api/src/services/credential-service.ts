@@ -4,12 +4,16 @@ import {
   signCredentialPayload,
   verifyCredentialSignature,
   createQrVerificationPayload,
+  signOfferLetterPayload,
+  verifyOfferLetterSignature,
   KeyPairPem,
 } from '@sahakar/credential-core';
 import type {
   CanonicalCredentialPayload,
   Credential,
   SkillSummary,
+  CanonicalOfferPayload,
+  DigitalOfferLetter,
 } from '@sahakar/types';
 import { CredentialStatus } from '@sahakar/types';
 import { centralStore } from '../store/memory-store.js';
@@ -300,6 +304,123 @@ export class CredentialService {
       status: 'UNKNOWN',
       details: 'Either credentialId or payload with signatureHex must be provided',
     };
+  }
+
+  public getIssuerKeyPair(): KeyPairPem {
+    return this.issuerKey;
+  }
+
+  /**
+   * Issues an Ed25519 digitally signed offer letter.
+   */
+  public issueOfferLetter(params: {
+    applicationId: string;
+    designation: string;
+    annualCompensationLPA: number;
+    monthlyStipendOrSalary: number;
+    joiningDate: string;
+    postingLocation: string;
+    terms?: string[];
+    authorizedSignatory?: string;
+  }): { offer: DigitalOfferLetter; signatureHex: string; verificationUrl: string } {
+    const app = centralStore.getJobApplication(params.applicationId);
+    if (!app) {
+      throw new Error(`Job application not found: ${params.applicationId}`);
+    }
+
+    const job = centralStore.getJobOpportunity(app.jobId);
+    if (!job) {
+      throw new Error(`Job opportunity not found: ${app.jobId}`);
+    }
+
+    const candidate = centralStore.getUser(app.candidateId);
+    if (!candidate) {
+      throw new Error(`Candidate user not found: ${app.candidateId}`);
+    }
+
+    const offerId = `off-${randomUUID()}`;
+    const issuedAt = new Date().toISOString();
+
+    const payload: CanonicalOfferPayload = {
+      offerId,
+      applicationId: app.id,
+      jobId: job.id,
+      jobTitle: job.title,
+      employer: {
+        id: job.employerId,
+        name: job.employerName || app.employerName || 'Cooperative Employer',
+        authorizedSignatory: params.authorizedSignatory || 'Head of Human Resources & Talent Network',
+      },
+      candidate: {
+        id: candidate.id,
+        name: candidate.name,
+        emailOrPhone: candidate.emailOrPhone,
+      },
+      designation: params.designation,
+      annualCompensationLPA: params.annualCompensationLPA,
+      monthlyStipendOrSalary: params.monthlyStipendOrSalary,
+      joiningDate: params.joiningDate,
+      postingLocation: params.postingLocation,
+      terms: params.terms || [
+        'Subject to verification of NCCT accredited training certification.',
+        'Immediate placement under the National Cooperative Development Scheme.',
+        'Probation period of 3 months with cooperative performance review.',
+      ],
+      issuedAt,
+      schemaVersion: 1,
+    };
+
+    const { signatureHex, offer } = signOfferLetterPayload(
+      payload,
+      this.issuerKey.privateKeyPem,
+      this.issuerKey.keyId,
+      this.verifyBaseUrl
+    );
+
+    // Save offer and transition application status to OFFERED
+    centralStore.saveOfferLetter(offer);
+    centralStore.updateJobApplicationStatus(app.id, 'OFFERED', {
+      offerLetterId: offer.id,
+    });
+
+    return { offer, signatureHex, verificationUrl: offer.verificationUrl };
+  }
+
+  /**
+   * Cryptographically verifies a digital offer letter.
+   */
+  public verifyOfferLetter(params: {
+    offerId?: string;
+    payload?: CanonicalOfferPayload;
+    signatureHex?: string;
+    publicKeyPem?: string;
+  }): { valid: boolean; status: string; details: string; offer?: DigitalOfferLetter } {
+    if (params.offerId) {
+      const stored = centralStore.getOfferLetter(params.offerId);
+      if (!stored) {
+        return { valid: false, status: 'NOT_FOUND', details: 'Offer letter not found in central registry' };
+      }
+      const isSigValid = verifyOfferLetterSignature(
+        stored.payload,
+        stored.signatureHex,
+        this.issuerKey.publicKeyPem
+      );
+      if (!isSigValid) {
+        return { valid: false, status: 'INVALID_SIGNATURE', details: 'Digital signature mismatch or tampered payload' };
+      }
+      return { valid: true, status: stored.status, details: 'Valid authentic Ed25519 digital offer letter', offer: stored };
+    }
+
+    if (params.payload && params.signatureHex) {
+      const pubKey = params.publicKeyPem || this.issuerKey.publicKeyPem;
+      const isSigValid = verifyOfferLetterSignature(params.payload, params.signatureHex, pubKey);
+      if (!isSigValid) {
+        return { valid: false, status: 'INVALID_SIGNATURE', details: 'Digital signature mismatch or tampered payload' };
+      }
+      return { valid: true, status: 'ISSUED', details: 'Verified offline via Ed25519 public key' };
+    }
+
+    return { valid: false, status: 'UNKNOWN', details: 'Either offerId or payload with signatureHex must be provided' };
   }
 }
 

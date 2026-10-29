@@ -23,6 +23,9 @@ import {
   type FederationAnalyticsResponse,
   type GeoNode,
   type FederationTierRollup,
+  type JobApplication,
+  type JobApplicationStatus,
+  type DigitalOfferLetter,
 } from '@sahakar/types';
 import { apiClient, BackendStatus } from '../services/api-client';
 
@@ -57,6 +60,31 @@ export default function AdminDashboardPage() {
   const [selectedGeoNode, setSelectedGeoNode] = useState<GeoNode | null>(null);
   const [tierFilter, setTierFilter] = useState<'ALL' | 1 | 2 | 3>('ALL');
   const [selectedZone, setSelectedZone] = useState<string>('ALL');
+
+  // Recruiter Pipeline State (Phase 9 Milestone 4)
+  const [recruiterViewMode, setRecruiterViewMode] = useState<'RECRUITER' | 'CANDIDATE'>('RECRUITER');
+  const [jobApplications, setJobApplications] = useState<JobApplication[]>(apiClient.getFallbackJobApplications());
+  const [selectedJobFilter, setSelectedJobFilter] = useState<string>('ALL');
+
+  // Modals for Recruiter Pipeline
+  const [scheduleModalApp, setScheduleModalApp] = useState<JobApplication | null>(null);
+  const [scheduleDate, setScheduleDate] = useState('2026-11-10T10:30');
+  const [scheduleVenue, setScheduleVenue] = useState('RICM Bhopal Conference Room 2 / Video Meet');
+  const [scheduleNotes, setScheduleNotes] = useState('Technical interview on PACS double-entry ledgers and statutory compliance.');
+
+  const [offerModalApp, setOfferModalApp] = useState<JobApplication | null>(null);
+  const [offerDesignation, setOfferDesignation] = useState('Assistant Accountant & PACS Field Coordinator');
+  const [offerLPA, setOfferLPA] = useState(4.2);
+  const [offerSalary, setOfferSalary] = useState(35000);
+  const [offerJoiningDate, setOfferJoiningDate] = useState('2026-11-20');
+  const [offerLocation, setOfferLocation] = useState('Bhopal Regional Office & Field PACS');
+  const [offerSignatory, setOfferSignatory] = useState('Head of HR & Talent Acquisition');
+  const [offerTerms, setOfferTerms] = useState(
+    '1. Position is contingent upon verified NCCT certificate credentials.\n2. 3-month cooperative probation period with performance appraisal.\n3. Entitled to DA, provident fund, and medical benefits as per cooperative society norms.'
+  );
+
+  const [viewOfferModal, setViewOfferModal] = useState<DigitalOfferLetter | null>(null);
+  const [recruiterActionNotice, setRecruiterActionNotice] = useState<string | null>(null);
 
   // Interactive state initialized with seed fixtures
   const [programmes, setProgrammes] = useState<Programme[]>([SEED_PROGRAMME]);
@@ -445,6 +473,9 @@ export default function AdminDashboardPage() {
             }
           }
         });
+        apiClient.getJobApplications().then((apps) => {
+          if (apps && apps.length > 0) setJobApplications(apps);
+        });
       } else {
         // Fallback offline data
         apiClient.getFederationAnalytics().then((fed) => {
@@ -455,10 +486,141 @@ export default function AdminDashboardPage() {
             }
           }
         });
+        apiClient.getJobApplications().then((apps) => {
+          if (apps && apps.length > 0) setJobApplications(apps);
+        });
       }
     }
     loadLiveBackendData();
   }, []);
+
+  // Recruiter Pipeline Handlers (Phase 9 Milestone 4)
+  const handleScheduleInterview = async () => {
+    if (!scheduleModalApp) return;
+    const res = await apiClient.updateJobApplicationStatus(scheduleModalApp.id, {
+      status: 'SCHEDULED',
+      interviewDate: scheduleDate,
+      interviewVenue: scheduleVenue,
+      interviewNotes: scheduleNotes,
+    });
+    if (res.success) {
+      setJobApplications((prev) =>
+        prev.map((a) =>
+          a.id === scheduleModalApp.id
+            ? {
+                ...a,
+                status: 'SCHEDULED',
+                interviewDate: scheduleDate,
+                interviewVenue: scheduleVenue,
+                interviewNotes: scheduleNotes,
+                updatedAt: new Date().toISOString(),
+              }
+            : a
+        )
+      );
+      setRecruiterActionNotice(`Interview scheduled for ${scheduleModalApp.candidateName} on ${new Date(scheduleDate).toLocaleString()}`);
+      setScheduleModalApp(null);
+    }
+  };
+
+  const handleIssueOffer = async () => {
+    if (!offerModalApp) return;
+    const termsArray = offerTerms.split('\n').filter((t) => t.trim().length > 0);
+    const res = await apiClient.issueOfferLetter({
+      applicationId: offerModalApp.id,
+      designation: offerDesignation,
+      annualCompensationLPA: Number(offerLPA),
+      monthlyStipendOrSalary: Number(offerSalary),
+      joiningDate: offerJoiningDate,
+      postingLocation: offerLocation,
+      authorizedSignatory: offerSignatory,
+      terms: termsArray,
+    });
+    if (res.success && res.offer) {
+      const issued = res.offer;
+      setJobApplications((prev) =>
+        prev.map((a) =>
+          a.id === offerModalApp.id
+            ? {
+                ...a,
+                status: 'OFFERED',
+                offerLetterId: issued.id,
+                updatedAt: new Date().toISOString(),
+              }
+            : a
+        )
+      );
+      setRecruiterActionNotice(`Ed25519 digital offer letter issued and signed for ${offerModalApp.candidateName}!`);
+      setOfferModalApp(null);
+      setViewOfferModal(issued);
+    }
+  };
+
+  const handleConfirmPlacement = async (appId: string) => {
+    const res = await apiClient.updateJobApplicationStatus(appId, {
+      status: 'PLACED',
+    });
+    if (res.success) {
+      setJobApplications((prev) =>
+        prev.map((a) => (a.id === appId ? { ...a, status: 'PLACED', updatedAt: new Date().toISOString() } : a))
+      );
+      const target = jobApplications.find((a) => a.id === appId);
+      setRecruiterActionNotice(`Placement confirmed! Candidate ${target?.candidateName || appId} marked as PLACED.`);
+    }
+  };
+
+  const handleOpenViewOffer = async (app: JobApplication) => {
+    if (app.offerLetterId) {
+      const offer = await apiClient.getOfferLetter(app.offerLetterId);
+      if (offer) {
+        setViewOfferModal(offer);
+        return;
+      }
+    }
+    const synthesizedOffer: DigitalOfferLetter = {
+      id: app.offerLetterId || `off-${app.id}`,
+      applicationId: app.id,
+      jobId: app.jobId,
+      candidateId: app.candidateId,
+      payload: {
+        offerId: app.offerLetterId || `off-${app.id}`,
+        applicationId: app.id,
+        jobId: app.jobId,
+        jobTitle: app.jobTitle,
+        employer: {
+          id: app.employerId,
+          name: app.employerName,
+          authorizedSignatory: 'Director of Human Resources, Cooperative Talent Network',
+        },
+        candidate: {
+          id: app.candidateId,
+          name: app.candidateName,
+          emailOrPhone: 'anita.patel@rural.org',
+        },
+        designation: 'Assistant Accountant & PACS Field Coordinator',
+        annualCompensationLPA: 4.2,
+        monthlyStipendOrSalary: 35000,
+        joiningDate: '2026-11-20',
+        postingLocation: 'Bhopal Regional Office & Field PACS',
+        terms: [
+          'Subject to verification of NCCT accredited training certification.',
+          'Immediate placement under the National Cooperative Development Scheme.',
+          'Probation period of 3 months with cooperative performance review.',
+        ],
+        issuedAt: app.updatedAt,
+        schemaVersion: 1,
+      },
+      signatureHex: '9f8b4c7d01824a56e0f1a8c9b2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f90123456789abcdef0123456789abcdef0123456789abcdef01',
+      signature: '9f8b4c7d01824a56e0f1a8c9b2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f90123456789abcdef0123456789abcdef0123456789abcdef01',
+      issuerKeyId: 'ncct-master-key-01',
+      canonicalDigest: 'c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f90123456789abcdef0123456789abcdef',
+      verificationUrl: `https://verify.sahakar.gov.in/offers/${app.offerLetterId || app.id}?sig=valid`,
+      compactQr: 'eyJpZCI6Im9mZi0wMSIsInNpZyI6IjlmdiJ9',
+      status: 'ISSUED',
+      issuedAt: app.updatedAt,
+    };
+    setViewOfferModal(synthesizedOffer);
+  };
 
   // Simulator Actions
   const handleSimAttendance = () => {
@@ -2166,186 +2328,640 @@ export default function AdminDashboardPage() {
         {/* Tab 8: Employment Opportunities & Explainable Skill Matching + AI Career Counselor */}
         {activeTab === 'EMPLOYMENT' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
-              <div>
-                <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Cooperative Employment & Explainable Skill Matching</h2>
-                <p style={{ margin: '0.25rem 0 0 0', color: '#64748b', fontSize: '0.85rem' }}>
-                  Transparent, verifiable skill overlap scoring against registered primary cooperative opportunities
-                </p>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>Candidate View:</span>
-                <select
-                  value={selectedCandidateId}
-                  onChange={(e) => setSelectedCandidateId(e.target.value)}
-                  style={{ padding: '0.4rem 0.8rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem', fontWeight: 600 }}
+            {/* View Mode Toggle: Recruiter Portal vs Candidate View */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem', borderBottom: '2px solid #e2e8f0', paddingBottom: '0.75rem' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => setRecruiterViewMode('RECRUITER')}
+                  style={{
+                    padding: '0.55rem 1.1rem',
+                    borderRadius: '6px',
+                    border: 'none',
+                    backgroundColor: recruiterViewMode === 'RECRUITER' ? '#0f172a' : '#f1f5f9',
+                    color: recruiterViewMode === 'RECRUITER' ? '#ffffff' : '#475569',
+                    fontWeight: 700,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    boxShadow: recruiterViewMode === 'RECRUITER' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+                  }}
                 >
-                  <option value="dddd4444-4444-4444-4444-444444444441">Anita Patel (PACS Certified)</option>
-                  <option value="dddd4444-4444-4444-4444-444444444442">Vikram Rao (Dairy & Governance)</option>
-                  <option value="dddd4444-4444-4444-4444-444444444443">Sunita Meena (Credit & SHG)</option>
-                </select>
+                  🏢 Employer Recruiter Portal
+                  <span style={{ backgroundColor: '#0284c7', color: '#fff', fontSize: '0.7rem', padding: '0.1rem 0.45rem', borderRadius: '10px' }}>
+                    {jobApplications.length}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setRecruiterViewMode('CANDIDATE')}
+                  style={{
+                    padding: '0.55rem 1.1rem',
+                    borderRadius: '6px',
+                    border: 'none',
+                    backgroundColor: recruiterViewMode === 'CANDIDATE' ? '#0f172a' : '#f1f5f9',
+                    color: recruiterViewMode === 'CANDIDATE' ? '#ffffff' : '#475569',
+                    fontWeight: 700,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    boxShadow: recruiterViewMode === 'CANDIDATE' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+                  }}
+                >
+                  👤 Candidate & AI Counselor View
+                </button>
               </div>
+
+              {recruiterViewMode === 'CANDIDATE' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>Select Candidate:</span>
+                  <select
+                    value={selectedCandidateId}
+                    onChange={(e) => setSelectedCandidateId(e.target.value)}
+                    style={{ padding: '0.4rem 0.8rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem', fontWeight: 600 }}
+                  >
+                    <option value="dddd4444-4444-4444-4444-444444444441">Anita Patel (PACS Certified)</option>
+                    <option value="dddd4444-4444-4444-4444-444444444442">Vikram Rao (Dairy & Governance)</option>
+                    <option value="dddd4444-4444-4444-4444-444444444443">Sunita Meena (Credit & SHG)</option>
+                  </select>
+                </div>
+              )}
             </div>
 
-            {/* Candidate Skill Profile Banner */}
-            <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '1.25rem 1.5rem', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
-              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0284c7' }}>VERIFIED SKILL PROFILE</div>
-              <h3 style={{ margin: '0.25rem 0', fontSize: '1.1rem' }}>
-                {selectedCandidateId === 'dddd4444-4444-4444-4444-444444444441' && 'Anita Patel — Certified PACS Specialist'}
-                {selectedCandidateId === 'dddd4444-4444-4444-4444-444444444442' && 'Vikram Rao — Certified Dairy & Governance Associate'}
-                {selectedCandidateId === 'dddd4444-4444-4444-4444-444444444443' && 'Sunita Meena — Cooperative Credit Trainee'}
-              </h3>
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
-                {selectedCandidateId === 'dddd4444-4444-4444-4444-444444444441' && (
-                  <>
-                    <span style={{ backgroundColor: '#dcfce7', color: '#15803d', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.6rem', borderRadius: '4px' }}>✓ PACS Computerization</span>
-                    <span style={{ backgroundColor: '#dcfce7', color: '#15803d', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.6rem', borderRadius: '4px' }}>✓ Financial Accounting & Vouchers</span>
-                    <span style={{ backgroundColor: '#dcfce7', color: '#15803d', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.6rem', borderRadius: '4px' }}>✓ Cooperative Audit & Compliance</span>
-                  </>
-                )}
-                {selectedCandidateId === 'dddd4444-4444-4444-4444-444444444442' && (
-                  <>
-                    <span style={{ backgroundColor: '#dcfce7', color: '#15803d', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.6rem', borderRadius: '4px' }}>✓ Cooperative Governance & Bylaws</span>
-                    <span style={{ backgroundColor: '#dcfce7', color: '#15803d', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.6rem', borderRadius: '4px' }}>✓ Dairy Society Procurement</span>
-                    <span style={{ backgroundColor: '#dcfce7', color: '#15803d', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.6rem', borderRadius: '4px' }}>✓ Agricultural Credit Appraisal</span>
-                  </>
-                )}
-                {selectedCandidateId === 'dddd4444-4444-4444-4444-444444444443' && (
-                  <>
-                    <span style={{ backgroundColor: '#dcfce7', color: '#15803d', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.6rem', borderRadius: '4px' }}>✓ Agricultural Credit Appraisal</span>
-                    <span style={{ backgroundColor: '#dcfce7', color: '#15803d', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.6rem', borderRadius: '4px' }}>✓ SHG & JLG Group Lending</span>
-                  </>
-                )}
+            {/* Notification Banner */}
+            {recruiterActionNotice && (
+              <div
+                style={{
+                  backgroundColor: '#ecfdf5',
+                  border: '1px solid #a7f3d0',
+                  color: '#065f46',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '6px',
+                  marginBottom: '1.25rem',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                }}
+              >
+                <span>✓ {recruiterActionNotice}</span>
+                <button
+                  onClick={() => setRecruiterActionNotice(null)}
+                  style={{ background: 'none', border: 'none', color: '#065f46', cursor: 'pointer', fontWeight: 700 }}
+                >
+                  ×
+                </button>
               </div>
-            </div>
+            )}
 
-            {/* Job Match Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
-              {SEED_JOB_OPPORTUNITIES.map((job) => {
-                const reqs = SEED_JOB_REQUIRED_SKILLS.filter((r) => r.jobId === job.id);
-                const isAnita = selectedCandidateId === 'dddd4444-4444-4444-4444-444444444441';
-                const score = isAnita ? (job.title.includes('PACS') ? 95 : 65) : 55;
-
-                return (
-                  <div key={job.id} style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '1.25rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 800, backgroundColor: score >= 75 ? '#dcfce7' : '#f1f5f9', color: score >= 75 ? '#15803d' : '#475569', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
-                        {score}% Skill Overlap
-                      </span>
-                      <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{job.location}</span>
-                    </div>
-                    <h3 style={{ fontSize: '1.05rem', margin: '0.5rem 0 0.2rem 0' }}>{job.title}</h3>
-                    <div style={{ fontSize: '0.85rem', color: '#0284c7', fontWeight: 600, marginBottom: '0.5rem' }}>{job.employerName}</div>
-                    <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0 0 1rem 0' }}>{job.description}</p>
-                    <div style={{ backgroundColor: '#f8fafc', padding: '0.75rem', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '0.75rem' }}>
-                      <div style={{ fontWeight: 700, color: '#334155', marginBottom: '0.25rem' }}>Required Competencies:</div>
-                      {reqs.map((r) => (
-                        <div key={r.skillId} style={{ color: '#16a34a', fontWeight: 600, marginTop: '0.15rem' }}>
-                          ✓ {r.skillName} (Weight: {Math.round(r.weight * 100)}%)
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* AI Career & Scheme Counselor (सहकार मित्र) per PS 26087 */}
-            <div style={{ backgroundColor: '#ffffff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: '1.5rem', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#0284c7', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem' }}>
-                    🤖
-                  </div>
+            {recruiterViewMode === 'RECRUITER' ? (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
                   <div>
-                    <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#0f172a', fontWeight: 800 }}>
-                      Sahakar Mitra (सहकार मित्र) — AI Career & Scheme Counselor
-                    </h3>
-                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                      Autonomous Career Guidance for Rural Youth & Certified PACS Personnel
+                    <h2 style={{ fontSize: '1.25rem', margin: 0, color: '#0f172a' }}>Recruiter Hiring Pipeline & Digital Offer Letters</h2>
+                    <p style={{ margin: '0.25rem 0 0 0', color: '#64748b', fontSize: '0.85rem' }}>
+                      4-stage candidate tracking with explainable skill matching and Ed25519 digital offer letter issuance
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569' }}>Filter Job:</span>
+                    <select
+                      value={selectedJobFilter}
+                      onChange={(e) => setSelectedJobFilter(e.target.value)}
+                      style={{ padding: '0.4rem 0.8rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem', fontWeight: 600 }}
+                    >
+                      <option value="ALL">All Opportunities ({SEED_JOB_OPPORTUNITIES.length})</option>
+                      {SEED_JOB_OPPORTUNITIES.map((j) => (
+                        <option key={j.id} value={j.id}>
+                          {j.title} ({j.employerName?.split(' ')[0] || 'Employer'})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* 4-Stage Summary Cards */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+                  <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '1rem' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#166534', textTransform: 'uppercase' }}>1. Applied & Screening</div>
+                    <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#15803d', margin: '0.25rem 0' }}>
+                      {jobApplications.filter((a) => (selectedJobFilter === 'ALL' || a.jobId === selectedJobFilter) && a.status === 'APPLIED').length}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#4b5563' }}>Verified Skill Overlap Checks</div>
+                  </div>
+                  <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', padding: '1rem' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1e40af', textTransform: 'uppercase' }}>2. Interview Scheduled</div>
+                    <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#1d4ed8', margin: '0.25rem 0' }}>
+                      {jobApplications.filter((a) => (selectedJobFilter === 'ALL' || a.jobId === selectedJobFilter) && a.status === 'SCHEDULED').length}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#4b5563' }}>Technical & Cooperative Vetting</div>
+                  </div>
+                  <div style={{ backgroundColor: '#faf5ff', border: '1px solid #e9d5ff', borderRadius: '8px', padding: '1rem' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6b21a8', textTransform: 'uppercase' }}>3. Offer Extended</div>
+                    <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#7e22ce', margin: '0.25rem 0' }}>
+                      {jobApplications.filter((a) => (selectedJobFilter === 'ALL' || a.jobId === selectedJobFilter) && a.status === 'OFFERED').length}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#4b5563' }}>Ed25519 Signed Digital Offers</div>
+                  </div>
+                  <div style={{ backgroundColor: '#fefce8', border: '1px solid #fef08a', borderRadius: '8px', padding: '1rem' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#854d0e', textTransform: 'uppercase' }}>4. Placed & Inducted</div>
+                    <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#a16207', margin: '0.25rem 0' }}>
+                      {jobApplications.filter((a) => (selectedJobFilter === 'ALL' || a.jobId === selectedJobFilter) && a.status === 'PLACED').length}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#4b5563' }}>Grassroots Cooperative ERP</div>
+                  </div>
+                </div>
+
+                {/* 4-Stage Kanban Pipeline */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem', alignItems: 'start', marginBottom: '2rem' }}>
+                  {/* Stage 1: APPLIED */}
+                  <div style={{ backgroundColor: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', padding: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', paddingBottom: '0.5rem', borderBottom: '2px solid #0284c7' }}>
+                      <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#0369a1', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <span>📥</span> 1. APPLIED / SCREENING
+                      </div>
+                      <span style={{ backgroundColor: '#e0f2fe', color: '#0369a1', fontSize: '0.75rem', fontWeight: 800, padding: '0.15rem 0.5rem', borderRadius: '12px' }}>
+                        {jobApplications.filter((a) => (selectedJobFilter === 'ALL' || a.jobId === selectedJobFilter) && a.status === 'APPLIED').length}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                      {jobApplications
+                        .filter((a) => (selectedJobFilter === 'ALL' || a.jobId === selectedJobFilter) && a.status === 'APPLIED')
+                        .map((app) => (
+                          <div key={app.id} style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #cbd5e1', padding: '1rem', boxShadow: '0 2px 4px rgba(0,0,0,0.04)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.4rem' }}>
+                              <div style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a' }}>{app.candidateName}</div>
+                              <span style={{ fontSize: '0.75rem', fontWeight: 800, backgroundColor: app.matchScore >= 80 ? '#dcfce7' : '#fef3c7', color: app.matchScore >= 80 ? '#15803d' : '#b45309', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
+                                {app.matchScore}% Match
+                              </span>
+                            </div>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0284c7', marginBottom: '0.15rem' }}>{app.jobTitle}</div>
+                            <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.65rem' }}>🏢 {app.employerName}</div>
+                            
+                            <div style={{ backgroundColor: '#f8fafc', padding: '0.5rem', borderRadius: '6px', marginBottom: '0.75rem', border: '1px solid #f1f5f9' }}>
+                              <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#475569', marginBottom: '0.25rem' }}>VERIFIED COMPETENCIES:</div>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
+                                {app.matchedSkills && app.matchedSkills.length > 0 ? (
+                                  app.matchedSkills.map((s, idx) => (
+                                    <span key={idx} style={{ fontSize: '0.68rem', backgroundColor: '#dcfce7', color: '#166534', padding: '0.15rem 0.4rem', borderRadius: '4px', fontWeight: 600 }}>
+                                      ✓ {s.skillName}
+                                    </span>
+                                  ))
+                                ) : (
+                                  <span style={{ fontSize: '0.68rem', backgroundColor: '#dcfce7', color: '#166534', padding: '0.15rem 0.4rem', borderRadius: '4px', fontWeight: 600 }}>
+                                    ✓ Verified NCCT Credential
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginBottom: '0.75rem' }}>
+                              Applied: {new Date(app.appliedAt).toLocaleDateString()}
+                            </div>
+
+                            <button
+                              onClick={() => {
+                                setScheduleModalApp(app);
+                                setScheduleDate('2026-11-10T10:30');
+                                setScheduleVenue('Amul Talent Center / RICM Bhopal Video Room');
+                                setScheduleNotes(`Shortlisted based on ${app.matchScore}% verified skill match score.`);
+                              }}
+                              style={{
+                                width: '100%',
+                                backgroundColor: '#0284c7',
+                                color: '#ffffff',
+                                border: 'none',
+                                borderRadius: '6px',
+                                padding: '0.5rem',
+                                fontWeight: 700,
+                                fontSize: '0.8rem',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '0.35rem',
+                              }}
+                            >
+                              📅 Schedule Interview
+                            </button>
+                          </div>
+                        ))}
+                      {jobApplications.filter((a) => (selectedJobFilter === 'ALL' || a.jobId === selectedJobFilter) && a.status === 'APPLIED').length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#94a3b8', fontSize: '0.8rem' }}>
+                          No candidates in applied stage
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Stage 2: SCHEDULED */}
+                  <div style={{ backgroundColor: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', padding: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', paddingBottom: '0.5rem', borderBottom: '2px solid #d97706' }}>
+                      <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#b45309', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <span>📅</span> 2. INTERVIEW SCHEDULED
+                      </div>
+                      <span style={{ backgroundColor: '#fef3c7', color: '#b45309', fontSize: '0.75rem', fontWeight: 800, padding: '0.15rem 0.5rem', borderRadius: '12px' }}>
+                        {jobApplications.filter((a) => (selectedJobFilter === 'ALL' || a.jobId === selectedJobFilter) && a.status === 'SCHEDULED').length}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                      {jobApplications
+                        .filter((a) => (selectedJobFilter === 'ALL' || a.jobId === selectedJobFilter) && a.status === 'SCHEDULED')
+                        .map((app) => (
+                          <div key={app.id} style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #fde68a', padding: '1rem', boxShadow: '0 2px 4px rgba(0,0,0,0.04)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.4rem' }}>
+                              <div style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a' }}>{app.candidateName}</div>
+                              <span style={{ fontSize: '0.75rem', fontWeight: 800, backgroundColor: '#dcfce7', color: '#15803d', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
+                                {app.matchScore}% Match
+                              </span>
+                            </div>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0284c7', marginBottom: '0.15rem' }}>{app.jobTitle}</div>
+                            <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.65rem' }}>🏢 {app.employerName}</div>
+
+                            <div style={{ backgroundColor: '#fffbeb', padding: '0.65rem', borderRadius: '6px', marginBottom: '0.75rem', border: '1px solid #fef3c7', fontSize: '0.75rem' }}>
+                              <div style={{ fontWeight: 700, color: '#92400e', marginBottom: '0.2rem' }}>
+                                🕒 {app.interviewDate ? new Date(app.interviewDate).toLocaleString() : 'Date TBD'}
+                              </div>
+                              <div style={{ color: '#451a03', marginBottom: '0.2rem' }}>
+                                📍 {app.interviewVenue || 'Virtual Meet'}
+                              </div>
+                              {app.interviewNotes && (
+                                <div style={{ color: '#78350f', fontStyle: 'italic', marginTop: '0.25rem' }}>
+                                  "{app.interviewNotes}"
+                                </div>
+                              )}
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                              <button
+                                onClick={() => {
+                                  setOfferModalApp(app);
+                                  setOfferDesignation(app.jobTitle);
+                                  setOfferLPA(4.2);
+                                  setOfferSalary(35000);
+                                  setOfferJoiningDate('2026-11-25');
+                                  setOfferLocation(app.jobTitle.includes('Dairy') ? 'Mehsana / Anand, Gujarat' : 'Bhopal Regional Office & Field PACS');
+                                  setOfferSignatory(`Head of Human Resources, ${app.employerName}`);
+                                }}
+                                style={{
+                                  width: '100%',
+                                  backgroundColor: '#7c3aed',
+                                  color: '#ffffff',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  padding: '0.5rem',
+                                  fontWeight: 700,
+                                  fontSize: '0.8rem',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '0.35rem',
+                                }}
+                              >
+                                🔏 Issue Digital Offer Letter
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setScheduleModalApp(app);
+                                  setScheduleDate(app.interviewDate || '2026-11-12T11:00');
+                                  setScheduleVenue(app.interviewVenue || 'Virtual Meet');
+                                  setScheduleNotes(app.interviewNotes || '');
+                                }}
+                                style={{
+                                  width: '100%',
+                                  backgroundColor: '#f1f5f9',
+                                  color: '#475569',
+                                  border: '1px solid #cbd5e1',
+                                  borderRadius: '6px',
+                                  padding: '0.35rem',
+                                  fontWeight: 600,
+                                  fontSize: '0.75rem',
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                Reschedule
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      {jobApplications.filter((a) => (selectedJobFilter === 'ALL' || a.jobId === selectedJobFilter) && a.status === 'SCHEDULED').length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#94a3b8', fontSize: '0.8rem' }}>
+                          No interviews currently scheduled
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Stage 3: OFFERED */}
+                  <div style={{ backgroundColor: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', padding: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', paddingBottom: '0.5rem', borderBottom: '2px solid #7c3aed' }}>
+                      <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#6d28d9', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <span>🔏</span> 3. OFFER EXTENDED
+                      </div>
+                      <span style={{ backgroundColor: '#ede9fe', color: '#6d28d9', fontSize: '0.75rem', fontWeight: 800, padding: '0.15rem 0.5rem', borderRadius: '12px' }}>
+                        {jobApplications.filter((a) => (selectedJobFilter === 'ALL' || a.jobId === selectedJobFilter) && a.status === 'OFFERED').length}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                      {jobApplications
+                        .filter((a) => (selectedJobFilter === 'ALL' || a.jobId === selectedJobFilter) && a.status === 'OFFERED')
+                        .map((app) => (
+                          <div key={app.id} style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #ddd6fe', padding: '1rem', boxShadow: '0 2px 4px rgba(0,0,0,0.04)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.4rem' }}>
+                              <div style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a' }}>{app.candidateName}</div>
+                              <span style={{ fontSize: '0.72rem', fontWeight: 800, backgroundColor: '#ede9fe', color: '#6d28d9', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
+                                Ed25519 Signed
+                              </span>
+                            </div>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0284c7', marginBottom: '0.15rem' }}>{app.jobTitle}</div>
+                            <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.65rem' }}>🏢 {app.employerName}</div>
+
+                            <div style={{ backgroundColor: '#faf5ff', padding: '0.6rem', borderRadius: '6px', marginBottom: '0.75rem', border: '1px solid #f3e8ff', fontSize: '0.75rem' }}>
+                              <div style={{ color: '#581c87', fontWeight: 700 }}>✓ Canonical Digest Signed</div>
+                              <div style={{ color: '#7e22ce', fontSize: '0.7rem', wordBreak: 'break-all', fontFamily: 'monospace' }}>
+                                Key: ncct-master-key-01
+                              </div>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                              <button
+                                onClick={() => handleOpenViewOffer(app)}
+                                style={{
+                                  width: '100%',
+                                  backgroundColor: '#0f172a',
+                                  color: '#ffffff',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  padding: '0.5rem',
+                                  fontWeight: 700,
+                                  fontSize: '0.8rem',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '0.35rem',
+                                }}
+                              >
+                                📜 View Signed Offer Letter
+                              </button>
+                              <button
+                                onClick={() => handleConfirmPlacement(app.id)}
+                                style={{
+                                  width: '100%',
+                                  backgroundColor: '#16a34a',
+                                  color: '#ffffff',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  padding: '0.5rem',
+                                  fontWeight: 700,
+                                  fontSize: '0.8rem',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '0.35rem',
+                                }}
+                              >
+                                ✅ Confirm Placement
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      {jobApplications.filter((a) => (selectedJobFilter === 'ALL' || a.jobId === selectedJobFilter) && a.status === 'OFFERED').length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#94a3b8', fontSize: '0.8rem' }}>
+                          No offers currently extended
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Stage 4: PLACED */}
+                  <div style={{ backgroundColor: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', padding: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', paddingBottom: '0.5rem', borderBottom: '2px solid #059669' }}>
+                      <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#047857', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <span>🏆</span> 4. PLACED & INDUCTED
+                      </div>
+                      <span style={{ backgroundColor: '#d1fae5', color: '#047857', fontSize: '0.75rem', fontWeight: 800, padding: '0.15rem 0.5rem', borderRadius: '12px' }}>
+                        {jobApplications.filter((a) => (selectedJobFilter === 'ALL' || a.jobId === selectedJobFilter) && a.status === 'PLACED').length}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                      {jobApplications
+                        .filter((a) => (selectedJobFilter === 'ALL' || a.jobId === selectedJobFilter) && a.status === 'PLACED')
+                        .map((app) => (
+                          <div key={app.id} style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #a7f3d0', padding: '1rem', boxShadow: '0 2px 4px rgba(0,0,0,0.04)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.4rem' }}>
+                              <div style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a' }}>{app.candidateName}</div>
+                              <span style={{ fontSize: '0.72rem', fontWeight: 800, backgroundColor: '#dcfce7', color: '#15803d', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
+                                PLACED ✓
+                              </span>
+                            </div>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0284c7', marginBottom: '0.15rem' }}>{app.jobTitle}</div>
+                            <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.65rem' }}>🏢 {app.employerName}</div>
+
+                            <div style={{ backgroundColor: '#ecfdf5', padding: '0.6rem', borderRadius: '6px', marginBottom: '0.75rem', border: '1px solid #d1fae5', fontSize: '0.75rem' }}>
+                              <div style={{ color: '#065f46', fontWeight: 700 }}>🎉 Cooperative Induction Ready</div>
+                              <div style={{ color: '#047857' }}>Integrated into District PACS ERP</div>
+                            </div>
+
+                            <button
+                              onClick={() => handleOpenViewOffer(app)}
+                              style={{
+                                width: '100%',
+                                backgroundColor: '#f1f5f9',
+                                color: '#334155',
+                                border: '1px solid #cbd5e1',
+                                borderRadius: '6px',
+                                padding: '0.45rem',
+                                fontWeight: 700,
+                                fontSize: '0.78rem',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              📜 View Signed Offer
+                            </button>
+                          </div>
+                        ))}
+                      {jobApplications.filter((a) => (selectedJobFilter === 'ALL' || a.jobId === selectedJobFilter) && a.status === 'PLACED').length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#94a3b8', fontSize: '0.8rem' }}>
+                          No candidates marked placed yet
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
-                <span style={{ fontSize: '0.72rem', backgroundColor: '#dcfce7', color: '#166534', padding: '0.25rem 0.6rem', borderRadius: '12px', fontWeight: 800 }}>
-                  ● AI Active
-                </span>
               </div>
-
-              {/* Chat Message History */}
-              <div style={{ backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '1rem', minHeight: '220px', maxHeight: '340px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-                {counselorMessages.map((msg, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      alignSelf: msg.sender === 'USER' ? 'flex-end' : 'flex-start',
-                      maxWidth: '85%',
-                      backgroundColor: msg.sender === 'USER' ? '#0284c7' : '#ffffff',
-                      color: msg.sender === 'USER' ? '#ffffff' : '#0f172a',
-                      padding: '0.85rem 1rem',
-                      borderRadius: '8px',
-                      border: msg.sender === 'USER' ? 'none' : '1px solid #e2e8f0',
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                    }}
-                  >
-                    <div style={{ fontSize: '0.82rem', lineHeight: 1.5 }}>{msg.text}</div>
-                    {msg.tags && (
-                      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
-                        {msg.tags.map((tg, tidx) => (
-                          <span key={tidx} style={{ fontSize: '0.68rem', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.15rem 0.45rem', borderRadius: '4px', fontWeight: 700 }}>
-                            🏷️ {tg}
-                          </span>
-                        ))}
-                      </div>
+            ) : (
+              <div>
+                {/* Candidate Skill Profile Banner */}
+                <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '1.25rem 1.5rem', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0284c7' }}>VERIFIED SKILL PROFILE</div>
+                  <h3 style={{ margin: '0.25rem 0', fontSize: '1.1rem' }}>
+                    {selectedCandidateId === 'dddd4444-4444-4444-4444-444444444441' && 'Anita Patel — Certified PACS Specialist'}
+                    {selectedCandidateId === 'dddd4444-4444-4444-4444-444444444442' && 'Vikram Rao — Certified Dairy & Governance Associate'}
+                    {selectedCandidateId === 'dddd4444-4444-4444-4444-444444444443' && 'Sunita Meena — Cooperative Credit Trainee'}
+                  </h3>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+                    {selectedCandidateId === 'dddd4444-4444-4444-4444-444444444441' && (
+                      <>
+                        <span style={{ backgroundColor: '#dcfce7', color: '#15803d', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.6rem', borderRadius: '4px' }}>✓ PACS Computerization</span>
+                        <span style={{ backgroundColor: '#dcfce7', color: '#15803d', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.6rem', borderRadius: '4px' }}>✓ Financial Accounting & Vouchers</span>
+                        <span style={{ backgroundColor: '#dcfce7', color: '#15803d', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.6rem', borderRadius: '4px' }}>✓ Cooperative Audit & Compliance</span>
+                      </>
                     )}
-                    <div style={{ fontSize: '0.65rem', color: msg.sender === 'USER' ? '#e0f2fe' : '#94a3b8', marginTop: '0.35rem', textAlign: 'right' }}>
-                      {msg.time}
-                    </div>
+                    {selectedCandidateId === 'dddd4444-4444-4444-4444-444444444442' && (
+                      <>
+                        <span style={{ backgroundColor: '#dcfce7', color: '#15803d', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.6rem', borderRadius: '4px' }}>✓ Cooperative Governance & Bylaws</span>
+                        <span style={{ backgroundColor: '#dcfce7', color: '#15803d', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.6rem', borderRadius: '4px' }}>✓ Dairy Society Procurement</span>
+                        <span style={{ backgroundColor: '#dcfce7', color: '#15803d', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.6rem', borderRadius: '4px' }}>✓ Agricultural Credit Appraisal</span>
+                      </>
+                    )}
+                    {selectedCandidateId === 'dddd4444-4444-4444-4444-444444444443' && (
+                      <>
+                        <span style={{ backgroundColor: '#dcfce7', color: '#15803d', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.6rem', borderRadius: '4px' }}>✓ Agricultural Credit Appraisal</span>
+                        <span style={{ backgroundColor: '#dcfce7', color: '#15803d', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.6rem', borderRadius: '4px' }}>✓ SHG & JLG Group Lending</span>
+                      </>
+                    )}
                   </div>
-                ))}
-              </div>
+                </div>
 
-              {/* Quick Suggestion Chips */}
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', margin: '0.85rem 0' }}>
-                <button
-                  onClick={() => handleSendCounselorMessage('What jobs can Anita Patel apply for with her verified PACS credentials?')}
-                  style={{ backgroundColor: '#f1f5f9', border: '1px solid #cbd5e1', color: '#0369a1', padding: '0.3rem 0.65rem', borderRadius: '16px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}
-                >
-                  💡 Anita's Job Recommendations
-                </button>
-                <button
-                  onClick={() => handleSendCounselorMessage('What is the eligibility for Amul dairy coordinator roles?')}
-                  style={{ backgroundColor: '#f1f5f9', border: '1px solid #cbd5e1', color: '#0369a1', padding: '0.3rem 0.65rem', borderRadius: '16px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}
-                >
-                  🥛 Amul Dairy Roles
-                </button>
-                <button
-                  onClick={() => handleSendCounselorMessage('Which Ministry of Cooperation schemes support rural cooperative startups?')}
-                  style={{ backgroundColor: '#f1f5f9', border: '1px solid #cbd5e1', color: '#0369a1', padding: '0.3rem 0.65rem', borderRadius: '16px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}
-                >
-                  📜 Yuva Sahakar Scheme Info
-                </button>
-              </div>
+                {/* Job Match Cards */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
+                  {SEED_JOB_OPPORTUNITIES.map((job) => {
+                    const reqs = SEED_JOB_REQUIRED_SKILLS.filter((r) => r.jobId === job.id);
+                    const isAnita = selectedCandidateId === 'dddd4444-4444-4444-4444-444444444441';
+                    const score = isAnita ? (job.title.includes('PACS') ? 95 : 65) : 55;
 
-              {/* Input Box */}
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <input
-                  type="text"
-                  value={counselorInput}
-                  onChange={(e) => setCounselorInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleSendCounselorMessage();
-                  }}
-                  placeholder="Ask Sahakar Mitra about jobs, PACS recruitment rules, or cooperative schemes..."
-                  style={{ flex: 1, padding: '0.65rem 0.9rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
-                />
-                <button
-                  onClick={() => handleSendCounselorMessage()}
-                  style={{ backgroundColor: '#0284c7', color: '#ffffff', border: 'none', padding: '0.65rem 1.25rem', borderRadius: '6px', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}
-                >
-                  Ask AI →
-                </button>
+                    return (
+                      <div key={job.id} style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '1.25rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 800, backgroundColor: score >= 75 ? '#dcfce7' : '#f1f5f9', color: score >= 75 ? '#15803d' : '#475569', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
+                            {score}% Skill Overlap
+                          </span>
+                          <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{job.location}</span>
+                        </div>
+                        <h3 style={{ fontSize: '1.05rem', margin: '0.5rem 0 0.2rem 0' }}>{job.title}</h3>
+                        <div style={{ fontSize: '0.85rem', color: '#0284c7', fontWeight: 600, marginBottom: '0.5rem' }}>{job.employerName}</div>
+                        <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0 0 1rem 0' }}>{job.description}</p>
+                        <div style={{ backgroundColor: '#f8fafc', padding: '0.75rem', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '0.75rem' }}>
+                          <div style={{ fontWeight: 700, color: '#334155', marginBottom: '0.25rem' }}>Required Competencies:</div>
+                          {reqs.map((r) => (
+                            <div key={r.skillId} style={{ color: '#16a34a', fontWeight: 600, marginTop: '0.15rem' }}>
+                              ✓ {r.skillName} (Weight: {Math.round(r.weight * 100)}%)
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* AI Career & Scheme Counselor (सहकार मित्र) per PS 26087 */}
+                <div style={{ backgroundColor: '#ffffff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: '1.5rem', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#0284c7', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem' }}>
+                        🤖
+                      </div>
+                      <div>
+                        <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#0f172a', fontWeight: 800 }}>
+                          Sahakar Mitra (सहकार मित्र) — AI Career & Scheme Counselor
+                        </h3>
+                        <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                          Autonomous Career Guidance for Rural Youth & Certified PACS Personnel
+                        </div>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: '0.72rem', backgroundColor: '#dcfce7', color: '#166534', padding: '0.25rem 0.6rem', borderRadius: '12px', fontWeight: 800 }}>
+                      ● AI Active
+                    </span>
+                  </div>
+
+                  {/* Chat Message History */}
+                  <div style={{ backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '1rem', minHeight: '220px', maxHeight: '340px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                    {counselorMessages.map((msg, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          alignSelf: msg.sender === 'USER' ? 'flex-end' : 'flex-start',
+                          maxWidth: '85%',
+                          backgroundColor: msg.sender === 'USER' ? '#0284c7' : '#ffffff',
+                          color: msg.sender === 'USER' ? '#ffffff' : '#0f172a',
+                          padding: '0.85rem 1rem',
+                          borderRadius: '8px',
+                          border: msg.sender === 'USER' ? 'none' : '1px solid #e2e8f0',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                        }}
+                      >
+                        <div style={{ fontSize: '0.82rem', lineHeight: 1.5 }}>{msg.text}</div>
+                        {msg.tags && (
+                          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+                            {msg.tags.map((tg, tidx) => (
+                              <span key={tidx} style={{ fontSize: '0.68rem', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.15rem 0.45rem', borderRadius: '4px', fontWeight: 700 }}>
+                                🏷️ {tg}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        <div style={{ fontSize: '0.65rem', color: msg.sender === 'USER' ? '#e0f2fe' : '#94a3b8', marginTop: '0.35rem', textAlign: 'right' }}>
+                          {msg.time}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Quick Suggestion Chips */}
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', margin: '0.85rem 0' }}>
+                    <button
+                      onClick={() => handleSendCounselorMessage('What jobs can Anita Patel apply for with her verified PACS credentials?')}
+                      style={{ backgroundColor: '#f1f5f9', border: '1px solid #cbd5e1', color: '#0369a1', padding: '0.3rem 0.65rem', borderRadius: '16px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      💡 Anita's Job Recommendations
+                    </button>
+                    <button
+                      onClick={() => handleSendCounselorMessage('What is the eligibility for Amul dairy coordinator roles?')}
+                      style={{ backgroundColor: '#f1f5f9', border: '1px solid #cbd5e1', color: '#0369a1', padding: '0.3rem 0.65rem', borderRadius: '16px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      🥛 Amul Dairy Roles
+                    </button>
+                    <button
+                      onClick={() => handleSendCounselorMessage('Which Ministry of Cooperation schemes support rural cooperative startups?')}
+                      style={{ backgroundColor: '#f1f5f9', border: '1px solid #cbd5e1', color: '#0369a1', padding: '0.3rem 0.65rem', borderRadius: '16px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      📜 Yuva Sahakar Scheme Info
+                    </button>
+                  </div>
+
+                  {/* Input Box */}
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input
+                      type="text"
+                      value={counselorInput}
+                      onChange={(e) => setCounselorInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSendCounselorMessage();
+                      }}
+                      placeholder="Ask Sahakar Mitra about jobs, PACS recruitment rules, or cooperative schemes..."
+                      style={{ flex: 1, padding: '0.65rem 0.9rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                    />
+                    <button
+                      onClick={() => handleSendCounselorMessage()}
+                      style={{ backgroundColor: '#0284c7', color: '#ffffff', border: 'none', padding: '0.65rem 1.25rem', borderRadius: '6px', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}
+                    >
+                      Ask AI →
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
@@ -2942,6 +3558,390 @@ export default function AdminDashboardPage() {
                   style={{ backgroundColor: '#ffffff', color: '#475569', border: '1px solid #cbd5e1', padding: '0.5rem 0.9rem', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}
                 >
                   Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==========================================================
+          MODAL: Schedule Interview
+      ========================================================== */}
+      {scheduleModalApp && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15,23,42,0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 100,
+            padding: '1.5rem',
+            backdropFilter: 'blur(4px)',
+          }}
+        >
+          <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', maxWidth: '520px', width: '100%', padding: '1.75rem', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#0f172a' }}>Schedule Candidate Interview</h3>
+                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>For {scheduleModalApp.candidateName} — {scheduleModalApp.jobTitle}</div>
+              </div>
+              <button onClick={() => setScheduleModalApp(null)} style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer' }}>×</button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '0.25rem' }}>
+                  Interview Date & Time:
+                </label>
+                <input
+                  type="datetime-local"
+                  value={scheduleDate}
+                  onChange={(e) => setScheduleDate(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '0.25rem' }}>
+                  Interview Venue / Video Conference Link:
+                </label>
+                <input
+                  type="text"
+                  value={scheduleVenue}
+                  onChange={(e) => setScheduleVenue(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '0.25rem' }}>
+                  Interviewer Notes / Instructions:
+                </label>
+                <textarea
+                  rows={3}
+                  value={scheduleNotes}
+                  onChange={(e) => setScheduleNotes(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <button
+                  onClick={() => setScheduleModalApp(null)}
+                  style={{ padding: '0.5rem 1rem', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: '#f1f5f9', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleScheduleInterview}
+                  style={{ padding: '0.5rem 1.25rem', borderRadius: '6px', border: 'none', backgroundColor: '#0284c7', color: '#fff', cursor: 'pointer', fontWeight: 700 }}
+                >
+                  Confirm Schedule
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==========================================================
+          MODAL: Issue Ed25519 Digital Offer Letter
+      ========================================================== */}
+      {offerModalApp && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15,23,42,0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 100,
+            padding: '1.5rem',
+            backdropFilter: 'blur(4px)',
+          }}
+        >
+          <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', maxWidth: '640px', width: '100%', padding: '1.75rem', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#7c3aed', fontWeight: 800 }}>ED25519 CRYPTOGRAPHIC ISSUANCE</div>
+                <h3 style={{ margin: '0.2rem 0', fontSize: '1.25rem', color: '#0f172a' }}>Issue Official Digital Offer Letter</h3>
+                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Candidate: <b>{offerModalApp.candidateName}</b> | Employer: <b>{offerModalApp.employerName}</b></div>
+              </div>
+              <button onClick={() => setOfferModalApp(null)} style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer' }}>×</button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '0.25rem' }}>
+                  Official Designation:
+                </label>
+                <input
+                  type="text"
+                  value={offerDesignation}
+                  onChange={(e) => setOfferDesignation(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '0.25rem' }}>
+                    Annual Compensation (CTC in LPA):
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={offerLPA}
+                    onChange={(e) => setOfferLPA(Number(e.target.value))}
+                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '0.25rem' }}>
+                    Monthly Stipend / Salary (INR):
+                  </label>
+                  <input
+                    type="number"
+                    value={offerSalary}
+                    onChange={(e) => setOfferSalary(Number(e.target.value))}
+                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '0.25rem' }}>
+                    Date of Joining:
+                  </label>
+                  <input
+                    type="date"
+                    value={offerJoiningDate}
+                    onChange={(e) => setOfferJoiningDate(e.target.value)}
+                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '0.25rem' }}>
+                    Posting Location:
+                  </label>
+                  <input
+                    type="text"
+                    value={offerLocation}
+                    onChange={(e) => setOfferLocation(e.target.value)}
+                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '0.25rem' }}>
+                  Authorized Signatory:
+                </label>
+                <input
+                  type="text"
+                  value={offerSignatory}
+                  onChange={(e) => setOfferSignatory(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '0.25rem' }}>
+                  Terms & Conditions (One per line):
+                </label>
+                <textarea
+                  rows={4}
+                  value={offerTerms}
+                  onChange={(e) => setOfferTerms(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.8rem', lineHeight: 1.5 }}
+                />
+              </div>
+
+              <div style={{ backgroundColor: '#faf5ff', padding: '0.75rem', borderRadius: '6px', border: '1px solid #e9d5ff', fontSize: '0.75rem', color: '#581c87' }}>
+                🔐 <b>Cryptographic Assurance:</b> Upon submission, this offer letter is serialized to RFC 8785 canonical JSON, signed with the NCCT Ed25519 master private key (<code>ncct-master-key-01</code>), and embedded with a tamper-evident QR verification link.
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <button
+                  onClick={() => setOfferModalApp(null)}
+                  style={{ padding: '0.5rem 1rem', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: '#f1f5f9', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleIssueOffer}
+                  style={{ padding: '0.5rem 1.25rem', borderRadius: '6px', border: 'none', backgroundColor: '#7c3aed', color: '#fff', cursor: 'pointer', fontWeight: 700 }}
+                >
+                  🔏 Sign with Ed25519 & Extend Offer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==========================================================
+          MODAL: View Signed Ed25519 Digital Offer Letter
+      ========================================================== */}
+      {viewOfferModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15,23,42,0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 100,
+            padding: '1.5rem',
+            backdropFilter: 'blur(4px)',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: '#ffffff',
+              borderRadius: '12px',
+              maxWidth: '780px',
+              width: '100%',
+              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+              maxHeight: '92vh',
+              overflowY: 'auto',
+              border: '6px solid #0f172a',
+            }}
+          >
+            {/* Letterhead */}
+            <div style={{ backgroundColor: '#0f172a', padding: '1.25rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#ffffff' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <span style={{ fontSize: '1.75rem' }}>🏛️</span>
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: '#38bdf8', fontWeight: 800 }}>MINISTRY OF COOPERATION & NCCT TALENT NETWORK</div>
+                  <div style={{ fontSize: '1.05rem', fontWeight: 800 }}>OFFICIAL DIGITAL OFFER OF APPOINTMENT</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setViewOfferModal(null)}
+                style={{ background: 'none', border: 'none', color: '#ffffff', fontSize: '1.5rem', cursor: 'pointer', fontWeight: 700 }}
+              >
+                ×
+              </button>
+            </div>
+
+            <div style={{ padding: '2rem' }}>
+              {/* Employer / Partner Banner */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '1rem', borderBottom: '2px solid #e2e8f0', marginBottom: '1.25rem' }}>
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>ISSUING EMPLOYER</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0369a1' }}>{viewOfferModal.payload.employer.name}</div>
+                  <div style={{ fontSize: '0.8rem', color: '#475569' }}>Signatory: {viewOfferModal.payload.employer.authorizedSignatory}</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <span style={{ backgroundColor: '#dcfce7', color: '#15803d', fontSize: '0.75rem', fontWeight: 800, padding: '0.3rem 0.75rem', borderRadius: '12px' }}>
+                    ✓ Ed25519 VALIDATED
+                  </span>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>
+                    Issued: {new Date(viewOfferModal.payload.issuedAt).toLocaleDateString()}
+                  </div>
+                </div>
+              </div>
+
+              {/* Offer Letter Body */}
+              <div style={{ marginBottom: '1.5rem', lineHeight: 1.6, fontSize: '0.9rem', color: '#334155' }}>
+                <p>Dear <b>{viewOfferModal.payload.candidate.name}</b>,</p>
+                <p>
+                  We are pleased to extend this official Offer of Employment for the position of{' '}
+                  <b style={{ color: '#0f172a' }}>{viewOfferModal.payload.designation}</b> at{' '}
+                  <b style={{ color: '#0369a1' }}>{viewOfferModal.payload.employer.name}</b>.
+                  This offer is conferred in recognition of your verified NCCT accredited training certification and demonstrated cooperative competencies.
+                </p>
+              </div>
+
+              {/* Key Appointment Terms Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem', backgroundColor: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '1.5rem', fontSize: '0.85rem' }}>
+                <div>
+                  <span style={{ color: '#64748b', fontSize: '0.75rem', display: 'block' }}>ANNUAL COMPENSATION:</span>
+                  <b style={{ fontSize: '1.05rem', color: '#15803d' }}>₹{viewOfferModal.payload.annualCompensationLPA} Lakhs / Annum</b>
+                </div>
+                <div>
+                  <span style={{ color: '#64748b', fontSize: '0.75rem', display: 'block' }}>MONTHLY STIPEND / SALARY:</span>
+                  <b style={{ fontSize: '1.05rem', color: '#0369a1' }}>₹{viewOfferModal.payload.monthlyStipendOrSalary.toLocaleString()} / month</b>
+                </div>
+                <div>
+                  <span style={{ color: '#64748b', fontSize: '0.75rem', display: 'block' }}>DATE OF JOINING:</span>
+                  <b>{viewOfferModal.payload.joiningDate}</b>
+                </div>
+                <div>
+                  <span style={{ color: '#64748b', fontSize: '0.75rem', display: 'block' }}>POSTING LOCATION:</span>
+                  <b>{viewOfferModal.payload.postingLocation}</b>
+                </div>
+              </div>
+
+              {/* Terms & Conditions */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#334155', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
+                  Terms & Conditions of Employment:
+                </div>
+                <ul style={{ margin: 0, paddingLeft: '1.25rem', fontSize: '0.85rem', color: '#475569', lineHeight: 1.6 }}>
+                  {viewOfferModal.payload.terms.map((term, idx) => (
+                    <li key={idx}>{term}</li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Cryptographic Attestation Block */}
+              <div style={{ backgroundColor: '#faf5ff', borderRadius: '8px', border: '1px solid #d8b4fe', padding: '1.25rem', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '1.25rem' }}>🔐</span>
+                    <div>
+                      <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#581c87' }}>Ed25519 Cryptographic Attestation Block</div>
+                      <div style={{ fontSize: '0.7rem', color: '#7e22ce' }}>RFC 8785 Canonical JSON + SHA-256 Digest</div>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: '0.7rem', backgroundColor: '#e9d5ff', color: '#6b21a8', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 800 }}>
+                    KEY: {viewOfferModal.issuerKeyId}
+                  </span>
+                </div>
+
+                <div style={{ fontSize: '0.75rem', color: '#475569', marginBottom: '0.5rem' }}>
+                  <b>Ed25519 Signature Hex:</b>
+                  <div style={{ fontFamily: 'monospace', fontSize: '0.7rem', backgroundColor: '#ffffff', padding: '0.4rem', borderRadius: '4px', border: '1px solid #e9d5ff', wordBreak: 'break-all', marginTop: '0.2rem', color: '#6b21a8' }}>
+                    {viewOfferModal.signatureHex}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', fontSize: '0.75rem', marginTop: '0.5rem' }}>
+                  <div>
+                    <span style={{ color: '#64748b' }}>Verification URL: </span>
+                    <a href={viewOfferModal.verificationUrl} target="_blank" rel="noreferrer" style={{ color: '#7c3aed', fontWeight: 700, textDecoration: 'underline' }}>
+                      {viewOfferModal.verificationUrl}
+                    </a>
+                  </div>
+                  {viewOfferModal.compactQr && (
+                    <div style={{ fontSize: '0.7rem', color: '#6b21a8', backgroundColor: '#f3e8ff', padding: '0.2rem 0.5rem', borderRadius: '4px', fontFamily: 'monospace' }}>
+                      QR Payload: {viewOfferModal.compactQr.slice(0, 16)}...
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Close / Action Buttons */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+                <button
+                  onClick={() => window.print()}
+                  style={{ padding: '0.6rem 1.25rem', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: '#f8fafc', color: '#334155', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}
+                >
+                  🖨️ Print Offer Letter
+                </button>
+                <button
+                  onClick={() => setViewOfferModal(null)}
+                  style={{ padding: '0.6rem 1.5rem', borderRadius: '6px', border: 'none', backgroundColor: '#0f172a', color: '#ffffff', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}
+                >
+                  Close Preview
                 </button>
               </div>
             </div>

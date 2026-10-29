@@ -1,5 +1,5 @@
-import { generateKeyPairSync, sign, verify, createPrivateKey, createPublicKey } from 'node:crypto';
-import { CanonicalCredentialPayload, Credential, CredentialStatus } from '@sahakar/types';
+import { generateKeyPairSync, sign, verify, createPrivateKey, createPublicKey, createHash } from 'node:crypto';
+import { CanonicalCredentialPayload, Credential, CredentialStatus, CanonicalOfferPayload, DigitalOfferLetter } from '@sahakar/types';
 import { canonicalJsonStringify } from '@sahakar/sync-protocol';
 
 export interface KeyPairPem {
@@ -89,3 +89,68 @@ export function createQrVerificationPayload(credential: Credential, verifyBaseUr
 
   return { verificationUrl, compactPayload };
 }
+
+/**
+ * Digitally signs a canonical offer letter payload using an Ed25519 private key.
+ */
+export function signOfferLetterPayload(
+  payload: CanonicalOfferPayload,
+  privateKeyPem: string,
+  keyId: string,
+  verifyBaseUrl: string = 'https://verify.sahakar.gov.in'
+): { signatureHex: string; canonicalDigest: string; offer: DigitalOfferLetter } {
+  const canonicalJson = canonicalJsonStringify(payload);
+  const canonicalBytes = Buffer.from(canonicalJson, 'utf8');
+  const canonicalDigest = createHash('sha256').update(canonicalBytes).digest('hex');
+  const privateKey = createPrivateKey(privateKeyPem);
+  const signatureBuffer = sign(null, canonicalBytes, privateKey);
+  const signatureHex = signatureBuffer.toString('hex');
+
+  const verificationUrl = `${verifyBaseUrl}/offers/${payload.offerId}?sig=${signatureHex}`;
+  const compactQr = Buffer.from(
+    JSON.stringify({
+      id: payload.offerId,
+      appId: payload.applicationId,
+      sig: signatureHex.slice(0, 32),
+      iss: keyId,
+      iat: payload.issuedAt,
+    })
+  ).toString('base64url');
+
+  const offer: DigitalOfferLetter = {
+    id: payload.offerId,
+    applicationId: payload.applicationId,
+    jobId: payload.jobId,
+    candidateId: payload.candidate.id,
+    payload,
+    signatureHex,
+    signature: signatureHex,
+    issuerKeyId: keyId,
+    canonicalDigest,
+    verificationUrl,
+    compactQr,
+    status: 'ISSUED',
+    issuedAt: payload.issuedAt,
+  };
+
+  return { signatureHex, canonicalDigest, offer };
+}
+
+/**
+ * Verifies the authenticity and integrity of a signed offer letter payload using an Ed25519 public key.
+ */
+export function verifyOfferLetterSignature(
+  payload: CanonicalOfferPayload,
+  signatureHex: string,
+  publicKeyPem: string
+): boolean {
+  try {
+    const canonicalBytes = Buffer.from(canonicalJsonStringify(payload), 'utf8');
+    const signatureBuffer = Buffer.from(signatureHex, 'hex');
+    const publicKey = createPublicKey(publicKeyPem);
+    return verify(null, canonicalBytes, publicKey, signatureBuffer);
+  } catch {
+    return false;
+  }
+}
+

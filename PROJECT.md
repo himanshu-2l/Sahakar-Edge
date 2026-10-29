@@ -72,7 +72,7 @@ Sahakar Edge Phase 9 expands the platform into an enterprise-grade national trai
 | M1 | Hardware IoT Hub & Smart Card Reader | `packages/hardware-adapters`, `packages/types`, `packages/validation`, `apps/edge-server` | none | DONE |
 | M2 | Oral Viva Assessment Player | `packages/types`, `packages/sync-protocol`, `packages/test-fixtures`, `apps/trainee-pwa` | none | DONE |
 | M3 | National Multi-Tier Federation API | `packages/types`, `packages/test-fixtures`, `packages/db-central`, `apps/central-api`, `apps/web-admin` | none | DONE |
-| M4 | Recruiter Pipeline & Digital Offer Letters | `packages/types`, `packages/validation`, `packages/db-central`, `packages/credential-core`, `apps/central-api`, `apps/web-admin` | none | PLANNED |
+| M4 | Recruiter Pipeline & Digital Offer Letters | `packages/types`, `packages/validation`, `packages/db-central`, `packages/credential-core`, `apps/central-api`, `apps/web-admin` | none | DONE |
 | M5 | E2E Test Suite & Monorepo Integration | `scripts/test-phase9.ts`, `scripts/run-all-tests.ts`, full verification & git commits | M1, M2, M3, M4 | PLANNED |
 
 ## Interface Contracts

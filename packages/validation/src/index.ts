@@ -228,3 +228,36 @@ export const createJobSchema = z.object({
   ),
 });
 export type CreateJobInput = z.infer<typeof createJobSchema>;
+
+// ==========================================
+// 9. Recruiter Pipeline & Digital Offers (M4)
+// ==========================================
+
+export const jobApplicationStatusSchema = z.enum([
+  'APPLIED',
+  'SCHEDULED',
+  'OFFERED',
+  'PLACED',
+  'REJECTED',
+]);
+
+export const updateApplicationStatusSchema = z.object({
+  status: jobApplicationStatusSchema,
+  interviewDate: z.string().optional(),
+  interviewVenue: z.string().optional(),
+  interviewNotes: z.string().optional(),
+});
+export type UpdateApplicationStatusInput = z.infer<typeof updateApplicationStatusSchema>;
+
+export const issueOfferLetterSchema = z.object({
+  applicationId: z.string().min(1),
+  designation: z.string().min(2),
+  annualCompensationLPA: z.number().positive(),
+  monthlyStipendOrSalary: z.number().positive(),
+  joiningDate: z.string(),
+  postingLocation: z.string().min(2),
+  terms: z.array(z.string()).optional(),
+  authorizedSignatory: z.string().optional(),
+});
+export type IssueOfferLetterInput = z.infer<typeof issueOfferLetterSchema>;
+
