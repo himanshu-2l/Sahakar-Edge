@@ -17,6 +17,7 @@ const testSuites = [
   'scripts/test-phase8.ts',
   'scripts/test-production-e2e.ts',
   'scripts/test-deep-adversarial.ts',
+  'scripts/test-phase9.ts',
 ];
 
 for (const suite of testSuites) {
