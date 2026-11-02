@@ -18,7 +18,33 @@ import { networkSync, ConnectivityState } from './services/network-sync';
 import { speechService } from './services/speech-service';
 import { OfficialCertificateModal } from './components/OfficialCertificateModal';
 import { OralAssessmentModal } from './components/OralAssessmentModal';
-import type { SyncEvent, Question, OralAssessmentResult } from '@sahakar/types';
+import { PacsOperationsLabModal } from './components/PacsOperationsLabModal';
+import { SchemeCalculatorModal } from './components/SchemeCalculatorModal';
+import { GrievanceModal } from './components/GrievanceModal';
+import { DynamicAttendanceModal } from './components/DynamicAttendanceModal';
+import { AcademicMarksTallyCard } from './components/AcademicMarksTallyCard';
+import { HostelRoomCard } from './components/HostelRoomCard';
+import { SovereignNfcProfileCard } from './components/SovereignNfcProfileCard';
+import {
+  AshokChakraIcon,
+  NcctEmblemIcon,
+  HomeIcon,
+  LearnIcon,
+  ProgressIcon,
+  CredentialsIcon,
+  OpportunitiesIcon,
+  ProfileIcon,
+} from './components/icons';
+import { THEME, doubleBezelCardOuter, doubleBezelCardInner, doubleBezelCard } from './theme';
+import type {
+  SyncEvent,
+  Question,
+  OralAssessmentResult,
+  DigitalOfferLetter,
+  CourseMarksTally,
+  TraineePublicNfcProfile,
+  SessionAttendanceRecord,
+} from '@sahakar/types';
 
 const TRANSLATIONS = {
   EN: {
@@ -127,6 +153,36 @@ const TRANSLATIONS = {
     markLessonComplete: '✓ Mark Lesson Completed',
     examReturnBtn: 'Return to Learning',
     examSubmitBtn: 'Submit Examination',
+    pacsLabTitle: 'PACS Operations & Ledger Balancing Lab',
+    pacsLabBadge: 'Interactive Simulation',
+    pacsLabDesc: 'Hands-on double-entry Day-End balancing simulator with Opening Vault Cash ₹45,000, 5 sequential voucher postings, KCC crop loan appraisal, and fertilizer POS stock reconciliation.',
+    launchPacsLabBtn: 'Launch PACS Operations Lab →',
+    pacsLabBalancedTag: '✓ Day-End Balanced',
+    schemeCalculatorBtn: '📊 Scheme Advisory Wizard',
+    schemeCardTitle: 'National Scheme Eligibility Advisory',
+    schemeCardSub: 'Calculate capital subsidy (up to ₹10L) & interest subvention (3%) for AIF, PMFME & Yuva Sahakar.',
+    openSchemeCalcBtn: 'Open Scheme Advisory Wizard →',
+    helpdeskHeaderBtn: 'Helpdesk & Grievance',
+    grievanceBtnTitle: 'Member Grievance & Ombudsman SLA Tracker',
+    grievanceCardTitle: 'Member Grievance & Ombudsman Helpdesk',
+    grievanceCardSub: 'Lodge statutory disputes under MSCS Act 2023 with guaranteed 48-hour Tier 1 resolution.',
+    openGrievanceBtn: 'Lodge Grievance / Track SLA →',
+    offerSectionTitle: 'Official Digital Offer Letter (Ed25519 Signed)',
+    offerSectionSub: 'Conferred under National Council for Cooperative Training (NCCT) Placement Drive',
+    offerStatusPending: 'Action Required — Pending Acceptance',
+    offerStatusAccepted: '✓ Offer Accepted — Candidate Placed',
+    offerStatusDeclined: 'Offer Declined',
+    offerSignatoryLabel: 'Authorized Signatory',
+    offerCtcLabel: 'Annual Compensation (CTC)',
+    offerSalaryLabel: 'Monthly Salary / Stipend',
+    offerLocationLabel: 'Posting Location',
+    offerJoiningDateLabel: 'Expected Joining Date',
+    offerTermsLabel: 'Terms & Conditions of Placement',
+    offerCryptoVerifiedBadge: 'Ed25519 Cryptographically Sealed & Validated',
+    offerFullLetterBtn: 'View Full Letter',
+    offerAcceptBtn: 'Accept Offer (स्वीकार करें)',
+    offerDeclineBtn: 'Decline Offer (अस्वीकार करें)',
+    offerPlacedStatusNotice: 'Placement Confirmed • Dossier Sent to Amul & NCCT',
   },
   HI: {
     motto: 'एनसीटीसीटी सहकारी प्रशिक्षण',
@@ -234,6 +290,36 @@ const TRANSLATIONS = {
     markLessonComplete: '✓ पाठ पूर्ण चिह्नित करें',
     examReturnBtn: 'पाठ्यक्रम पर वापस जाएं',
     examSubmitBtn: 'परीक्षा जमा करें',
+    pacsLabTitle: 'पैक्स परिचालन एवं रोकड़बही प्रयोगशाला',
+    pacsLabBadge: 'इंटरैक्टिव सिमुलेटर',
+    pacsLabDesc: '₹45,000 प्रारंभिक तिजोरी नकदी, 5 रोजनामचा वाउचर प्रविष्टियों, केसीसी फसली ऋण मूल्यांकन, एवं उर्वरक पीओएस स्टॉक मिलान हेतु अभ्यास प्रयोगशाला।',
+    launchPacsLabBtn: 'पैक्स प्रयोगशाला शुरू करें →',
+    pacsLabBalancedTag: '✓ रोकड़बही मिलान पूर्ण',
+    schemeCalculatorBtn: '📊 योजना पात्रता सलाहकार',
+    schemeCardTitle: 'राष्ट्रीय योजना पात्रता एवं सब्सिडी सलाहकार',
+    schemeCardSub: 'एआईएफ, पीएमएफएमई और युवा सहकार के लिए पूंजीगत सब्सिडी (₹10 लाख तक) एवं ब्याज छूट (3%) की गणना करें।',
+    openSchemeCalcBtn: 'योजना सलाहकार विज़ार्ड खोलें →',
+    helpdeskHeaderBtn: 'शिकायत निवारण',
+    grievanceBtnTitle: 'सदस्य शिकायत एवं लोकपाल समय-सीमा ट्रैकर',
+    grievanceCardTitle: 'सदस्य शिकायत एवं लोकपाल सहायता केंद्र',
+    grievanceCardSub: 'एमएससीएस अधिनियम 2023 के तहत 48 घंटे की समय-सीमा के भीतर वैधानिक विवाद दर्ज करें।',
+    openGrievanceBtn: 'शिकायत दर्ज करें / स्थिति देखें →',
+    offerSectionTitle: 'आधिकारिक डिजिटल नियुक्ति पत्र (Ed25519 हस्ताक्षरित)',
+    offerSectionSub: 'राष्ट्रीय सहकारी प्रशिक्षण परिषद (NCCT) रोजगार अभियान के अंतर्गत प्रदत्त',
+    offerStatusPending: 'कार्रवाई अपेक्षित — स्वीकृति लंबित',
+    offerStatusAccepted: '✓ नियुक्ति पत्र स्वीकृत — पदस्थापन पूर्ण',
+    offerStatusDeclined: 'नियुक्ति पत्र अस्वीकृत',
+    offerSignatoryLabel: 'प्राधिकृत हस्ताक्षरकर्ता',
+    offerCtcLabel: 'वार्षिक सीटीसी (कुल पैकेज)',
+    offerSalaryLabel: 'मासिक मानदेय / वेतन',
+    offerLocationLabel: 'कार्यभार ग्रहण स्थल',
+    offerJoiningDateLabel: 'प्रस्तावित कार्यभार ग्रहण तिथि',
+    offerTermsLabel: 'पदस्थापन नियम एवं शर्तें',
+    offerCryptoVerifiedBadge: 'Ed25519 संप्रभु क्रिप्टोग्राफिक मुहर द्वारा प्रमाणित',
+    offerFullLetterBtn: 'पूर्ण नियुक्ति पत्र देखें',
+    offerAcceptBtn: 'स्वीकार करें (Accept Offer)',
+    offerDeclineBtn: 'अस्वीकार करें (Decline Offer)',
+    offerPlacedStatusNotice: 'पदस्थापन पुष्ट • विवरण अमूल एवं एनसीटीसीटी को प्रेषित',
   },
 };
 
@@ -283,6 +369,44 @@ export default function App() {
   const [showCertModal, setShowCertModal] = useState(false);
   const [scanSuccessNotice, setScanSuccessNotice] = useState<string | null>(null);
 
+  // Visitor Profile mode for /?profile=:code
+  const [visitorProfileCode, setVisitorProfileCode] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('profile');
+    }
+    return null;
+  });
+
+  // Dynamic 6-Digit Attendance state
+  const [isDynamicAttendanceOpen, setIsDynamicAttendanceOpen] = useState(false);
+  const [todayAttendanceRecord, setTodayAttendanceRecord] = useState<any>(null);
+
+  // Milestone 3 Sovereign NFC & Marks Tally state
+  const [nfcProfile, setNfcProfile] = useState<TraineePublicNfcProfile | null>(null);
+  const [marksTally, setMarksTally] = useState<CourseMarksTally | null>(null);
+
+  // Live IST Clock
+  const [currentIstTime, setCurrentIstTime] = useState<string>('');
+  useEffect(() => {
+    const updateTime = () => {
+      const d = new Date();
+      setCurrentIstTime(d.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' IST');
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Check attendance on mount
+  useEffect(() => {
+    const records = offlineStore.getAttendanceRecords();
+    const existing = records.find((r) => r.sessionId === SEED_SESSION.id || r.sessionId === 'sess-pacs-101');
+    if (existing) {
+      setTodayAttendanceRecord(existing);
+    }
+  }, []);
+
   const [counselorInput, setCounselorInput] = useState('');
   const [counselorMessages, setCounselorMessages] = useState<
     Array<{ sender: 'USER' | 'AI'; text: string; time: string; tags?: string[] }>
@@ -306,6 +430,108 @@ export default function App() {
 
   // Trainee identity
   const trainee = SEED_USERS.find((u) => u.role === 'TRAINEE') || SEED_USERS[3];
+
+  // Milestone 2 Modals State
+  const [isPacsLabOpen, setIsPacsLabOpen] = useState(false);
+  const [isSchemeModalOpen, setIsSchemeModalOpen] = useState(false);
+  const [isGrievanceModalOpen, setIsGrievanceModalOpen] = useState(false);
+
+  // Milestone 2 Digital Offer Letter State
+  const SEED_AMUL_OFFER: DigitalOfferLetter = {
+    id: 'off-amul-2026-0814',
+    applicationId: 'app-amul-pacs-001',
+    jobId: 'ffffffff-ffff-ffff-ffff-ffffffffffff',
+    candidateId: trainee.id,
+    payload: {
+      offerId: 'off-amul-2026-0814',
+      applicationId: 'app-amul-pacs-001',
+      jobId: 'ffffffff-ffff-ffff-ffff-ffffffffffff',
+      jobTitle: 'Assistant Accountant & PACS Field Coordinator',
+      employer: {
+        id: 'eeee5555-5555-5555-5555-555555555555',
+        name: 'Anand Milk Union (Amul) Talent Network',
+        authorizedSignatory: 'Head of Human Resources & Recruitment',
+      },
+      candidate: {
+        id: trainee.id,
+        name: trainee.name,
+        emailOrPhone: trainee.emailOrPhone,
+      },
+      designation: 'Assistant Accountant & PACS Field Coordinator',
+      annualCompensationLPA: 3.8,
+      monthlyStipendOrSalary: 31666,
+      joiningDate: '15 November 2026',
+      postingLocation: 'Anand, Gujarat / Attached PACS Hub (Bhopal, MP)',
+      terms: [
+        'Subject to verification of NCCT accredited training certification.',
+        'Immediate placement under the National Cooperative Development Scheme.',
+        'Probation period of 3 months with cooperative performance review.',
+      ],
+      issuedAt: '2026-10-25T10:00:00.000Z',
+      schemaVersion: 1,
+    },
+    signatureHex:
+      '7c98b671a532d88f6b98e1e79201f9bb973941458e0a4f526b7c53d10a28f73b88a9c04d13e2f5b6a7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f901',
+    signature:
+      '7c98b671a532d88f6b98e1e79201f9bb973941458e0a4f526b7c53d10a28f73b88a9c04d13e2f5b6a7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f901',
+    issuerKeyId: 'ncct-master-key-01',
+    canonicalDigest: '8f434346648f6b96df89dda901c5176b10e6d83961dd3c1ac88b59b2dc327aa4',
+    verificationUrl: 'https://verify.sahakar.gov.in/offers/off-amul-2026-0814',
+    compactQr: 'eyJpZCI6Im9mZi1hbXVsLTIwMjYtMDgxNCIsInNpZyI6IjdjOThiNiJ9',
+    status: 'ISSUED',
+    issuedAt: '2026-10-25T10:00:00.000Z',
+  };
+
+  const [receivedOffer, setReceivedOffer] = useState<DigitalOfferLetter>(() => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const saved = window.localStorage.getItem('sahakar_edge_offer_state_v1');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {}
+      }
+    }
+    return SEED_AMUL_OFFER;
+  });
+  const [showOfferModal, setShowOfferModal] = useState(false);
+  const [offerFeedbackNotice, setOfferFeedbackNotice] = useState<string | null>(null);
+
+  const handleAcceptOffer = () => {
+    const updated: DigitalOfferLetter = {
+      ...receivedOffer,
+      status: 'ACCEPTED',
+    };
+    setReceivedOffer(updated);
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem('sahakar_edge_offer_state_v1', JSON.stringify(updated));
+    }
+    setOfferFeedbackNotice(
+      language === 'HI'
+        ? 'बधाई हो! आपने अमूल का नियुक्ति पत्र स्वीकार कर लिया है। आपकी स्थिति PLACED के रूप में दर्ज हो गई है।'
+        : 'Congratulations! You have accepted the offer from Amul. Candidate status updated to PLACED.'
+    );
+    setTimeout(() => setOfferFeedbackNotice(null), 6000);
+  };
+
+  const handleDeclineOffer = () => {
+    if (!confirm(language === 'HI' ? 'क्या आप निश्चित रूप से यह नियुक्ति पत्र अस्वीकार करना चाहते हैं?' : 'Are you sure you want to decline this digital offer?')) {
+      return;
+    }
+    const updated: DigitalOfferLetter = {
+      ...receivedOffer,
+      status: 'DECLINED',
+    };
+    setReceivedOffer(updated);
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem('sahakar_edge_offer_state_v1', JSON.stringify(updated));
+    }
+    setOfferFeedbackNotice(
+      language === 'HI'
+        ? 'नियुक्ति पत्र अस्वीकृत कर दिया गया है। आपकी प्रोफ़ाइल अन्य सहकारी रिक्तियों हेतु सक्रिय रहेगी।'
+        : 'Offer declined. Your profile remains active for other cooperative society openings.'
+    );
+    setTimeout(() => setOfferFeedbackNotice(null), 6000);
+  };
 
   const refreshState = () => {
     setQueuedEvents(offlineStore.getQueuedEvents());
@@ -560,6 +786,229 @@ export default function App() {
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
 
+  if (visitorProfileCode) {
+    const isCodeActive =
+      visitorProfileCode === 'NCCT-AP-9941' ||
+      (nfcProfile && nfcProfile.publicProfileCode === visitorProfileCode && nfcProfile.enabled);
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '100vh',
+          backgroundColor: '#f8fafc',
+          fontFamily: THEME.fonts.sans,
+        }}
+      >
+        {/* Tricolor National Identity Ribbon */}
+        <div style={{ display: 'flex', height: '4px', width: '100%' }}>
+          <div style={{ flex: 1, backgroundColor: THEME.colors.saffronFlag }} />
+          <div style={{ flex: 1, backgroundColor: '#ffffff' }} />
+          <div style={{ flex: 1, backgroundColor: THEME.colors.greenFlag }} />
+        </div>
+
+        {/* Government Deep Navy Masthead */}
+        <header
+          style={{
+            backgroundColor: THEME.colors.navyDeep,
+            color: '#ffffff',
+            padding: '1rem 1.25rem',
+            textAlign: 'center',
+            boxShadow: '0 2px 8px rgba(8, 24, 84, 0.2)',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.65rem', marginBottom: '0.35rem' }}>
+            <AshokChakraIcon size={28} color="#ffffff" />
+            <span style={{ fontSize: '0.8125rem', color: THEME.colors.goldCoop, fontWeight: 800, letterSpacing: '0.04em' }}>
+              भारत सरकार • सहकारिता मंत्रालय • राष्ट्रीय सहकारी प्रशिक्षण परिषद (NCCT)
+            </span>
+          </div>
+          <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: '#ffffff', letterSpacing: '0.02em' }}>
+            Sovereign Field Verification Service
+          </h1>
+          <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.25rem' }}>
+            Tap-to-Verify Credential Inspector • Zero-PII Protected Public Register
+          </div>
+        </header>
+
+        <main style={{ maxWidth: '640px', width: '100%', margin: '1.75rem auto', padding: '0 1rem', boxSizing: 'border-box' }}>
+          {isCodeActive ? (
+            <div style={{ ...doubleBezelCardOuter, marginBottom: '1.5rem' }}>
+              <div style={doubleBezelCardInner}>
+                {/* Header Verification Seal */}
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: '0.5rem',
+                    borderBottom: `1px solid ${THEME.colors.borderHairline}`,
+                    paddingBottom: '0.85rem',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                    <NcctEmblemIcon size={38} color="#081854" accentColor="#feb505" greenColor="#1ab452" />
+                    <div>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 800, color: THEME.colors.navyPrimary, letterSpacing: '0.04em' }}>
+                        TRUST ISSUER: NCCT APEX BOARD
+                      </div>
+                      <div style={{ fontSize: '0.875rem', fontWeight: 800, color: THEME.colors.navyDeep }}>
+                        National Council for Cooperative Training
+                      </div>
+                    </div>
+                  </div>
+
+                  <span
+                    style={{
+                      backgroundColor: '#f0fdf4',
+                      color: '#166534',
+                      border: '1px solid #86efac',
+                      borderRadius: '9999px',
+                      padding: '0.3rem 0.75rem',
+                      fontSize: '0.75rem',
+                      fontWeight: 800,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                    }}
+                  >
+                    <span>✓</span>
+                    <span>SOVEREIGN VERIFIED CREDENTIAL</span>
+                  </span>
+                </div>
+
+                {/* Trainee Public Details */}
+                <div style={{ margin: '1.25rem 0' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: THEME.colors.inkMuted }}>
+                    Verified Candidate Name
+                  </div>
+                  <div style={{ fontSize: '1.45rem', fontWeight: 900, color: THEME.colors.navyDeep, marginTop: '0.15rem' }}>
+                    Anita Patel
+                  </div>
+                  <div style={{ fontSize: '0.875rem', color: THEME.colors.inkBody, marginTop: '0.25rem', fontWeight: 600 }}>
+                    Bilkisganj PACS, Sehore (Madhya Pradesh) • RICM Bhopal
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: THEME.colors.inkMuted, marginTop: '0.2rem', fontFamily: THEME.fonts.mono }}>
+                    Token Code: {visitorProfileCode} • Ed25519 Cryptographically Validated
+                  </div>
+                </div>
+
+                {/* Verified Competencies */}
+                <div style={{ margin: '1rem 0' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', color: THEME.colors.navyPrimary, marginBottom: '0.45rem' }}>
+                    Verified Assessed Competencies (100% Pass)
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem' }}>
+                    {[
+                      'PACS Double-Entry Accounting',
+                      'Daybook & Cash Voucher Posting',
+                      'KCC Loan Disbursement Verification',
+                      'Statutory Audit Compliance',
+                    ].map((sk, idx) => (
+                      <span
+                        key={idx}
+                        style={{
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          backgroundColor: '#eff6ff',
+                          color: THEME.colors.navyPrimary,
+                          border: '1px solid #bfdbfe',
+                          padding: '0.3rem 0.65rem',
+                          borderRadius: '3px',
+                        }}
+                      >
+                        ✓ {sk}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Conferred Certificate */}
+                <div
+                  style={{
+                    margin: '1.25rem 0',
+                    padding: '1rem',
+                    backgroundColor: '#f8fafc',
+                    border: `1px solid ${THEME.colors.borderHairline}`,
+                    borderRadius: '4px',
+                  }}
+                >
+                  <div style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', color: THEME.colors.inkMuted }}>
+                    Conferred Statutory Certification
+                  </div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 800, color: THEME.colors.navyDeep, marginTop: '0.25rem' }}>
+                    Comprehensive Certificate in PACS Digital Accounting & Cooperative Governance
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: THEME.colors.inkMuted, marginTop: '0.25rem', fontFamily: THEME.fonts.mono }}>
+                    Certificate Token: EDU-NCCT-2026-9501 • Issued: 25 October 2026
+                  </div>
+                </div>
+
+                {/* Strict Zero-PII Privacy Guarantee */}
+                <div
+                  style={{
+                    backgroundColor: '#eff6ff',
+                    border: '1px solid #bfdbfe',
+                    borderRadius: '3px',
+                    padding: '0.85rem 1rem',
+                    fontSize: '0.75rem',
+                    color: '#1e3a8a',
+                    lineHeight: 1.45,
+                  }}
+                >
+                  <strong>🔒 Zero-PII Privacy Guarantee:</strong> Under official NCCT data isolation rules, trainee phone numbers, residential addresses, emails, and campus hostel room allotments are strictly private and NEVER exposed to public inquiry.
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div style={{ ...doubleBezelCardOuter, marginBottom: '1.5rem' }}>
+              <div style={{ ...doubleBezelCardInner, textAlign: 'center', padding: '2rem 1.5rem' }}>
+                <span style={{ fontSize: '2.5rem' }}>🔒</span>
+                <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#991b1b', margin: '0.5rem 0' }}>
+                  Profile Shielded or Rotated
+                </h2>
+                <p style={{ fontSize: '0.8125rem', color: THEME.colors.inkMuted, lineHeight: 1.5, maxWidth: '420px', margin: '0 auto 1.25rem auto' }}>
+                  This credential profile code ({visitorProfileCode}) has been set to shielded/private or has been rotated by the trainee. No data is available for this token.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                window.history.replaceState({}, '', '/');
+              }
+              setVisitorProfileCode(null);
+            }}
+            style={{
+              width: '100%',
+              minHeight: '44px',
+              backgroundColor: THEME.colors.navyPrimary,
+              color: '#ffffff',
+              border: `1px solid ${THEME.colors.goldCoop}`,
+              borderRadius: '4px',
+              padding: '0.75rem 1rem',
+              fontSize: '0.875rem',
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              boxShadow: '0 2px 4px rgba(8, 24, 84, 0.15)',
+            }}
+          >
+            <span>←</span>
+            <span>Return to Trainee Portal (शिक्षार्थी पोर्टल पर लौटें)</span>
+          </button>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
@@ -571,41 +1020,39 @@ export default function App() {
         backgroundColor: '#f8fafc',
         position: 'relative',
         boxShadow: '0 0 24px rgba(15, 23, 42, 0.08)',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Devanagari", Roboto, sans-serif',
+        fontFamily: THEME.fonts.sans,
       }}
     >
       {/* Tricolor National Identity Ribbon */}
       <div style={{ display: 'flex', height: '4px', width: '100%' }}>
-        <div style={{ flex: 1, backgroundColor: '#ea580c' }} />
+        <div style={{ flex: 1, backgroundColor: THEME.colors.saffronFlag }} />
         <div style={{ flex: 1, backgroundColor: '#ffffff' }} />
-        <div style={{ flex: 1, backgroundColor: '#16a34a' }} />
+        <div style={{ flex: 1, backgroundColor: THEME.colors.greenFlag }} />
       </div>
 
-      {/* Top Network & Sync Status Banner */}
+      {/* Top Government Deep Navy Utility Strip */}
       <div
         style={{
-          padding: '0.65rem 1rem',
-          backgroundColor: isOffline ? '#b45309' : '#15803d',
+          padding: '0.55rem 0.85rem',
+          backgroundColor: THEME.colors.navyDeep,
           color: '#ffffff',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          transition: 'background-color 0.25s ease',
-          gap: '0.65rem',
+          flexWrap: 'wrap',
+          gap: '0.5rem',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
-          <span style={{ fontSize: '1rem' }}>
-            {isOffline
-              ? '📡'
-              : isSyncing
-              ? '⚡'
-              : '✓'}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', minWidth: 0 }}>
+          <span style={{ fontSize: '0.75rem', color: THEME.colors.goldCoop, fontWeight: 800 }}>
+            {currentIstTime || 'IST'}
           </span>
+          <span style={{ color: 'rgba(255, 255, 255, 0.4)' }}>•</span>
           <span
             style={{
-              fontSize: '0.8125rem',
-              fontWeight: 700,
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              color: '#cbd5e1',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -614,7 +1061,7 @@ export default function App() {
             {isSyncing
               ? syncNotice || 'Synchronizing with Gateway...'
               : networkConnectivity.edgeOnline
-              ? 'Edge Node Online (RICM Bhopal - 192.168.4.1)'
+              ? 'Edge Node Online (RICM Bhopal)'
               : networkConnectivity.centralOnline
               ? 'Central Cloud Direct (api.ncct.gov.in)'
               : isOffline
@@ -624,16 +1071,16 @@ export default function App() {
         </div>
 
         {/* Top WAN Mode Selector & Queue Pill Button (Strict >= 44px) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexShrink: 0 }}>
           <select
             value={wanMode}
             onChange={(e) => setWanMode(e.target.value as any)}
             aria-label="WAN simulation mode"
             style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              backgroundColor: 'rgba(255, 255, 255, 0.15)',
               color: '#ffffff',
-              border: '1px solid rgba(255, 255, 255, 0.5)',
-              borderRadius: '8px',
+              border: '1px solid rgba(255, 255, 255, 0.35)',
+              borderRadius: '4px',
               minHeight: '44px',
               padding: '0.45rem 0.65rem',
               fontSize: '0.8125rem',
@@ -642,9 +1089,9 @@ export default function App() {
               outline: 'none',
             }}
           >
-            <option value="OFFLINE" style={{ color: '#0f172a' }}>WAN: OFFLINE</option>
-            <option value="ONLINE" style={{ color: '#0f172a' }}>WAN: ONLINE</option>
-            <option value="FLAKY" style={{ color: '#0f172a' }}>WAN: FLAKY</option>
+            <option value="OFFLINE" style={{ color: '#081854' }}>WAN: OFFLINE</option>
+            <option value="ONLINE" style={{ color: '#081854' }}>WAN: ONLINE</option>
+            <option value="FLAKY" style={{ color: '#081854' }}>WAN: FLAKY</option>
           </select>
 
           {/* Clickable Queue Pill -> Opens Queue Drawer (Strict >= 44px) */}
@@ -654,12 +1101,12 @@ export default function App() {
             title="Inspect pending offline events"
             aria-label="Open offline event journal drawer"
             style={{
-              backgroundColor: 'rgba(15, 23, 42, 0.4)',
+              backgroundColor: 'rgba(255, 255, 255, 0.15)',
               color: '#ffffff',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
+              border: '1px solid rgba(255, 255, 255, 0.35)',
               minHeight: '44px',
               padding: '0.45rem 0.85rem',
-              borderRadius: '22px',
+              borderRadius: '4px',
               fontSize: '0.8125rem',
               fontWeight: 800,
               cursor: 'pointer',
@@ -674,10 +1121,10 @@ export default function App() {
         </div>
       </div>
 
-      {/* Top Header with Ministry Branding and Bilingual Switcher */}
+      {/* Top Header with National Council Masthead & Controls */}
       <header
         style={{
-          padding: '0.9rem 1rem',
+          padding: '0.85rem 1rem',
           backgroundColor: '#ffffff',
           borderBottom: '1px solid #e2e8f0',
           display: 'flex',
@@ -686,32 +1133,35 @@ export default function App() {
           gap: '0.75rem',
         }}
       >
-        <div>
-          <div
-            style={{
-              fontSize: '0.8125rem',
-              color: '#0369a1',
-              fontWeight: 800,
-              textTransform: 'uppercase',
-              letterSpacing: '0.06em',
-            }}
-          >
-            {t.motto}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+          <AshokChakraIcon size={32} color="#0649a2" />
+          <div>
+            <div
+              style={{
+                fontSize: '0.75rem',
+                color: THEME.colors.navySovereign,
+                fontWeight: 800,
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+              }}
+            >
+              {t.motto}
+            </div>
+            <h1
+              style={{
+                fontSize: '1.15rem',
+                margin: '0.1rem 0 0 0',
+                color: THEME.colors.navyDeep,
+                fontWeight: 900,
+                lineHeight: 1.3,
+              }}
+            >
+              {t.greeting}, {trainee.name.split(' ')[0]}
+            </h1>
           </div>
-          <h1
-            style={{
-              fontSize: '1.25rem',
-              margin: '0.15rem 0 0 0',
-              color: '#0f172a',
-              fontWeight: 800,
-              lineHeight: 1.35,
-            }}
-          >
-            {t.greeting}, {trainee.name.split(' ')[0]}
-          </h1>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexShrink: 0 }}>
           {/* Language Switcher Button (Strict >= 44px) */}
           <button
             type="button"
@@ -720,10 +1170,10 @@ export default function App() {
             style={{
               backgroundColor: '#f1f5f9',
               border: '1px solid #cbd5e1',
-              color: '#0f172a',
+              color: THEME.colors.navyDeep,
               minHeight: '44px',
-              padding: '0.45rem 0.85rem',
-              borderRadius: '8px',
+              padding: '0.45rem 0.75rem',
+              borderRadius: '4px',
               fontSize: '0.875rem',
               fontWeight: 800,
               cursor: 'pointer',
@@ -736,15 +1186,41 @@ export default function App() {
             <span>{language === 'EN' ? '🇮🇳 हिन्दी' : '🌐 English'}</span>
           </button>
 
+          {/* Member Grievance & Helpdesk Quick Trigger (Strict >= 44px) */}
+          <button
+            type="button"
+            onClick={() => setIsGrievanceModalOpen(true)}
+            aria-label="Open member grievance and helpdesk modal"
+            title={t.grievanceBtnTitle}
+            style={{
+              backgroundColor: '#fef2f2',
+              border: '1px solid #fecaca',
+              color: '#b91c1c',
+              minHeight: '44px',
+              minWidth: '44px',
+              padding: '0.45rem 0.75rem',
+              borderRadius: '4px',
+              fontSize: '0.875rem',
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+            }}
+          >
+            <span>⚖️</span>
+            <span>{t.helpdeskHeaderBtn}</span>
+          </button>
+
           <div
             style={{
-              fontSize: '0.8125rem',
-              backgroundColor: '#e0f2fe',
-              color: '#0369a1',
-              border: '1px solid #bae6fd',
+              fontSize: '0.75rem',
+              backgroundColor: '#f0fdf4',
+              color: '#166534',
+              border: '1px solid #86efac',
               minHeight: '44px',
-              padding: '0.45rem 0.65rem',
-              borderRadius: '8px',
+              padding: '0.35rem 0.65rem',
+              borderRadius: '4px',
               fontWeight: 800,
               display: 'flex',
               alignItems: 'center',
@@ -766,30 +1242,22 @@ export default function App() {
         {activeTab === 'HOME' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {/* Current Programme Card */}
-            <div
-              style={{
-                backgroundColor: '#ffffff',
-                borderRadius: '12px',
-                padding: '1.25rem',
-                border: '1px solid #e2e8f0',
-                boxShadow: '0 1px 4px rgba(15, 23, 42, 0.05)',
-              }}
-            >
-              <div style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={doubleBezelCard('navy')}>
+              <div style={{ fontSize: '0.8125rem', color: THEME.colors.navySovereign, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 {t.enrolledProgram}
               </div>
               <h2
                 style={{
                   fontSize: '1.15rem',
                   margin: '0.35rem 0 0.5rem 0',
-                  color: '#0369a1',
+                  color: THEME.colors.navyDeep,
                   lineHeight: 1.45,
                   fontWeight: 800,
                 }}
               >
                 {SEED_PROGRAMME.title}
               </h2>
-              <div style={{ fontSize: '0.875rem', color: '#475569', display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{ fontSize: '0.875rem', color: THEME.colors.inkBody, display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
                 <span><strong>{t.cohort}:</strong> 2026-A</span>
                 <span>•</span>
                 <span><strong>{t.venue}:</strong> {t.venueDetail}</span>
@@ -797,39 +1265,63 @@ export default function App() {
             </div>
 
             {/* Attendance Status & Offline Check-in */}
-            <div
-              style={{
-                backgroundColor: '#ffffff',
-                borderRadius: '12px',
-                padding: '1.25rem',
-                border: '1px solid #e2e8f0',
-                boxShadow: '0 1px 4px rgba(15, 23, 42, 0.05)',
-              }}
-            >
+            <div style={doubleBezelCard('emerald')}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-                <span style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <span style={{ fontSize: '0.8125rem', color: THEME.colors.inkMuted, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   {t.todaysAttendance}
                 </span>
                 <span
                   style={{
                     fontSize: '0.8125rem',
-                    backgroundColor: '#dcfce7',
-                    color: '#15803d',
+                    backgroundColor: todayAttendanceRecord ? '#dcfce7' : '#eff6ff',
+                    color: todayAttendanceRecord ? '#15803d' : '#0649a2',
                     padding: '0.25rem 0.65rem',
-                    borderRadius: '6px',
+                    borderRadius: '4px',
                     fontWeight: 800,
+                    border: `1px solid ${todayAttendanceRecord ? '#86efac' : '#bfdbfe'}`,
                   }}
                 >
-                  {t.activeStatus}
+                  {todayAttendanceRecord ? '✓ Verified Present' : t.activeStatus}
                 </span>
               </div>
 
-              <h3 style={{ fontSize: '1.05rem', margin: '0.45rem 0 0.25rem 0', color: '#0f172a', fontWeight: 700, lineHeight: 1.4 }}>
+              <h3 style={{ fontSize: '1.05rem', margin: '0.45rem 0 0.25rem 0', color: THEME.colors.navyDeep, fontWeight: 800, lineHeight: 1.4 }}>
                 {SEED_SESSION.title}
               </h3>
-              <p style={{ fontSize: '0.8125rem', color: '#64748b', margin: '0 0 0.95rem 0', lineHeight: 1.5 }}>
+              <p style={{ fontSize: '0.8125rem', color: THEME.colors.inkMuted, margin: '0 0 0.95rem 0', lineHeight: 1.5 }}>
                 {t.sessionTimings}
               </p>
+
+              {/* Primary 6-Digit Dynamic Attendance Button */}
+              <button
+                type="button"
+                onClick={() => setIsDynamicAttendanceOpen(true)}
+                style={{
+                  width: '100%',
+                  minHeight: '48px',
+                  backgroundColor: THEME.colors.navyDeep,
+                  color: '#ffffff',
+                  border: `1px solid ${THEME.colors.goldCoop}`,
+                  padding: '0.65rem 1rem',
+                  borderRadius: '4px',
+                  fontSize: '0.875rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.55rem',
+                  boxShadow: '0 2px 4px rgba(8, 24, 84, 0.2)',
+                  marginBottom: '0.65rem',
+                }}
+              >
+                <span style={{ fontSize: '1.15rem' }}>🔢</span>
+                <span>
+                  {language === 'HI'
+                    ? '6-अंकीय कोड से उपस्थिति दर्ज करें'
+                    : 'Enter Dynamic 6-Digit Check-In Code'}
+                </span>
+              </button>
 
               <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
                 <button
@@ -838,20 +1330,20 @@ export default function App() {
                   style={{
                     flex: 1,
                     minWidth: '140px',
-                    minHeight: '46px',
-                    backgroundColor: '#0369a1',
-                    color: '#ffffff',
-                    border: 'none',
+                    minHeight: '44px',
+                    backgroundColor: '#ffffff',
+                    color: THEME.colors.navyPrimary,
+                    border: `1px solid ${THEME.colors.borderOuter}`,
                     padding: '0.65rem 0.85rem',
-                    borderRadius: '8px',
-                    fontSize: '0.875rem',
+                    borderRadius: '4px',
+                    fontSize: '0.8125rem',
                     fontWeight: 800,
                     cursor: 'pointer',
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '0.45rem',
-                    boxShadow: '0 1px 3px rgba(3, 105, 161, 0.25)',
+                    boxShadow: '0 1px 2px rgba(8, 24, 84, 0.05)',
                   }}
                 >
                   <span style={{ fontSize: '1.1rem' }}>📷</span>
@@ -863,20 +1355,20 @@ export default function App() {
                   style={{
                     flex: 1,
                     minWidth: '140px',
-                    minHeight: '46px',
-                    backgroundColor: '#15803d',
-                    color: '#ffffff',
-                    border: 'none',
+                    minHeight: '44px',
+                    backgroundColor: '#ffffff',
+                    color: '#15803d',
+                    border: `1px solid ${THEME.colors.borderOuter}`,
                     padding: '0.65rem 0.85rem',
-                    borderRadius: '8px',
-                    fontSize: '0.875rem',
+                    borderRadius: '4px',
+                    fontSize: '0.8125rem',
                     fontWeight: 800,
                     cursor: 'pointer',
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '0.45rem',
-                    boxShadow: '0 1px 3px rgba(21, 128, 61, 0.25)',
+                    boxShadow: '0 1px 2px rgba(22, 101, 52, 0.05)',
                   }}
                 >
                   <span style={{ fontSize: '1.1rem' }}>👤</span>
@@ -1055,6 +1547,116 @@ export default function App() {
                 <span>{t.launchOralViva}</span>
               </button>
             </div>
+
+            {/* National Scheme Advisory Card */}
+            <div
+              style={{
+                backgroundColor: '#ffffff',
+                borderRadius: '12px',
+                padding: '1.25rem',
+                border: '1px solid #e2e8f0',
+                boxShadow: '0 1px 4px rgba(15, 23, 42, 0.05)',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span
+                  style={{
+                    fontSize: '0.8125rem',
+                    color: '#0369a1',
+                    fontWeight: 800,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                  }}
+                >
+                  Central Scheme Engine
+                </span>
+                <span style={{ fontSize: '1.25rem' }}>📊</span>
+              </div>
+              <h3 style={{ fontSize: '1.05rem', margin: '0.35rem 0 0.35rem 0', color: '#0f172a', fontWeight: 700, lineHeight: 1.4 }}>
+                {t.schemeCardTitle}
+              </h3>
+              <p style={{ fontSize: '0.8125rem', color: '#64748b', margin: '0 0 0.95rem 0', lineHeight: 1.55 }}>
+                {t.schemeCardSub}
+              </p>
+              <button
+                type="button"
+                onClick={() => setIsSchemeModalOpen(true)}
+                style={{
+                  width: '100%',
+                  minHeight: '46px',
+                  backgroundColor: '#0369a1',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '0.65rem 1rem',
+                  borderRadius: '8px',
+                  fontSize: '0.925rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  boxShadow: '0 1px 3px rgba(3, 105, 161, 0.25)',
+                }}
+              >
+                <span>{t.openSchemeCalcBtn}</span>
+              </button>
+            </div>
+
+            {/* Member Grievance Redressal Card */}
+            <div
+              style={{
+                backgroundColor: '#ffffff',
+                borderRadius: '12px',
+                padding: '1.25rem',
+                border: '1px solid #e2e8f0',
+                boxShadow: '0 1px 4px rgba(15, 23, 42, 0.05)',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span
+                  style={{
+                    fontSize: '0.8125rem',
+                    color: '#b91c1c',
+                    fontWeight: 800,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                  }}
+                >
+                  MSCS Act 2023 Redressal
+                </span>
+                <span style={{ fontSize: '1.25rem' }}>⚖️</span>
+              </div>
+              <h3 style={{ fontSize: '1.05rem', margin: '0.35rem 0 0.35rem 0', color: '#0f172a', fontWeight: 700, lineHeight: 1.4 }}>
+                {t.grievanceCardTitle}
+              </h3>
+              <p style={{ fontSize: '0.8125rem', color: '#64748b', margin: '0 0 0.95rem 0', lineHeight: 1.55 }}>
+                {t.grievanceCardSub}
+              </p>
+              <button
+                type="button"
+                onClick={() => setIsGrievanceModalOpen(true)}
+                style={{
+                  width: '100%',
+                  minHeight: '46px',
+                  backgroundColor: '#b91c1c',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '0.65rem 1rem',
+                  borderRadius: '8px',
+                  fontSize: '0.925rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  boxShadow: '0 1px 3px rgba(185, 28, 28, 0.25)',
+                }}
+              >
+                <span>{t.openGrievanceBtn}</span>
+              </button>
+            </div>
           </div>
         )}
 
@@ -1091,6 +1693,68 @@ export default function App() {
               <p style={{ fontSize: '0.8125rem', color: '#64748b', margin: 0, lineHeight: 1.5 }}>
                 {t.courseMeta}
               </p>
+            </div>
+
+            {/* Interactive PACS Operations Lab & Balancing Simulator Card */}
+            <div
+              style={{
+                backgroundColor: '#ffffff',
+                borderRadius: '12px',
+                padding: '1.25rem',
+                border: '2px solid #0284c7',
+                boxShadow: '0 4px 12px rgba(2, 132, 199, 0.08)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.65rem',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span
+                  style={{
+                    fontSize: '0.8125rem',
+                    fontWeight: 800,
+                    backgroundColor: '#e0f2fe',
+                    color: '#0369a1',
+                    padding: '0.25rem 0.65rem',
+                    borderRadius: '6px',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {t.pacsLabBadge}
+                </span>
+                <span style={{ fontSize: '1.25rem' }}>🏛️</span>
+              </div>
+
+              <h3 style={{ fontSize: '1.1rem', margin: 0, color: '#0f172a', fontWeight: 800, lineHeight: 1.4 }}>
+                {t.pacsLabTitle}
+              </h3>
+
+              <p style={{ fontSize: '0.8125rem', color: '#64748b', margin: 0, lineHeight: 1.55 }}>
+                {t.pacsLabDesc}
+              </p>
+
+              <button
+                type="button"
+                onClick={() => setIsPacsLabOpen(true)}
+                style={{
+                  minHeight: '44px',
+                  backgroundColor: '#0284c7',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '0.65rem 1.25rem',
+                  borderRadius: '8px',
+                  fontSize: '0.875rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  marginTop: '0.35rem',
+                }}
+              >
+                <span>{t.launchPacsLabBtn}</span>
+              </button>
             </div>
 
             <div style={{ fontSize: '0.875rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
@@ -1169,35 +1833,28 @@ export default function App() {
         ======================================================== */}
         {activeTab === 'PROGRESS' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div
-              style={{
-                backgroundColor: '#ffffff',
-                borderRadius: '12px',
-                padding: '1.25rem',
-                border: '1px solid #e2e8f0',
-                boxShadow: '0 1px 4px rgba(15, 23, 42, 0.05)',
-              }}
-            >
-              <h2 style={{ fontSize: '1.05rem', margin: '0 0 0.65rem 0', fontWeight: 800 }}>{t.overallProgress}</h2>
+            {/* Academic Marks Tally & Gradebook Card */}
+            <AcademicMarksTallyCard
+              tally={marksTally}
+              language={language}
+              onLaunchQuiz={() => setIsAssessmentOpen(true)}
+              onLaunchExam={() => setIsAssessmentOpen(true)}
+              onViewCertificate={() => setShowCertModal(true)}
+            />
+
+            <div style={doubleBezelCard('navy')}>
+              <h2 style={{ fontSize: '1.05rem', margin: '0 0 0.65rem 0', fontWeight: 800, color: THEME.colors.navyDeep }}>{t.overallProgress}</h2>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', marginBottom: '0.45rem' }}>
-                <span>{t.completionStatus}</span>
-                <span style={{ fontWeight: 800, color: '#0369a1' }}>{progressPercent}%</span>
+                <span style={{ color: THEME.colors.inkBody }}>{t.completionStatus}</span>
+                <span style={{ fontWeight: 800, color: THEME.colors.navyPrimary }}>{progressPercent}%</span>
               </div>
               <div style={{ width: '100%', height: '10px', backgroundColor: '#e2e8f0', borderRadius: '5px', overflow: 'hidden' }}>
-                <div style={{ width: `${progressPercent}%`, height: '100%', backgroundColor: '#0369a1', transition: 'width 0.4s ease' }} />
+                <div style={{ width: `${progressPercent}%`, height: '100%', backgroundColor: THEME.colors.navyPrimary, transition: 'width 0.4s ease' }} />
               </div>
             </div>
 
-            <div
-              style={{
-                backgroundColor: '#ffffff',
-                borderRadius: '12px',
-                padding: '1.25rem',
-                border: '1px solid #e2e8f0',
-                boxShadow: '0 1px 4px rgba(15, 23, 42, 0.05)',
-              }}
-            >
-              <h3 style={{ fontSize: '1rem', margin: '0 0 0.65rem 0', fontWeight: 800 }}>{t.completedModules}</h3>
+            <div style={doubleBezelCard('neutral')}>
+              <h3 style={{ fontSize: '1rem', margin: '0 0 0.65rem 0', fontWeight: 800, color: THEME.colors.navyDeep }}>{t.completedModules}</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
                 {lessons.map((lesson) => {
                   const done = completedLessonIds.includes(lesson.id);
@@ -1287,29 +1944,47 @@ export default function App() {
         ======================================================== */}
         {activeTab === 'CREDENTIALS' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div
-              style={{
-                backgroundColor: '#ffffff',
-                borderRadius: '12px',
-                padding: '1.35rem',
-                border: '2px solid #0369a1',
-                boxShadow: '0 2px 8px rgba(3, 105, 161, 0.08)',
+            {/* Sovereign NFC Credential Card */}
+            <SovereignNfcProfileCard
+              profile={nfcProfile}
+              language={language}
+              onToggleEnabled={async (en) => {
+                setNfcProfile((prev) => (prev ? { ...prev, enabled: en } : null));
               }}
-            >
+              onRotateCode={async () => {
+                const newCode = 'NFC-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+                setNfcProfile((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        publicProfileCode: newCode,
+                        publicUrl: `/?profile=${newCode}`,
+                      }
+                    : null
+                );
+              }}
+              onPreviewPublicUrl={(url) => {
+                if (typeof window !== 'undefined') {
+                  window.open(url, '_blank');
+                }
+              }}
+            />
+
+            <div style={doubleBezelCard('navy')}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-                <span style={{ fontSize: '0.8125rem', fontWeight: 800, color: '#15803d' }}>
+                <span style={{ fontSize: '0.8125rem', fontWeight: 800, color: THEME.colors.emerald }}>
                   ✓ ED25519 CRYPTOGRAPHICALLY SIGNED
                 </span>
-                <span style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 700 }}>NCCT Official</span>
+                <span style={{ fontSize: '0.8125rem', color: THEME.colors.navyPrimary, fontWeight: 700 }}>NCCT Official</span>
               </div>
 
-              <h2 style={{ fontSize: '1.15rem', margin: '0.5rem 0 0.35rem 0', color: '#0f172a', fontWeight: 800, lineHeight: 1.4 }}>
+              <h2 style={{ fontSize: '1.15rem', margin: '0.5rem 0 0.35rem 0', color: THEME.colors.navyDeep, fontWeight: 800, lineHeight: 1.4 }}>
                 Certificate of Competency in PACS Ledgering & Governance
               </h2>
-              <div style={{ fontSize: '0.875rem', color: '#475569' }}>
-                {t.awardedTo}: <strong style={{ color: '#0f172a' }}>{trainee.name}</strong>
+              <div style={{ fontSize: '0.875rem', color: THEME.colors.inkBody }}>
+                {t.awardedTo}: <strong style={{ color: THEME.colors.navyDeep }}>{trainee.name}</strong>
               </div>
-              <div style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '0.25rem' }}>
+              <div style={{ fontSize: '0.8125rem', color: THEME.colors.inkMuted, marginTop: '0.25rem' }}>
                 {t.credentialId}: <code style={{ fontFamily: 'monospace', fontWeight: 700 }}>cred-pacs-2026-0814</code>
               </div>
 
@@ -1317,9 +1992,9 @@ export default function App() {
                 style={{
                   marginTop: '1.15rem',
                   padding: '1.25rem',
-                  backgroundColor: '#f8fafc',
-                  borderRadius: '8px',
-                  border: '1px dashed #cbd5e1',
+                  backgroundColor: THEME.colors.creamWarm,
+                  borderRadius: '4px',
+                  border: `1px dashed ${THEME.colors.borderInner}`,
                   textAlign: 'center',
                 }}
               >
@@ -1332,16 +2007,16 @@ export default function App() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    borderRadius: '8px',
+                    borderRadius: '4px',
                     fontSize: '0.875rem',
-                    color: '#0369a1',
+                    color: THEME.colors.navyPrimary,
                     fontWeight: 800,
-                    border: '1px solid #bae6fd',
+                    border: `1px solid ${THEME.colors.borderOuter}`,
                   }}
                 >
                   {t.qrVerified}
                 </div>
-                <div style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '0.65rem', lineHeight: 1.5 }}>
+                <div style={{ fontSize: '0.8125rem', color: THEME.colors.inkMuted, marginTop: '0.65rem', lineHeight: 1.5 }}>
                   {t.verifyQr}
                 </div>
               </div>
@@ -1350,11 +2025,11 @@ export default function App() {
                 style={{
                   marginTop: '1.15rem',
                   paddingTop: '0.85rem',
-                  borderTop: '1px solid #f1f5f9',
+                  borderTop: `1px solid ${THEME.colors.borderInner}`,
                   display: 'flex',
                   justifyContent: 'space-between',
                   fontSize: '0.8125rem',
-                  color: '#64748b',
+                  color: THEME.colors.inkMuted,
                   flexWrap: 'wrap',
                   gap: '0.5rem',
                 }}
@@ -1369,11 +2044,11 @@ export default function App() {
                 style={{
                   width: '100%',
                   minHeight: '46px',
-                  backgroundColor: '#0369a1',
+                  backgroundColor: THEME.colors.navyDeep,
                   color: '#ffffff',
-                  border: 'none',
+                  border: `1px solid ${THEME.colors.goldCoop}`,
                   padding: '0.65rem 1rem',
-                  borderRadius: '8px',
+                  borderRadius: '4px',
                   fontSize: '0.925rem',
                   fontWeight: 800,
                   cursor: 'pointer',
@@ -1382,7 +2057,7 @@ export default function App() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '0.5rem',
-                  boxShadow: '0 1px 3px rgba(3, 105, 161, 0.25)',
+                  boxShadow: '0 2px 4px rgba(8, 24, 84, 0.2)',
                 }}
               >
                 <span style={{ fontSize: '1.15rem' }}>🖨️</span>
@@ -1453,6 +2128,292 @@ export default function App() {
               </button>
             </div>
 
+            {/* ========================================================
+                DIGITAL OFFER LETTER SECTION (Ed25519 Cryptographic Verification)
+            ======================================================== */}
+            <div
+              style={{
+                backgroundColor: '#ffffff',
+                borderRadius: '12px',
+                border: '2px solid #0369a1',
+                boxShadow: '0 4px 12px rgba(3, 105, 161, 0.08)',
+                overflow: 'hidden',
+              }}
+            >
+              {/* National Tricolor Top Bar */}
+              <div style={{ display: 'flex', height: '4px', width: '100%' }}>
+                <div style={{ flex: 1, backgroundColor: '#ea580c' }} />
+                <div style={{ flex: 1, backgroundColor: '#ffffff' }} />
+                <div style={{ flex: 1, backgroundColor: '#16a34a' }} />
+              </div>
+
+              <div style={{ padding: '1.25rem' }}>
+                {/* Header row with status badge */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '1.35rem' }}>📜</span>
+                    <div>
+                      <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a' }}>
+                        {t.offerSectionTitle}
+                      </div>
+                      <div style={{ fontSize: '0.8125rem', color: '#64748b' }}>
+                        {t.offerSectionSub}
+                      </div>
+                    </div>
+                  </div>
+
+                  <span
+                    style={{
+                      padding: '0.3rem 0.75rem',
+                      borderRadius: '16px',
+                      fontSize: '0.8125rem',
+                      fontWeight: 800,
+                      backgroundColor:
+                        receivedOffer.status === 'ACCEPTED'
+                          ? '#dcfce7'
+                          : receivedOffer.status === 'DECLINED'
+                          ? '#f1f5f9'
+                          : '#fef3c7',
+                      color:
+                        receivedOffer.status === 'ACCEPTED'
+                          ? '#15803d'
+                          : receivedOffer.status === 'DECLINED'
+                          ? '#64748b'
+                          : '#b45309',
+                      border: `1px solid ${
+                        receivedOffer.status === 'ACCEPTED'
+                          ? '#86efac'
+                          : receivedOffer.status === 'DECLINED'
+                          ? '#cbd5e1'
+                          : '#fcd34d'
+                      }`,
+                    }}
+                  >
+                    {receivedOffer.status === 'ACCEPTED'
+                      ? t.offerStatusAccepted
+                      : receivedOffer.status === 'DECLINED'
+                      ? t.offerStatusDeclined
+                      : t.offerStatusPending}
+                  </span>
+                </div>
+
+                {/* Feedback Notice */}
+                {offerFeedbackNotice && (
+                  <div
+                    style={{
+                      marginTop: '0.85rem',
+                      padding: '0.75rem 1rem',
+                      borderRadius: '8px',
+                      backgroundColor: receivedOffer.status === 'ACCEPTED' ? '#f0fdf4' : '#f8fafc',
+                      border: `1px solid ${receivedOffer.status === 'ACCEPTED' ? '#86efac' : '#cbd5e1'}`,
+                      fontSize: '0.875rem',
+                      color: receivedOffer.status === 'ACCEPTED' ? '#15803d' : '#334155',
+                      fontWeight: 700,
+                    }}
+                  >
+                    {offerFeedbackNotice}
+                  </div>
+                )}
+
+                {/* Employer & Role Summary */}
+                <div style={{ marginTop: '1rem', paddingBottom: '0.85rem', borderBottom: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', lineHeight: 1.35 }}>
+                    {receivedOffer.payload.designation}
+                  </div>
+                  <div style={{ fontSize: '0.925rem', color: '#0369a1', fontWeight: 700, marginTop: '0.2rem' }}>
+                    {receivedOffer.payload.employer.name}
+                  </div>
+                  <div style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '0.25rem' }}>
+                    {t.offerSignatoryLabel}: <strong>{receivedOffer.payload.employer.authorizedSignatory}</strong>
+                  </div>
+                </div>
+
+                {/* Compensation & Location Grid */}
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                    gap: '0.75rem',
+                    marginTop: '0.85rem',
+                    backgroundColor: '#f8fafc',
+                    padding: '0.85rem',
+                    borderRadius: '8px',
+                    border: '1px solid #e2e8f0',
+                  }}
+                >
+                  <div>
+                    <span style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 700, display: 'block' }}>
+                      {t.offerCtcLabel}
+                    </span>
+                    <strong style={{ fontSize: '1.05rem', color: '#15803d' }}>
+                      ₹{receivedOffer.payload.annualCompensationLPA} Lakhs / Annum
+                    </strong>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 700, display: 'block' }}>
+                      {t.offerSalaryLabel}
+                    </span>
+                    <strong style={{ fontSize: '1.05rem', color: '#0369a1' }}>
+                      ₹{receivedOffer.payload.monthlyStipendOrSalary.toLocaleString()} / month
+                    </strong>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 700, display: 'block' }}>
+                      {t.offerLocationLabel}
+                    </span>
+                    <strong style={{ fontSize: '0.875rem', color: '#0f172a' }}>
+                      {receivedOffer.payload.postingLocation}
+                    </strong>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 700, display: 'block' }}>
+                      {t.offerJoiningDateLabel}
+                    </span>
+                    <strong style={{ fontSize: '0.875rem', color: '#0f172a' }}>
+                      {receivedOffer.payload.joiningDate}
+                    </strong>
+                  </div>
+                </div>
+
+                {/* Terms & Conditions */}
+                <div style={{ marginTop: '0.85rem' }}>
+                  <div style={{ fontSize: '0.8125rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.35rem' }}>
+                    {t.offerTermsLabel}:
+                  </div>
+                  <ul style={{ margin: 0, paddingLeft: '1.25rem', fontSize: '0.8125rem', color: '#475569', lineHeight: 1.55 }}>
+                    {receivedOffer.payload.terms.map((term, i) => (
+                      <li key={i}>{term}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Ed25519 Cryptographic Verification Badge */}
+                <div
+                  style={{
+                    marginTop: '1rem',
+                    padding: '0.75rem',
+                    backgroundColor: '#f0fdf4',
+                    borderRadius: '8px',
+                    border: '1px solid #86efac',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.35rem',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8125rem', fontWeight: 800, color: '#15803d' }}>
+                      <span>🛡️</span>
+                      <span>{t.offerCryptoVerifiedBadge}</span>
+                    </div>
+                    <span style={{ fontSize: '0.8125rem', color: '#64748b', fontFamily: 'monospace' }}>
+                      Key: {receivedOffer.issuerKeyId}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.8125rem', color: '#475569', fontFamily: 'monospace', wordBreak: 'break-all' }}>
+                    <strong>Sig:</strong> {receivedOffer.signatureHex.slice(0, 48)}...
+                  </div>
+                </div>
+
+                {/* Action Buttons (minHeight >= 46px) */}
+                <div
+                  style={{
+                    marginTop: '1.15rem',
+                    display: 'flex',
+                    gap: '0.75rem',
+                    justifyContent: 'flex-end',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setShowOfferModal(true)}
+                    style={{
+                      minHeight: '46px',
+                      padding: '0.65rem 1.15rem',
+                      borderRadius: '8px',
+                      fontSize: '0.875rem',
+                      fontWeight: 700,
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #cbd5e1',
+                      color: '#0369a1',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                    }}
+                  >
+                    <span>📄</span>
+                    <span>{t.offerFullLetterBtn}</span>
+                  </button>
+
+                  {receivedOffer.status === 'ISSUED' && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={handleDeclineOffer}
+                        style={{
+                          minHeight: '46px',
+                          padding: '0.65rem 1.15rem',
+                          borderRadius: '8px',
+                          fontSize: '0.875rem',
+                          fontWeight: 700,
+                          backgroundColor: '#fee2e2',
+                          border: '1px solid #fecaca',
+                          color: '#991b1b',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                        }}
+                      >
+                        <span>✕</span>
+                        <span>{t.offerDeclineBtn}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleAcceptOffer}
+                        style={{
+                          minHeight: '46px',
+                          padding: '0.65rem 1.45rem',
+                          borderRadius: '8px',
+                          fontSize: '0.925rem',
+                          fontWeight: 800,
+                          backgroundColor: '#15803d',
+                          color: '#ffffff',
+                          border: 'none',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.45rem',
+                          boxShadow: '0 2px 4px rgba(21, 128, 61, 0.25)',
+                        }}
+                      >
+                        <span>✓</span>
+                        <span>{t.offerAcceptBtn}</span>
+                      </button>
+                    </>
+                  )}
+
+                  {receivedOffer.status === 'ACCEPTED' && (
+                    <span
+                      style={{
+                        fontSize: '0.875rem',
+                        fontWeight: 800,
+                        color: '#15803d',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                      }}
+                    >
+                      <span>✓</span>
+                      <span>{t.offerPlacedStatusNotice}</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <div style={{ fontSize: '0.875rem', color: '#475569', fontWeight: 600 }}>
               {t.oppsHeader}
             </div>
@@ -1514,40 +2475,61 @@ export default function App() {
         ======================================================== */}
         {activeTab === 'PROFILE' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div
-              style={{
-                backgroundColor: '#ffffff',
-                borderRadius: '12px',
-                padding: '1.35rem',
-                border: '1px solid #e2e8f0',
-                boxShadow: '0 1px 4px rgba(15, 23, 42, 0.05)',
+            {/* Campus Hostel Accommodation (Strictly Private) */}
+            <HostelRoomCard language={language} />
+
+            {/* Sovereign NFC Profile Controls */}
+            <SovereignNfcProfileCard
+              profile={nfcProfile}
+              language={language}
+              onToggleEnabled={async (en) => {
+                setNfcProfile((prev) => (prev ? { ...prev, enabled: en } : null));
               }}
-            >
-              <h2 style={{ fontSize: '1.15rem', margin: '0 0 1.15rem 0', fontWeight: 800 }}>{t.profileTitle}</h2>
+              onRotateCode={async () => {
+                const newCode = 'NFC-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+                setNfcProfile((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        publicProfileCode: newCode,
+                        publicUrl: `/?profile=${newCode}`,
+                      }
+                    : null
+                );
+              }}
+              onPreviewPublicUrl={(url) => {
+                if (typeof window !== 'undefined') {
+                  window.open(url, '_blank');
+                }
+              }}
+            />
+
+            <div style={doubleBezelCard('neutral')}>
+              <h2 style={{ fontSize: '1.15rem', margin: '0 0 1.15rem 0', fontWeight: 800, color: THEME.colors.navyDeep }}>{t.profileTitle}</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.875rem' }}>
                 <div>
-                  <span style={{ color: '#64748b' }}>{t.fullNameLabel}: </span>
-                  <strong style={{ color: '#0f172a' }}>{trainee.name}</strong>
+                  <span style={{ color: THEME.colors.inkMuted }}>{t.fullNameLabel}: </span>
+                  <strong style={{ color: THEME.colors.navyDeep }}>{trainee.name}</strong>
                 </div>
                 <div>
-                  <span style={{ color: '#64748b' }}>{t.contactLabel}: </span>
-                  <strong style={{ color: '#0f172a' }}>{trainee.emailOrPhone}</strong>
+                  <span style={{ color: THEME.colors.inkMuted }}>{t.contactLabel}: </span>
+                  <strong style={{ color: THEME.colors.navyDeep }}>{trainee.emailOrPhone}</strong>
                 </div>
                 <div>
-                  <span style={{ color: '#64748b' }}>{t.instituteLabel}: </span>
-                  <strong style={{ color: '#0f172a' }}>{t.instituteValue}</strong>
+                  <span style={{ color: THEME.colors.inkMuted }}>{t.instituteLabel}: </span>
+                  <strong style={{ color: THEME.colors.navyDeep }}>{t.instituteValue}</strong>
                 </div>
                 <div>
-                  <span style={{ color: '#64748b' }}>{t.prefLangLabel}: </span>
-                  <strong style={{ color: '#0f172a' }}>{language === 'HI' ? 'हिन्दी (Hindi)' : 'English'}</strong>
+                  <span style={{ color: THEME.colors.inkMuted }}>{t.prefLangLabel}: </span>
+                  <strong style={{ color: THEME.colors.navyDeep }}>{language === 'HI' ? 'हिन्दी (Hindi)' : 'English'}</strong>
                 </div>
                 <div>
-                  <span style={{ color: '#64748b' }}>{t.nodeConnLabel}: </span>
-                  <strong style={{ color: '#15803d' }}>sahakar.local (192.168.4.1)</strong>
+                  <span style={{ color: THEME.colors.inkMuted }}>{t.nodeConnLabel}: </span>
+                  <strong style={{ color: THEME.colors.emerald }}>sahakar.local (192.168.4.1)</strong>
                 </div>
               </div>
 
-              <div style={{ marginTop: '1.75rem', paddingTop: '1.15rem', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
+              <div style={{ marginTop: '1.75rem', paddingTop: '1.15rem', borderTop: `1px solid ${THEME.colors.borderInner}`, display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
                 <button
                   type="button"
                   onClick={handleSimulateSync}
@@ -1556,11 +2538,11 @@ export default function App() {
                     flex: 1,
                     minWidth: '160px',
                     minHeight: '46px',
-                    backgroundColor: isSyncing ? '#94a3b8' : '#0369a1',
+                    backgroundColor: isSyncing ? '#94a3b8' : THEME.colors.navyPrimary,
                     color: '#ffffff',
                     border: 'none',
                     padding: '0.65rem 1rem',
-                    borderRadius: '8px',
+                    borderRadius: '4px',
                     fontSize: '0.875rem',
                     fontWeight: 800,
                     cursor: isSyncing ? 'wait' : 'pointer',
@@ -1577,7 +2559,7 @@ export default function App() {
                     color: '#991b1b',
                     border: '1px solid #fecaca',
                     padding: '0.65rem 1.15rem',
-                    borderRadius: '8px',
+                    borderRadius: '4px',
                     fontSize: '0.875rem',
                     fontWeight: 800,
                     cursor: 'pointer',
@@ -2342,6 +3324,17 @@ export default function App() {
         onSubmitted={() => {
           refreshState();
         }}
+        onOpenLesson={(lessonId) => {
+          setIsOralAssessmentOpen(false);
+          const detail = offlineStore.getLessonDetail(lessonId);
+          if (detail) {
+            setActiveLesson(detail);
+          }
+        }}
+        onOpenPacsLab={() => {
+          setIsOralAssessmentOpen(false);
+          setIsPacsLabOpen(true);
+        }}
       />
 
       {/* Floating Action Button for Sahakar Mitra AI (Repositioned to bottom: 88px, right: 16px to prevent bottom nav overlap) */}
@@ -2639,6 +3632,27 @@ export default function App() {
               >
                 📜 {language === 'HI' ? 'युवा सहकार योजना' : 'Yuva Sahakar'}
               </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCounselorOpen(false);
+                  setIsSchemeModalOpen(true);
+                }}
+                style={{
+                  backgroundColor: '#f0fdf4',
+                  border: '1px solid #bbf7d0',
+                  color: '#15803d',
+                  minHeight: '44px',
+                  padding: '0.45rem 0.85rem',
+                  borderRadius: '16px',
+                  fontSize: '0.8125rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                }}
+              >
+                📊 {t.schemeCalculatorBtn}
+              </button>
             </div>
 
             {/* Input Form with >=44px buttons */}
@@ -2752,6 +3766,283 @@ export default function App() {
         />
       )}
 
+      {/* PACS Operations Simulator Lab */}
+      <PacsOperationsLabModal
+        isOpen={isPacsLabOpen}
+        onClose={() => setIsPacsLabOpen(false)}
+        language={language}
+        traineeId={trainee.id}
+      />
+
+      {/* Scheme Advisory & Subsidy Calculator */}
+      <SchemeCalculatorModal
+        isOpen={isSchemeModalOpen}
+        onClose={() => setIsSchemeModalOpen(false)}
+        language={language}
+      />
+
+      {/* Statutory Grievance Redressal (MSCS Act 2023) */}
+      <GrievanceModal
+        isOpen={isGrievanceModalOpen}
+        onClose={() => setIsGrievanceModalOpen(false)}
+        language={language}
+        trainee={trainee}
+      />
+
+      {/* Full Digital Offer Letter Viewer Modal */}
+      {showOfferModal && receivedOffer && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.75)',
+            zIndex: 120,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
+            backdropFilter: 'blur(3px)',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: '#ffffff',
+              borderRadius: '16px',
+              maxWidth: '560px',
+              width: '100%',
+              maxHeight: '90vh',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 20px 45px rgba(0, 0, 0, 0.3)',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Header */}
+            <div
+              style={{
+                backgroundColor: '#0369a1',
+                color: '#ffffff',
+                padding: '1rem 1.25rem',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                <span style={{ fontSize: '1.5rem' }}>📜</span>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800 }}>
+                    {t.offerSectionTitle}
+                  </h3>
+                  <div style={{ fontSize: '0.8125rem', color: '#bae6fd' }}>
+                    {receivedOffer.payload.employer.name} • Ref: {receivedOffer.id}
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowOfferModal(false)}
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  minWidth: '44px',
+                  minHeight: '44px',
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  border: 'none',
+                  color: '#ffffff',
+                  fontSize: '1.35rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 700,
+                }}
+                aria-label="Close offer letter"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Body */}
+            <div
+              style={{
+                padding: '1.25rem',
+                overflowY: 'auto',
+                flex: 1,
+                fontSize: '0.875rem',
+                lineHeight: 1.6,
+                color: '#1e293b',
+              }}
+            >
+              <div
+                style={{
+                  padding: '1rem',
+                  backgroundColor: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '12px',
+                  marginBottom: '1rem',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <span style={{ fontWeight: 700, color: '#64748b', fontSize: '0.8125rem' }}>
+                    {t.offerSignatoryLabel}:
+                  </span>
+                  <span style={{ fontWeight: 800, color: '#0369a1' }}>
+                    {receivedOffer.payload.employer.name}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <span style={{ fontWeight: 700, color: '#64748b', fontSize: '0.8125rem' }}>
+                    {language === 'HI' ? 'पद / भूमिका' : 'Designation'}:
+                  </span>
+                  <span style={{ fontWeight: 800, color: '#0f172a' }}>
+                    {receivedOffer.payload.designation}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <span style={{ fontWeight: 700, color: '#64748b', fontSize: '0.8125rem' }}>
+                    {t.offerLocationLabel}:
+                  </span>
+                  <span style={{ fontWeight: 700, color: '#0f172a' }}>
+                    {receivedOffer.payload.postingLocation}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <span style={{ fontWeight: 700, color: '#64748b', fontSize: '0.8125rem' }}>
+                    {t.offerCtcLabel}:
+                  </span>
+                  <span style={{ fontWeight: 800, color: '#15803d' }}>
+                    ₹{receivedOffer.payload.annualCompensationLPA} LPA (₹{receivedOffer.payload.monthlyStipendOrSalary.toLocaleString('en-IN')}/mo)
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <span style={{ fontWeight: 700, color: '#64748b', fontSize: '0.8125rem' }}>
+                    {t.offerJoiningDateLabel}:
+                  </span>
+                  <span style={{ fontWeight: 700, color: '#0f172a' }}>
+                    {receivedOffer.payload.joiningDate}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ fontWeight: 700, color: '#64748b', fontSize: '0.8125rem' }}>
+                    {language === 'HI' ? 'प्रस्ताव स्थिति' : 'Offer Status'}:
+                  </span>
+                  <span
+                    style={{
+                      fontWeight: 800,
+                      color:
+                        receivedOffer.status === 'ACCEPTED'
+                          ? '#15803d'
+                          : receivedOffer.status === 'DECLINED'
+                          ? '#dc2626'
+                          : '#d97706',
+                    }}
+                  >
+                    {receivedOffer.status}
+                  </span>
+                </div>
+              </div>
+
+              {/* Cryptographic Guarantee Card */}
+              <div
+                style={{
+                  padding: '0.85rem',
+                  backgroundColor: '#f0fdf4',
+                  border: '1px solid #bbf7d0',
+                  borderRadius: '10px',
+                  fontSize: '0.8125rem',
+                  color: '#166534',
+                }}
+              >
+                <div style={{ fontWeight: 800, marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <span>🛡️</span>
+                  <span>{t.offerCryptoVerifiedBadge}</span>
+                </div>
+                <div style={{ wordBreak: 'break-all', fontFamily: 'monospace', fontSize: '0.8125rem', color: '#15803d' }}>
+                  <strong>Issuer Key ID:</strong> {receivedOffer.issuerKeyId}
+                </div>
+                <div style={{ wordBreak: 'break-all', fontFamily: 'monospace', fontSize: '0.8125rem', color: '#15803d', marginTop: '0.25rem' }}>
+                  <strong>Ed25519 Sig:</strong> {receivedOffer.signatureHex}
+                </div>
+                <div style={{ wordBreak: 'break-all', fontFamily: 'monospace', fontSize: '0.8125rem', color: '#15803d', marginTop: '0.25rem' }}>
+                  <strong>Canonical Digest:</strong> {receivedOffer.canonicalDigest}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer with >=44px buttons */}
+            <div
+              style={{
+                padding: '0.85rem 1.25rem',
+                backgroundColor: '#f8fafc',
+                borderTop: '1px solid #e2e8f0',
+                display: 'flex',
+                gap: '0.75rem',
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => window.print()}
+                style={{
+                  minHeight: '44px',
+                  padding: '0.55rem 1rem',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  backgroundColor: '#ffffff',
+                  color: '#0f172a',
+                  fontWeight: 700,
+                  fontSize: '0.875rem',
+                  cursor: 'pointer',
+                }}
+              >
+                🖨️ {language === 'HI' ? 'प्रिंट / सेव' : 'Print / Save'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowOfferModal(false)}
+                style={{
+                  minHeight: '44px',
+                  padding: '0.55rem 1.25rem',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: '#0369a1',
+                  color: '#ffffff',
+                  fontWeight: 800,
+                  fontSize: '0.875rem',
+                  cursor: 'pointer',
+                }}
+              >
+                {language === 'HI' ? 'बंद करें' : 'Close'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          MODAL: 6-Digit Dynamic Session Attendance Modal
+      ======================================================== */}
+      <DynamicAttendanceModal
+        isOpen={isDynamicAttendanceOpen}
+        onClose={() => setIsDynamicAttendanceOpen(false)}
+        session={SEED_SESSION}
+        trainee={{
+          id: trainee.id,
+          name: trainee.name,
+          designation: 'PACS Secretary Trainee',
+          cooperativeAffiliation: 'Bilkisganj Primary Agriculture Credit Cooperative',
+        }}
+        isApprovedNominee={true}
+        language={language}
+        networkConnectivity={networkConnectivity}
+        onCheckInSuccess={(record) => {
+          setTodayAttendanceRecord(record);
+        }}
+      />
+
       {/* ========================================================
           BOTTOM NAVIGATION BAR (All 6 Tabs, Strict >= 48px Touch Height)
       ======================================================== */}
@@ -2767,23 +4058,24 @@ export default function App() {
           display: 'grid',
           gridTemplateColumns: 'repeat(6, 1fr)',
           backgroundColor: '#ffffff',
-          borderTop: '1px solid #e2e8f0',
-          boxShadow: '0 -2px 10px rgba(15, 23, 42, 0.06)',
+          borderTop: `1px solid ${THEME.colors.borderOuter}`,
+          boxShadow: '0 -2px 10px rgba(8, 24, 84, 0.08)',
           zIndex: 90,
           padding: '0 2px',
         }}
       >
         {(
           [
-            { id: 'HOME', label: t.tabs.HOME, icon: '🏠' },
-            { id: 'LEARN', label: t.tabs.LEARN, icon: '📚' },
-            { id: 'PROGRESS', label: t.tabs.PROGRESS, icon: '📊' },
-            { id: 'CREDENTIALS', label: t.tabs.CREDENTIALS, icon: '📜' },
-            { id: 'OPPORTUNITIES', label: t.tabs.OPPORTUNITIES, icon: '💼' },
-            { id: 'PROFILE', label: t.tabs.PROFILE, icon: '👤' },
+            { id: 'HOME', label: t.tabs.HOME, Icon: HomeIcon },
+            { id: 'LEARN', label: t.tabs.LEARN, Icon: LearnIcon },
+            { id: 'PROGRESS', label: t.tabs.PROGRESS, Icon: ProgressIcon },
+            { id: 'CREDENTIALS', label: t.tabs.CREDENTIALS, Icon: CredentialsIcon },
+            { id: 'OPPORTUNITIES', label: t.tabs.OPPORTUNITIES, Icon: OpportunitiesIcon },
+            { id: 'PROFILE', label: t.tabs.PROFILE, Icon: ProfileIcon },
           ] as const
         ).map((tab) => {
           const isActive = activeTab === tab.id;
+          const TabIcon = tab.Icon;
           return (
             <button
               key={tab.id}
@@ -2792,7 +4084,7 @@ export default function App() {
               style={{
                 background: 'none',
                 border: 'none',
-                color: isActive ? '#0369a1' : '#64748b',
+                color: isActive ? THEME.colors.navyPrimary : '#64748b',
                 fontWeight: isActive ? 800 : 600,
                 fontSize: '0.8125rem',
                 display: 'flex',
@@ -2807,10 +4099,10 @@ export default function App() {
                 position: 'relative',
               }}
             >
-              <span style={{ fontSize: '1.25rem', lineHeight: 1 }}>{tab.icon}</span>
+              <TabIcon size={20} color={isActive ? THEME.colors.navyPrimary : '#64748b'} />
               <span
                 style={{
-                  fontSize: '0.8125rem',
+                  fontSize: '0.75rem',
                   maxWidth: '100%',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
@@ -2827,7 +4119,7 @@ export default function App() {
                     top: '2px',
                     width: '24px',
                     height: '3px',
-                    backgroundColor: '#0369a1',
+                    backgroundColor: THEME.colors.goldCoop,
                     borderRadius: '2px',
                   }}
                 />

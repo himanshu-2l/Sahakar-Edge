@@ -7,6 +7,8 @@ import type {
   OralQuestion,
   OralAssessmentResult,
   OralQuestionScore,
+  RubricDimensionType,
+  RubricDimensionScore,
 } from '@sahakar/types';
 import {
   offlineStore,
@@ -20,6 +22,282 @@ export interface OralAssessmentModalProps {
   traineeId: string;
   onSubmitted?: (result: OralAssessmentResult) => void;
   initialLanguage?: 'HI' | 'EN';
+  onOpenLesson?: (lessonId: string) => void;
+  onOpenPacsLab?: () => void;
+}
+
+export const NCCT_RUBRIC_CONFIG = {
+  TECHNICAL_ACCURACY: {
+    weight: 0.40,
+    labelEn: 'Technical & Statutory Accuracy',
+    labelHi: 'तकनीकी एवं सांविधिक सटीकता',
+    descriptionEn: 'Statutory compliance (25% reserve fund), NABARD balancing formula, asset classification',
+    descriptionHi: 'सांविधिक अनुपालन (25% आरक्षित निधि), नाबार्ड मिलान सूत्र, परिसंपत्ति वर्गीकरण',
+    concepts: [
+      {
+        id: 'c-statutory-reserve-25',
+        termsEn: ['25%', 'statutory reserve fund', 'net profit', 'mandatory', 'unforeseen losses'],
+        termsHi: ['25%', '25 प्रतिशत', 'सांविधिक आरक्षित निधि', 'शुद्ध लाभ', 'अनिवार्य', 'अप्रत्याशित'],
+        feedbackEn: 'Accurate understanding of mandatory 25% net profit transfer to Statutory Reserve Fund.',
+        feedbackHi: 'सांविधिक आरक्षित निधि में 25% शुद्ध लाभ के अनिवार्य अंतरण की सटीक समझ।',
+      },
+      {
+        id: 'c-vault-balancing-formula',
+        termsEn: ['vault cash', 'reconciliation', 'closing balance', 'physical cash', 'opening balance'],
+        termsHi: ['तिजोरी', 'भौतिक नकदी', 'रोकड़ मिलान', 'अंतिम शेष', 'प्रारम्भिक शेष'],
+        feedbackEn: 'Correct application of daily cashbook to vault physical cash reconciliation formula.',
+        feedbackHi: 'दैनिक रोकड़बही एवं तिजोरी भौतिक नकदी मिलान सूत्र का सही प्रयोग।',
+      },
+      {
+        id: 'c-loan-asset-classification',
+        termsEn: ['crop loan', 'loan asset', 'asset account', 'kcc', 'short-term'],
+        termsHi: ['फसल ऋण', 'ऋण परिसंपत्ति', 'केसीसी', 'अल्पकालिक ऋण'],
+        feedbackEn: 'Precise classification of crop loans under Short-Term Loan Assets.',
+        feedbackHi: 'फसल ऋण को अल्पकालिक ऋण परिसंपत्ति के रूप में सटीक वर्गीकरण।',
+      },
+    ],
+  },
+  PROCEDURAL_LOGIC: {
+    weight: 0.30,
+    labelEn: 'Procedural Logic & Double-Entry Sequence',
+    labelHi: 'प्रक्रियात्मक तर्क एवं दोहरी प्रविष्टि क्रम',
+    descriptionEn: 'Correct debit/credit account sequencing, opposing balance verification, voucher verification',
+    descriptionHi: 'नामे/जमा खातों का सही क्रम, दोहरी प्रविष्टि मिलान, वाउचर सत्यापन',
+    concepts: [
+      {
+        id: 'c-debit-credit-direction',
+        termsEn: ['debit loan', 'credit cash', 'credit bank', 'debit', 'credit'],
+        termsHi: ['नामे', 'जमा', 'डेबिट', 'क्रेडिट', 'खाता नामे', 'खाता जमा'],
+        feedbackEn: 'Correct double-entry direction: Debit Loan Asset, Credit Cash/Bank upon disbursement.',
+        feedbackHi: 'सही दोहरी प्रविष्टि दिशा: वितरण पर ऋण खाता नामे (Debit) एवं रोकड़/बैंक जमा (Credit)।',
+      },
+      {
+        id: 'c-balancing-tally-logic',
+        termsEn: ['receipts', 'disbursements', 'total receipts', 'tally', 'equal'],
+        termsHi: ['प्राप्तियां', 'संवितरण', 'कुल प्राप्तियां', 'बराबर', 'योग'],
+        feedbackEn: 'Flawless verification that Receipts + Opening Cash equals Disbursements + Closing Cash.',
+        feedbackHi: 'प्राप्तियां + प्रारम्भिक रोकड़ = संवितरण + अंतिम तिजोरी रोकड़ का सही सत्यापन।',
+      },
+      {
+        id: 'c-reserve-allocation-order',
+        termsEn: ['before dividend', 'transfer', 'appropriation', 'permanent'],
+        termsHi: ['लाभांश से पूर्व', 'अंतरण', 'स्थानांतरित', 'स्थायी'],
+        feedbackEn: 'Sound logic: Reserve allocation strictly precedes any dividend distribution.',
+        feedbackHi: 'तार्किक क्रम: लाभांश वितरण से पूर्व अनिवार्य आरक्षित निधि अंतरण।',
+      },
+    ],
+  },
+  COOPERATIVE_TERMINOLOGY: {
+    weight: 0.20,
+    labelEn: 'Cooperative Vernacular & Terminology',
+    labelHi: 'सहकारी शब्दावली एवं प्रादेशिक अभिव्यक्ति',
+    descriptionEn: 'Authentic grassroots cooperative nomenclature (Rojnamcha, Rokadbahi, Tijori, KCC)',
+    descriptionHi: 'सहकारी लेखा शब्दावली (रोजनामचा, रोकड़बही, तिजोरी, केसीसी, लाभांश)',
+    concepts: [
+      {
+        id: 'c-vernacular-books',
+        termsEn: ['rojnamcha', 'rokadbahi', 'tijori', 'daybook', 'cashbook'],
+        termsHi: ['रोजनामचा', 'रोकड़बही', 'तिजोरी'],
+        feedbackEn: 'Exemplary usage of vernacular ledger names (Rojnamcha & Rokadbahi).',
+        feedbackHi: 'सहकारी बहियों (रोजनामचा, रोकड़बही, तिजोरी) की प्रामाणिक शब्दावली का प्रयोग।',
+      },
+      {
+        id: 'c-coop-credit-terms',
+        termsEn: ['pacs', 'kcc', 'kisan credit card', 'member loan account'],
+        termsHi: ['पैक्स', 'केसीसी', 'किसान क्रेडिट कार्ड', 'सदस्य ऋण खाता'],
+        feedbackEn: 'Accurate reference to PACS credit instruments (KCC, member ledgers).',
+        feedbackHi: 'पैक्स साख शब्दावली (केसीसी, सदस्य ऋण खाता) का उपयुक्त उपयोग।',
+      },
+      {
+        id: 'c-statutory-terms',
+        termsEn: ['indivisible', 'dividend', 'statutory reserve', 'buffer'],
+        termsHi: ['अविभाज्य', 'लाभांश', 'सांविधिक निधि', 'सुरक्षा कोष'],
+        feedbackEn: 'Mastery of cooperative governance terms: indivisible reserve, dividend prohibition.',
+        feedbackHi: 'सहकारी शासन शब्दावली: अविभाज्य निधि, लाभांश पर रोक का प्रभावी प्रयोग।',
+      },
+    ],
+  },
+  INTERNAL_CONTROLS: {
+    weight: 0.10,
+    labelEn: 'Internal Controls & Anti-Fraud Awareness',
+    labelHi: 'आंतरिक नियंत्रण एवं धोखाधड़ी रोधी जागरूकता',
+    descriptionEn: 'Dual-custody verification, anti-decapitalization rules, physical vault counting',
+    descriptionHi: 'दोहरी अभिरक्षा, पूँजी ह्रास रोकथाम, भौतिक रोकड़ सत्यापन',
+    concepts: [
+      {
+        id: 'c-physical-cash-audit',
+        termsEn: ['physical cash', 'vault cash', 'physical currency', 'counted in the vault'],
+        termsHi: ['भौतिक नकदी', 'तिजोरी नकदी', 'भौतिक मुद्रा', 'तिजोरी में रखी'],
+        feedbackEn: 'Strong awareness of physical vault counting as an anti-embezzlement safeguard.',
+        feedbackHi: 'गबन रोकथाम हेतु भौतिक तिजोरी रोकड़ गणना की मजबूत समझ।',
+      },
+      {
+        id: 'c-bad-debt-insulation',
+        termsEn: ['bad debts', 'unforeseen losses', 'buffer', 'cannot be distributed'],
+        termsHi: ['डूबंत ऋण', 'अप्रत्याशित हानि', 'बफर', 'बांटा नहीं जा सकता'],
+        feedbackEn: 'Clear understanding that reserves protect member capital from default shocks.',
+        feedbackHi: 'स्पष्ट समझ कि आरक्षित निधि समिति की शेयर पूँजी को डूबंत ऋणों से सुरक्षित रखती है।',
+      },
+    ],
+  },
+};
+
+export function calculateNCCTRubricBreakdown(
+  transcripts: Record<string, string>,
+  language: 'HI' | 'EN'
+): {
+  rubricBreakdown: RubricDimensionScore[];
+  compositeScore: number;
+  passed: boolean;
+  proficiencyBand: 'EXEMPLARY' | 'PROFICIENT' | 'DEVELOPING' | 'NEEDS_REMEDIATION';
+  pedagogicalRecommendations: Array<{
+    moduleId: string;
+    lessonId?: string;
+    isLab?: boolean;
+    titleEn: string;
+    titleHi: string;
+    reasonEn: string;
+    reasonHi: string;
+    actionLabelEn: string;
+    actionLabelHi: string;
+  }>;
+} {
+  const combinedText = Object.values(transcripts).join(' ').toLowerCase();
+
+  const dimensions: RubricDimensionType[] = [
+    'TECHNICAL_ACCURACY',
+    'PROCEDURAL_LOGIC',
+    'COOPERATIVE_TERMINOLOGY',
+    'INTERNAL_CONTROLS',
+  ];
+
+  const rubricBreakdown: RubricDimensionScore[] = dimensions.map((dim) => {
+    const config = NCCT_RUBRIC_CONFIG[dim];
+    const matchedConcepts: string[] = [];
+    const missingConcepts: string[] = [];
+
+    config.concepts.forEach((concept) => {
+      const searchTerms = language === 'HI' ? concept.termsHi : concept.termsEn;
+      const fallbackTerms = language === 'HI' ? concept.termsEn : concept.termsHi;
+      const allTerms = [...searchTerms, ...fallbackTerms];
+
+      const found = allTerms.some((term) => combinedText.includes(term.toLowerCase().trim()));
+      const label = language === 'HI' ? concept.termsHi[0] : concept.termsEn[0];
+
+      if (found) {
+        matchedConcepts.push(label);
+      } else {
+        missingConcepts.push(label);
+      }
+    });
+
+    const ratio = matchedConcepts.length / Math.max(1, config.concepts.length);
+    let score = Math.round(ratio * 100);
+    if (matchedConcepts.length === config.concepts.length) {
+      score = 100;
+    } else if (matchedConcepts.length >= 2) {
+      score = Math.max(75, Math.round(ratio * 100));
+    } else if (matchedConcepts.length === 1) {
+      score = 50;
+    } else {
+      score = 0;
+    }
+
+    const weightedScore = Number((score * config.weight).toFixed(1));
+    const label = language === 'HI' ? config.labelHi : config.labelEn;
+    const feedback =
+      score >= 70
+        ? language === 'HI'
+          ? `उत्कृष्ट: ${matchedConcepts.join(', ')} के प्रयोग द्वारा इस आयाम में सांविधिक मानक पूर्ण।`
+          : `Competent: Demonstrated mastery in ${matchedConcepts.join(', ')}.`
+        : language === 'HI'
+        ? `पुनरावलोकन आवश्यक: ${missingConcepts.join(', ')} शब्दावली एवं नियमों का अध्ययन करें।`
+        : `Remediation needed: Review key principles regarding ${missingConcepts.join(', ')}.`;
+
+    return {
+      dimension: dim,
+      dimensionLabel: label,
+      weight: config.weight,
+      score,
+      weightedScore,
+      matchedConcepts,
+      missingConcepts,
+      feedback,
+    };
+  });
+
+  const compositeScore = Math.round(
+    rubricBreakdown.reduce((sum, item) => sum + item.weightedScore, 0)
+  );
+  const passed = compositeScore >= 70;
+
+  let proficiencyBand: 'EXEMPLARY' | 'PROFICIENT' | 'DEVELOPING' | 'NEEDS_REMEDIATION' = 'NEEDS_REMEDIATION';
+  if (compositeScore >= 85) proficiencyBand = 'EXEMPLARY';
+  else if (compositeScore >= 70) proficiencyBand = 'PROFICIENT';
+  else if (compositeScore >= 50) proficiencyBand = 'DEVELOPING';
+
+  const pedagogicalRecommendations: Array<{
+    moduleId: string;
+    lessonId?: string;
+    isLab?: boolean;
+    titleEn: string;
+    titleHi: string;
+    reasonEn: string;
+    reasonHi: string;
+    actionLabelEn: string;
+    actionLabelHi: string;
+  }> = [];
+
+  const techDim = rubricBreakdown.find((r) => r.dimension === 'TECHNICAL_ACCURACY');
+  const procDim = rubricBreakdown.find((r) => r.dimension === 'PROCEDURAL_LOGIC');
+  const ctrlDim = rubricBreakdown.find((r) => r.dimension === 'INTERNAL_CONTROLS');
+
+  if (!techDim || techDim.score < 70) {
+    pedagogicalRecommendations.push({
+      moduleId: '88888888-8888-8888-8888-888888888888',
+      lessonId: '99999999-9999-9999-9999-999999999991',
+      titleEn: 'Lesson 1.1: Cooperative Principles & Statutory Reserve Fund',
+      titleHi: 'पाठ 1.1: सहकारी सिद्धांत एवं सांविधिक आरक्षित निधि',
+      reasonEn: 'Deepen statutory knowledge on mandatory 25% net profit transfer and Section 67 reserve fund indivisibility.',
+      reasonHi: 'शुद्ध लाभ के 25% सांविधिक आरक्षित निधि अंतरण एवं अविभाज्य पूंजी सुरक्षा नियमों का अध्ययन करें।',
+      actionLabelEn: 'Study Lesson 1.1 →',
+      actionLabelHi: 'पाठ 1.1 पढ़ें →',
+    });
+  }
+
+  if (!procDim || procDim.score < 70) {
+    pedagogicalRecommendations.push({
+      moduleId: '88888888-8888-8888-8888-888888888888',
+      lessonId: '99999999-9999-9999-9999-999999999992',
+      titleEn: 'Lesson 1.2: Daybook, Cashbook & Double-Entry Ledger Posting',
+      titleHi: 'पाठ 1.2: रोजनामचा, रोकड़बही एवं दोहरी प्रविष्टि खाता बही',
+      reasonEn: 'Master crop loan asset debiting, vault cash crediting, and daily closing tally procedures.',
+      reasonHi: 'फसल ऋण संवितरण नामे/जमा प्रविष्टि एवं दैनिक रोकड़ मिलान प्रक्रिया का पुनः अभ्यास करें।',
+      actionLabelEn: 'Study Lesson 1.2 →',
+      actionLabelHi: 'पाठ 1.2 पढ़ें →',
+    });
+  }
+
+  if (!ctrlDim || ctrlDim.score < 70 || compositeScore < 70) {
+    pedagogicalRecommendations.push({
+      moduleId: 'pacs-operations-lab',
+      isLab: true,
+      titleEn: 'Interactive PACS Operations Lab: Day-End Balancing Simulator',
+      titleHi: 'इंटरैक्टिव पैक्स ऑपरेशन्स लैब: दैनिक रोकड़ मिलान सिमुलेटर',
+      reasonEn: 'Practice hands-on physical vault counting with ₹45,000 opening cash and 5 live transaction postings.',
+      reasonHi: 'प्रारम्भिक तिजोरी शेष ₹45,000 के साथ 5 व्यवहारों की प्रविष्टि कर वास्तविक रोकड़ मिलान का अभ्यास करें।',
+      actionLabelEn: 'Launch PACS Lab Simulator →',
+      actionLabelHi: 'पैक्स सिमुलेटर खोलें →',
+    });
+  }
+
+  return {
+    rubricBreakdown,
+    compositeScore,
+    passed,
+    proficiencyBand,
+    pedagogicalRecommendations,
+  };
 }
 
 export const OralAssessmentModal: React.FC<OralAssessmentModalProps> = ({
@@ -28,6 +306,8 @@ export const OralAssessmentModal: React.FC<OralAssessmentModalProps> = ({
   traineeId,
   onSubmitted,
   initialLanguage = 'EN',
+  onOpenLesson,
+  onOpenPacsLab,
 }) => {
   const [language, setLanguage] = useState<'HI' | 'EN'>(initialLanguage);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -216,6 +496,9 @@ export const OralAssessmentModal: React.FC<OralAssessmentModalProps> = ({
     setResult(null);
   };
 
+  // Derive rubric breakdown when results are available
+  const rubricDetails = result ? calculateNCCTRubricBreakdown(transcripts, language) : null;
+
   return (
     <div
       style={{
@@ -234,7 +517,7 @@ export const OralAssessmentModal: React.FC<OralAssessmentModalProps> = ({
         style={{
           backgroundColor: '#ffffff',
           borderRadius: '16px',
-          maxWidth: '740px',
+          maxWidth: '760px',
           width: '100%',
           boxShadow: '0 25px 50px -12px rgba(15, 23, 42, 0.45)',
           overflow: 'hidden',
@@ -269,10 +552,12 @@ export const OralAssessmentModal: React.FC<OralAssessmentModalProps> = ({
             <span style={{ fontSize: '1.4rem' }}>🎙️</span>
             <div>
               <div style={{ fontSize: '0.95rem', fontWeight: 800, letterSpacing: '0.02em', color: '#ffffff' }}>
-                {language === 'HI' ? 'मौखिक परीक्षा (Oral Viva Assessment)' : 'Oral Viva Assessment Player'}
+                {language === 'HI' ? 'मौखिक परीक्षा (NCCT Oral Viva Rubric Player)' : 'NCCT Oral Viva Rubric Player'}
               </div>
-              <div style={{ fontSize: '0.8125rem', color: '#94a3b8' }}>
-                NCCT Cooperative Accounting • Voice & Keyword Scoring
+              <div style={{ fontSize: '0.8125rem', color: '#94a3b8', lineHeight: 1.55 }}>
+                {language === 'HI'
+                  ? 'एनसीटीसीटी 4-आयाम सांविधिक मौखिक मूल्यांकन एवं उपचारात्मक मार्गदर्शन'
+                  : '4-Dimension NCCT Statutory Viva Rubric & Remediation'}
               </div>
             </div>
           </div>
@@ -368,48 +653,87 @@ export const OralAssessmentModal: React.FC<OralAssessmentModalProps> = ({
         </div>
 
         {/* Modal Body */}
-        {result ? (
+        {result && rubricDetails ? (
           /* ========================================================
-             RESULT SCREEN
+             RESULT SCREEN: 4-DIMENSION NCCT RUBRIC SCORECARD
              ======================================================== */
           <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', overflowY: 'auto' }}>
+            {/* Statutory Competency Header & Badge */}
             <div
               style={{
                 textAlign: 'center',
                 padding: '1.5rem',
-                backgroundColor: result.passed ? '#f0fdf4' : '#fef2f2',
+                backgroundColor: rubricDetails.passed ? '#f0fdf4' : '#fef2f2',
                 borderRadius: '12px',
-                border: `2px solid ${result.passed ? '#16a34a' : '#dc2626'}`,
+                border: `2px solid ${rubricDetails.passed ? '#16a34a' : '#dc2626'}`,
               }}
             >
               <div style={{ fontSize: '2.5rem', marginBottom: '0.35rem' }}>
-                {result.passed ? '🎉' : '⚠️'}
+                {rubricDetails.passed ? '🛡️' : '⚠️'}
               </div>
+
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.35rem 0.85rem',
+                  borderRadius: '20px',
+                  fontWeight: 900,
+                  fontSize: '0.8125rem',
+                  letterSpacing: '0.04em',
+                  textTransform: 'uppercase',
+                  backgroundColor: rubricDetails.passed ? '#dcfce7' : '#fee2e2',
+                  color: rubricDetails.passed ? '#15803d' : '#b91c1c',
+                  border: `1px solid ${rubricDetails.passed ? '#86efac' : '#fca5a5'}`,
+                  marginBottom: '0.75rem',
+                }}
+              >
+                <span>{rubricDetails.passed ? '✓' : '!'}</span>
+                <span>
+                  {rubricDetails.passed
+                    ? language === 'HI'
+                      ? 'सांविधिक योग्यता प्रमाणित (STATUTORY COMPETENCY CERTIFIED)'
+                      : 'STATUTORY COMPETENCY CERTIFIED'
+                    : language === 'HI'
+                    ? 'पुनः परीक्षा आवश्यक (RETAKE REQUIRED • THRESHOLD: 70%)'
+                    : 'RETAKE REQUIRED (THRESHOLD: 70%)'}
+                </span>
+              </div>
+
               <h2
                 style={{
                   margin: '0 0 0.35rem 0',
-                  fontSize: '1.4rem',
+                  fontSize: '1.35rem',
                   fontWeight: 900,
-                  color: result.passed ? '#15803d' : '#b91c1c',
+                  color: rubricDetails.passed ? '#15803d' : '#b91c1c',
                 }}
               >
-                {result.passed
+                {rubricDetails.passed
                   ? language === 'HI'
-                    ? 'मौखिक परीक्षा उत्तीर्ण (Viva Passed)'
-                    : 'Oral Viva Assessment Passed!'
+                    ? 'मौखिक परीक्षा 4-आयाम मूल्यांकन में उत्तीर्ण'
+                    : 'Oral Viva 4-Dimension Rubric Passed!'
                   : language === 'HI'
-                  ? 'अंक अपर्याप्त — पुनः प्रयास करें (Assessment Incomplete)'
-                  : 'Passing Score Not Met — Retake Recommended'}
+                  ? 'अंक अपर्याप्त — उपचारात्मक अध्ययन आवश्यक'
+                  : 'Competency Threshold Not Met — Remediation Recommended'}
               </h2>
-              <div style={{ fontSize: '1.05rem', color: '#1e293b', fontWeight: 700 }}>
-                {language === 'HI' ? 'अंतिम प्राप्तांक:' : 'Final Viva Score:'}{' '}
-                <span style={{ fontSize: '1.45rem', color: result.passed ? '#15803d' : '#dc2626', fontWeight: 900 }}>
-                  {result.percentage}%
+
+              <div style={{ fontSize: '1rem', color: '#1e293b', fontWeight: 700 }}>
+                {language === 'HI' ? 'संयुक्त प्राप्तांक (Composite Score):' : 'NCCT Composite Viva Score:'}{' '}
+                <span
+                  style={{
+                    fontSize: '1.5rem',
+                    color: rubricDetails.passed ? '#15803d' : '#dc2626',
+                    fontWeight: 900,
+                  }}
+                >
+                  {rubricDetails.compositeScore}%
                 </span>{' '}
-                <span style={{ fontSize: '0.875rem', color: '#64748b' }}>
-                  ({result.totalScore} / {result.maxScore} pts • Threshold: 70%)
+                <span style={{ fontSize: '0.8125rem', color: '#64748b' }}>
+                  (Band: <strong>{rubricDetails.proficiencyBand}</strong> • Min Pass: 70%)
                 </span>
               </div>
+
               <div
                 style={{
                   marginTop: '0.85rem',
@@ -431,10 +755,189 @@ export const OralAssessmentModal: React.FC<OralAssessmentModalProps> = ({
               </div>
             </div>
 
-            {/* Question Breakdown */}
+            {/* 4-Dimension NCCT Rubric Progress Bars */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.95rem' }}>
+              <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a' }}>
+                {language === 'HI'
+                  ? 'एनसीटीसीटी 4-आयामी मूल्यांकन रिपोर्ट (4-Dimension Rubric Scorecard):'
+                  : 'NCCT 4-Dimension Viva Rubric Scorecard:'}
+              </div>
+
+              {rubricDetails.rubricBreakdown.map((dim) => (
+                <div
+                  key={dim.dimension}
+                  style={{
+                    backgroundColor: '#ffffff',
+                    borderRadius: '10px',
+                    padding: '1.15rem',
+                    border: '1px solid #cbd5e1',
+                    boxShadow: '0 1px 3px rgba(15, 23, 42, 0.05)',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '0.925rem', fontWeight: 800, color: '#0f172a' }}>
+                        {dim.dimensionLabel}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: '0.8125rem',
+                          fontWeight: 800,
+                          backgroundColor: '#e0f2fe',
+                          color: '#0369a1',
+                          padding: '0.15rem 0.5rem',
+                          borderRadius: '12px',
+                        }}
+                      >
+                        {(dim.weight * 100).toFixed(0)}% Weight
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '0.875rem', fontWeight: 800, color: dim.score >= 70 ? '#15803d' : '#b91c1c' }}>
+                      {dim.score}% ({dim.weightedScore.toFixed(1)} / {(dim.weight * 100).toFixed(0)} pts)
+                    </div>
+                  </div>
+
+                  {/* Visual Progress Bar */}
+                  <div
+                    style={{
+                      marginTop: '0.65rem',
+                      height: '10px',
+                      borderRadius: '5px',
+                      backgroundColor: '#e2e8f0',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: `${dim.score}%`,
+                        height: '100%',
+                        backgroundColor: dim.score >= 70 ? '#16a34a' : dim.score >= 50 ? '#d97706' : '#dc2626',
+                        borderRadius: '5px',
+                        transition: 'width 0.4s ease',
+                      }}
+                    />
+                  </div>
+
+                  {/* Concept Badges */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '0.65rem' }}>
+                    {dim.matchedConcepts.map((c) => (
+                      <span
+                        key={c}
+                        style={{
+                          fontSize: '0.8125rem',
+                          backgroundColor: '#dcfce7',
+                          color: '#15803d',
+                          border: '1px solid #86efac',
+                          borderRadius: '6px',
+                          padding: '0.2rem 0.5rem',
+                          fontWeight: 700,
+                        }}
+                      >
+                        ✓ {c}
+                      </span>
+                    ))}
+                    {dim.missingConcepts.map((c) => (
+                      <span
+                        key={c}
+                        style={{
+                          fontSize: '0.8125rem',
+                          backgroundColor: '#f1f5f9',
+                          color: '#64748b',
+                          border: '1px solid #cbd5e1',
+                          borderRadius: '6px',
+                          padding: '0.2rem 0.5rem',
+                        }}
+                      >
+                        ○ {c}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div style={{ fontSize: '0.8125rem', color: '#475569', marginTop: '0.5rem', lineHeight: 1.55 }}>
+                    {dim.feedback}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Pedagogical Recommendations & Remediation Links */}
+            {rubricDetails.pedagogicalRecommendations.length > 0 && (
+              <div
+                style={{
+                  backgroundColor: '#eff6ff',
+                  borderRadius: '12px',
+                  padding: '1.25rem',
+                  border: '1px solid #bfdbfe',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                  <span style={{ fontSize: '1.3rem' }}>📚</span>
+                  <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: '#1e40af' }}>
+                    {language === 'HI' ? 'शैक्षणिक अनुशंसाएं एवं उपचारात्मक अध्ययन' : 'Pedagogical Recommendations & Remediation Modules'}
+                  </h3>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {rubricDetails.pedagogicalRecommendations.map((rec, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        backgroundColor: '#ffffff',
+                        borderRadius: '8px',
+                        padding: '0.85rem 1rem',
+                        border: '1px solid #dbeafe',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: '0.65rem',
+                      }}
+                    >
+                      <div style={{ flex: 1, minWidth: '220px' }}>
+                        <div style={{ fontSize: '0.875rem', fontWeight: 800, color: '#0f172a' }}>
+                          {language === 'HI' ? rec.titleHi : rec.titleEn}
+                        </div>
+                        <div style={{ fontSize: '0.8125rem', color: '#475569', marginTop: '0.2rem', lineHeight: 1.55 }}>
+                          {language === 'HI' ? rec.reasonHi : rec.reasonEn}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onClose();
+                          if (rec.isLab && onOpenPacsLab) {
+                            onOpenPacsLab();
+                          } else if (onOpenLesson && rec.lessonId) {
+                            onOpenLesson(rec.lessonId);
+                          }
+                        }}
+                        style={{
+                          minHeight: '44px',
+                          padding: '0.55rem 1rem',
+                          borderRadius: '6px',
+                          backgroundColor: '#0369a1',
+                          color: '#ffffff',
+                          border: 'none',
+                          fontSize: '0.8125rem',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                        }}
+                      >
+                        <span>{language === 'HI' ? rec.actionLabelHi : rec.actionLabelEn}</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Question Evaluation Breakdown */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
               <div style={{ fontSize: '0.925rem', fontWeight: 800, color: '#0f172a' }}>
-                {language === 'HI' ? 'प्रश्नानुसार मूल्यांकन विवरण:' : 'Question Evaluation Breakdown:'}
+                {language === 'HI' ? 'प्रश्नानुसार मूल्यांकन विवरण (Question Breakdown):' : 'Question-by-Question Keyword Audit:'}
               </div>
 
               {result.questions.map((q, idx) => (
@@ -448,7 +951,7 @@ export const OralAssessmentModal: React.FC<OralAssessmentModalProps> = ({
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
-                    <div style={{ fontSize: '0.925rem', fontWeight: 700, color: '#0f172a' }}>
+                    <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0f172a' }}>
                       Q{idx + 1}: {q.prompt}
                     </div>
                     <span
@@ -466,7 +969,7 @@ export const OralAssessmentModal: React.FC<OralAssessmentModalProps> = ({
                     </span>
                   </div>
 
-                  <div style={{ fontSize: '0.8125rem', color: '#475569', marginTop: '0.45rem', lineHeight: 1.5 }}>
+                  <div style={{ fontSize: '0.8125rem', color: '#475569', marginTop: '0.45rem', lineHeight: 1.55 }}>
                     <strong>Transcript:</strong> {q.transcript || <em>(No response recorded)</em>}
                   </div>
 
@@ -492,7 +995,7 @@ export const OralAssessmentModal: React.FC<OralAssessmentModalProps> = ({
                         key={kw}
                         style={{
                           fontSize: '0.8125rem',
-                          backgroundColor: '#f1f5f9',
+                          backgroundColor: '#ffffff',
                           color: '#64748b',
                           border: '1px solid #cbd5e1',
                           borderRadius: '6px',
@@ -507,7 +1010,7 @@ export const OralAssessmentModal: React.FC<OralAssessmentModalProps> = ({
               ))}
             </div>
 
-            {/* Result Action Buttons */}
+            {/* Result Action Buttons (minHeight >= 46px) */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.85rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
               <button
                 type="button"
@@ -516,7 +1019,7 @@ export const OralAssessmentModal: React.FC<OralAssessmentModalProps> = ({
                   minHeight: '46px',
                   padding: '0.65rem 1.25rem',
                   borderRadius: '8px',
-                  fontSize: '0.925rem',
+                  fontSize: '0.875rem',
                   fontWeight: 700,
                   backgroundColor: '#ffffff',
                   border: '1px solid #cbd5e1',
@@ -537,7 +1040,7 @@ export const OralAssessmentModal: React.FC<OralAssessmentModalProps> = ({
                   minHeight: '46px',
                   padding: '0.65rem 1.45rem',
                   borderRadius: '8px',
-                  fontSize: '0.925rem',
+                  fontSize: '0.875rem',
                   fontWeight: 800,
                   backgroundColor: '#0f172a',
                   border: 'none',
@@ -696,7 +1199,7 @@ export const OralAssessmentModal: React.FC<OralAssessmentModalProps> = ({
                     padding: '0.85rem',
                     borderRadius: '8px',
                     border: isListening ? '2px solid #dc2626' : '1px solid #cbd5e1',
-                    fontSize: '0.9375rem',
+                    fontSize: '0.875rem',
                     lineHeight: 1.55,
                     color: '#0f172a',
                     fontFamily: 'inherit',
@@ -933,7 +1436,7 @@ export const OralAssessmentModal: React.FC<OralAssessmentModalProps> = ({
                       minHeight: '46px',
                       padding: '0.65rem 1.5rem',
                       borderRadius: '8px',
-                      fontSize: '0.925rem',
+                      fontSize: '0.875rem',
                       fontWeight: 800,
                       backgroundColor: '#15803d',
                       border: 'none',
