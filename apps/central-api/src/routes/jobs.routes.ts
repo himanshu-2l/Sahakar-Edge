@@ -458,4 +458,52 @@ export async function registerJobRoutes(app: FastifyInstance) {
     }
     return reply.send(result);
   });
+
+  // ==========================================
+  // 100-Point Matcher & Career Pathway Endpoints (M1)
+  // ==========================================
+
+  // 100-Point Candidate Matcher for a trainee
+  app.get<{
+    Params: { traineeId: string };
+    Querystring: { jobId?: string };
+  }>('/api/v1/jobs/match-100pt/:traineeId', async (request, reply) => {
+    const { traineeId } = request.params;
+    const { jobId } = request.query;
+
+    const trainee = centralStore.getUser(traineeId);
+    if (!trainee) {
+      return reply.status(404).send({ error: 'NOT_FOUND', message: 'Trainee not found' });
+    }
+
+    try {
+      const match = centralStore.matchCandidate100Pt(traineeId, jobId);
+      return reply.send({
+        traineeId,
+        traineeName: trainee.name,
+        match,
+      });
+    } catch (err: any) {
+      return reply.status(400).send({ error: 'MATCH_FAILED', message: err.message });
+    }
+  });
+
+  // 5-Step Trainee Career Pathway
+  app.get<{
+    Params: { traineeId: string };
+  }>('/api/v1/jobs/pathway/:traineeId', async (request, reply) => {
+    const { traineeId } = request.params;
+
+    const trainee = centralStore.getUser(traineeId);
+    if (!trainee) {
+      return reply.status(404).send({ error: 'NOT_FOUND', message: 'Trainee not found' });
+    }
+
+    const pathway = centralStore.getCareerPathway(traineeId);
+    return reply.send({
+      traineeId,
+      traineeName: trainee.name,
+      pathway,
+    });
+  });
 }

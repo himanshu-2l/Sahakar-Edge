@@ -12,6 +12,11 @@ import { registerJobRoutes } from './routes/jobs.routes.js';
 import { edgeRoutes } from './routes/edge.routes.js';
 import { logisticsRoutes } from './routes/logistics.routes.js';
 import { counselorRoutes } from './routes/counselor.routes.js';
+import { schemesRoutes } from './routes/schemes.routes.js';
+import { cooperativesRoutes } from './routes/cooperatives.routes.js';
+import { grievancesRoutes } from './routes/grievances.routes.js';
+import { trainingRoutes } from './routes/training.routes.js';
+import { publicProfileRoutes } from './routes/public-profile.routes.js';
 
 export async function buildCentralServer() {
   const app = Fastify({
@@ -50,9 +55,16 @@ export async function buildCentralServer() {
   await app.register(edgeRoutes, { prefix: '/api/v1' });
   await app.register(logisticsRoutes, { prefix: '/api/v1' });
   await app.register(counselorRoutes, { prefix: '/api/v1' });
+  await app.register(schemesRoutes, { prefix: '/api/v1' });
+  await app.register(cooperativesRoutes, { prefix: '/api/v1' });
+  await app.register(grievancesRoutes, { prefix: '/api/v1' });
   await app.register(registerSyncRoutes);
   await app.register(registerCredentialRoutes);
   await app.register(registerJobRoutes);
+
+  // NCCT Milestone 1 Training & Public Profile Route Plugins
+  await app.register(trainingRoutes, { prefix: '/api/v1/training' });
+  await app.register(publicProfileRoutes, { prefix: '/api/v1' });
 
   return app;
 }
