@@ -2,6 +2,7 @@ import React from 'react';
 import { THEME, pillBadge } from './theme';
 import {
   MinistryEmblemIcon,
+  NcctEmblemIcon,
   OverviewIcon,
   FederationIcon,
   InstitutesIcon,
@@ -16,17 +17,41 @@ import {
   SyncMonitorIcon,
   AuditLogIcon,
   PhoneSimulatorIcon,
+  SchemeRadarIcon,
+  CamelScorecardIcon,
+  AnalyticsIcon,
+  HeatmapIcon,
+  ProofIcon,
+  ScaleIcon,
+  AtpBatchesIcon,
+  TimetableAttendanceIcon,
+  ContinuousGradebookIcon,
+  DropoutRiskRadarIcon,
 } from './icons';
 
 export type AdminTab =
   | 'OVERVIEW'
   | 'FEDERATION'
+  | 'SCHEME_RADAR'
+  | 'CAMEL_SCORECARD'
   | 'INSTITUTES'
   | 'PROGRAMMES'
   | 'BATCHES'
   | 'COURSES'
+  | 'VIVA_ANALYTICS'
+  | 'PACS_SIMULATION_HEATMAP'
+  | 'ATP_BATCHES'
+  | 'GRADEBOOK'
+  | 'DROPOUT_RISK_ANALYTICS'
+  | 'atp-batches'
+  | 'gradebook'
+  | 'dropout-risk-analytics'
   | 'ATTENDANCE'
   | 'CREDENTIALS'
+  | 'PROOF_INSPECTOR'
+  | 'TIMETABLE_ATTENDANCE'
+  | 'timetable-attendance'
+  | 'GRIEVANCES'
   | 'EMPLOYMENT'
   | 'ERP_LOGISTICS'
   | 'EDGE_NODES'
@@ -62,14 +87,26 @@ export function SidebarNav({
       items: [
         {
           id: 'OVERVIEW',
-          label: 'Executive Overview',
+          label: 'कार्यकारी अवलोकन / Executive Overview',
           icon: <OverviewIcon size={16} />,
         },
         {
           id: 'FEDERATION',
-          label: 'National Federation Map',
+          label: 'राष्ट्रीय परिसंघ / Federation Map',
           icon: <FederationIcon size={16} />,
           badge: { text: '3-TIER', type: 'apex' },
+        },
+        {
+          id: 'SCHEME_RADAR',
+          label: 'योजना परामर्श रडार / Scheme Advisory',
+          icon: <SchemeRadarIcon size={16} />,
+          badge: { text: 'AIF/PMFME', type: 'info' },
+        },
+        {
+          id: 'CAMEL_SCORECARD',
+          label: 'सोसायटी कैमेल / CAMEL Scorecard',
+          icon: <CamelScorecardIcon size={16} />,
+          badge: { text: '5-DIM', type: 'apex' },
         },
       ],
     },
@@ -77,24 +114,54 @@ export function SidebarNav({
       title: 'Directorate 2: Institutional Training',
       items: [
         {
+          id: 'ATP_BATCHES',
+          label: 'वार्षिक प्रशिक्षण योजना / ATP & Nominations',
+          icon: <AtpBatchesIcon size={16} />,
+          badge: { text: 'ATP 2026', type: 'apex' },
+        },
+        {
           id: 'INSTITUTES',
-          label: 'Cooperative Institutes (20)',
+          label: 'सहकारी संस्थान / Institutes (20)',
           icon: <InstitutesIcon size={16} />,
         },
         {
           id: 'PROGRAMMES',
-          label: 'Capacity Programmes',
+          label: 'क्षमता कार्यक्रम / Capacity Programmes',
           icon: <ProgrammesIcon size={16} />,
         },
         {
           id: 'BATCHES',
-          label: 'Training Batches',
+          label: 'प्रशिक्षण बैच / Training Batches',
           icon: <BatchesIcon size={16} />,
         },
         {
           id: 'COURSES',
-          label: 'Curricular Courses',
+          label: 'पाठ्यक्रम / Curricular Courses',
           icon: <CoursesIcon size={16} />,
+        },
+        {
+          id: 'GRADEBOOK',
+          label: 'सतत मूल्यांकन / Continuous Gradebook',
+          icon: <ContinuousGradebookIcon size={16} />,
+          badge: { text: 'XLSX EXPORT', type: 'apex' },
+        },
+        {
+          id: 'DROPOUT_RISK_ANALYTICS',
+          label: 'जोखिम एवं कौशल / Retention & Skill Radar',
+          icon: <DropoutRiskRadarIcon size={16} />,
+          badge: { text: '4-FACTOR', type: 'warning' },
+        },
+        {
+          id: 'VIVA_ANALYTICS',
+          label: 'मौखिकी विश्लेषण / Viva Rubric',
+          icon: <AnalyticsIcon size={16} />,
+          badge: { text: 'NCCT 4D', type: 'success' },
+        },
+        {
+          id: 'PACS_SIMULATION_HEATMAP',
+          label: 'पैक्स हीटमैप / PACS Ledger Heatmap',
+          icon: <HeatmapIcon size={16} />,
+          badge: { text: '5x5 DIAG', type: 'warning' },
         },
       ],
     },
@@ -102,15 +169,27 @@ export function SidebarNav({
       title: 'Directorate 3: Trainee Verification',
       items: [
         {
+          id: 'TIMETABLE_ATTENDANCE',
+          label: 'समय-सारणी एवं उपस्थिति / Timetable & Attendance',
+          icon: <TimetableAttendanceIcon size={16} />,
+          badge: { text: '6-DIGIT CODE', type: 'success' },
+        },
+        {
           id: 'ATTENDANCE',
-          label: 'Attendance & Biometrics',
+          label: 'उपस्थिति / Multi-Modal Attendance',
           icon: <AttendanceIcon size={16} />,
         },
         {
           id: 'CREDENTIALS',
-          label: 'Digital Credentials',
+          label: 'डिजिटल प्रमाण-पत्र / Digital Credentials',
           icon: <CredentialsIcon size={16} />,
           badge: { text: 'ED25519', type: 'info' },
+        },
+        {
+          id: 'PROOF_INSPECTOR',
+          label: 'प्रमाण सैंडबॉक्स / Proof Sandbox',
+          icon: <ProofIcon size={16} />,
+          badge: { text: 'ED25519', type: 'apex' },
         },
       ],
     },
@@ -118,13 +197,19 @@ export function SidebarNav({
       title: 'Directorate 4: Industry & Logistics',
       items: [
         {
+          id: 'GRIEVANCES',
+          label: 'लोकपाल निवारण / Ombudsman SLA',
+          icon: <ScaleIcon size={16} />,
+          badge: { text: '4-TIER SLA', type: 'warning' },
+        },
+        {
           id: 'EMPLOYMENT',
-          label: 'Recruiter Kanban Board',
+          label: 'भर्ती बोर्ड / Recruiter Kanban',
           icon: <EmploymentIcon size={16} />,
         },
         {
           id: 'ERP_LOGISTICS',
-          label: 'Hostel & Logistics ERP',
+          label: 'छात्रावास ईआरपी / Hostel & Logistics',
           icon: <ErpLogisticsIcon size={16} />,
         },
       ],
@@ -134,23 +219,32 @@ export function SidebarNav({
       items: [
         {
           id: 'EDGE_NODES',
-          label: 'Edge Hardware Fleet',
+          label: 'एज हार्डवेयर / Edge Hardware Fleet',
           icon: <EdgeNodesIcon size={16} />,
           badge: { text: 'ONLINE', type: 'success' },
         },
         {
           id: 'SYNC_MONITOR',
-          label: 'Offline Ingestion & Sync',
+          label: 'ऑफ़लाइन सिंक / Ingestion & Sync',
           icon: <SyncMonitorIcon size={16} />,
         },
         {
           id: 'AUDIT_LOG',
-          label: 'Security Audit Trail',
+          label: 'सुरक्षा ऑडिट / Security Audit Trail',
           icon: <AuditLogIcon size={16} />,
         },
       ],
     },
   ];
+
+  const isTabActive = (itemId: AdminTab) => {
+    if (activeTab === itemId) return true;
+    if (itemId === 'ATP_BATCHES' && activeTab === 'atp-batches') return true;
+    if (itemId === 'TIMETABLE_ATTENDANCE' && activeTab === 'timetable-attendance') return true;
+    if (itemId === 'GRADEBOOK' && activeTab === 'gradebook') return true;
+    if (itemId === 'DROPOUT_RISK_ANALYTICS' && activeTab === 'dropout-risk-analytics') return true;
+    return false;
+  };
 
   return (
     <aside
@@ -176,38 +270,42 @@ export function SidebarNav({
           display: 'flex',
           alignItems: 'center',
           gap: '0.75rem',
+          backgroundColor: '#ffffff',
         }}
       >
         <div
           style={{
-            width: '38px',
-            height: '38px',
-            borderRadius: THEME.radii.sm,
-            backgroundColor: THEME.colors.bgMuted,
-            border: `1px solid ${THEME.colors.borderHairline}`,
+            width: '42px',
+            height: '42px',
+            borderRadius: THEME.radii.sharp,
+            backgroundColor: '#ffffff',
+            border: `1px solid ${THEME.colors.borderOuter}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: THEME.colors.navyPrimary,
+            boxShadow: THEME.shadows.card,
             flexShrink: 0,
           }}
         >
-          <MinistryEmblemIcon size={22} />
+          <NcctEmblemIcon size={34} />
         </div>
         <div>
           <div
             style={{
-              fontSize: '0.68rem',
+              fontSize: '0.64rem',
               fontWeight: 800,
-              letterSpacing: '0.06em',
-              color: THEME.colors.navyPrimary,
+              letterSpacing: '0.04em',
+              color: THEME.colors.navySovereign,
               textTransform: 'uppercase',
             }}
           >
-            Ministry of Cooperation
+            सहकारिता मंत्रालय | GOI
           </div>
-          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: THEME.colors.inkPrimary }}>
-            NCCT Central Portal
+          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: THEME.colors.navyDeep }}>
+            राष्ट्रीय सहकारी प्रशिक्षण परिषद
+          </div>
+          <div style={{ fontSize: '0.64rem', fontWeight: 600, color: THEME.colors.inkMuted }}>
+            NCCT Central Governance
           </div>
         </div>
       </div>
@@ -239,29 +337,32 @@ export function SidebarNav({
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
               {dir.items.map((item) => {
-                const isActive = activeTab === item.id;
+                const isActive = isTabActive(item.id);
                 return (
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
+                    aria-current={isActive ? 'page' : undefined}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       width: '100%',
-                      padding: '0.55rem 0.65rem',
-                      borderRadius: THEME.radii.sm,
-                      border: isActive ? `1px solid ${THEME.colors.borderHairline}` : '1px solid transparent',
-                      backgroundColor: isActive ? THEME.colors.bgMuted : 'transparent',
+                      minHeight: '40px',
+                      padding: '0.5rem 0.65rem',
+                      boxSizing: 'border-box',
+                      borderRadius: THEME.radii.sharp,
+                      border: isActive ? `1px solid ${THEME.colors.navyPrimary}` : '1px solid transparent',
+                      backgroundColor: isActive ? THEME.colors.navyLight : 'transparent',
                       color: isActive ? THEME.colors.navyPrimary : THEME.colors.inkBody,
-                      fontSize: '0.8rem',
-                      fontWeight: isActive ? 700 : 500,
+                      fontSize: '0.78rem',
+                      fontWeight: isActive ? 800 : 500,
                       cursor: 'pointer',
                       textAlign: 'left',
                       transition: 'background-color 0.12s ease',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', minWidth: 0 }}>
                       <span
                         style={{
                           color: isActive ? THEME.colors.navyPrimary : THEME.colors.inkMuted,
@@ -279,8 +380,8 @@ export function SidebarNav({
                       <span
                         style={{
                           ...pillBadge(item.badge.type),
-                          fontSize: '0.62rem',
-                          padding: '0.05rem 0.35rem',
+                          fontSize: '0.60rem',
+                          padding: '0.05rem 0.3rem',
                         }}
                       >
                         {item.badge.text}
@@ -307,14 +408,17 @@ export function SidebarNav({
       >
         <button
           onClick={() => setShowMobileSimulator(!showMobileSimulator)}
+          aria-pressed={showMobileSimulator}
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             width: '100%',
-            padding: '0.55rem 0.75rem',
-            borderRadius: THEME.radii.sm,
-            border: `1px solid ${THEME.colors.borderHairline}`,
+            minHeight: '40px',
+            padding: '0.5rem 0.75rem',
+            boxSizing: 'border-box',
+            borderRadius: THEME.radii.sharp,
+            border: `1px solid ${THEME.colors.borderOuter}`,
             backgroundColor: showMobileSimulator ? THEME.colors.navyPrimary : '#ffffff',
             color: showMobileSimulator ? '#ffffff' : THEME.colors.inkPrimary,
             fontSize: '0.78rem',
@@ -330,8 +434,8 @@ export function SidebarNav({
           {simQueuedEventsCount > 0 && (
             <span
               style={{
-                backgroundColor: '#ea580c',
-                color: '#ffffff',
+                backgroundColor: '#ff9933',
+                color: '#081854',
                 fontSize: '0.65rem',
                 fontWeight: 800,
                 padding: '0.1rem 0.4rem',
@@ -355,8 +459,8 @@ export function SidebarNav({
             style={{
               width: '32px',
               height: '32px',
-              borderRadius: THEME.radii.pill,
-              backgroundColor: THEME.colors.navyPrimary,
+              borderRadius: THEME.radii.sharp,
+              backgroundColor: THEME.colors.navyDeep,
               color: '#ffffff',
               fontSize: '0.75rem',
               fontWeight: 800,
@@ -364,6 +468,7 @@ export function SidebarNav({
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
+              border: '1px solid #feb505',
             }}
           >
             RV

@@ -32,6 +32,16 @@ import { apiClient, BackendStatus } from '../services/api-client';
 import { SidebarNav, AdminTab } from '../components/SidebarNav';
 import { TopHeader } from '../components/TopHeader';
 import { AuditDetailsModal, AuditLogItem } from '../components/AuditDetailsModal';
+import { SchemeAdvisoryRadarView } from '../components/SchemeAdvisoryRadarView';
+import { CamelScorecardView } from '../components/CamelScorecardView';
+import { ProofInspectorView } from '../components/ProofInspectorView';
+import { VivaAnalyticsView } from '../components/VivaAnalyticsView';
+import { PacsSimulationErrorHeatmapView } from '../components/PacsSimulationErrorHeatmapView';
+import { OmbudsmanRegistryView } from '../components/OmbudsmanRegistryView';
+import { AtpNominationQueueView } from '../components/AtpNominationQueueView';
+import { TimetableAttendanceView } from '../components/TimetableAttendanceView';
+import { AcademicGradebookView } from '../components/AcademicGradebookView';
+import { DropoutRiskAnalyticsView } from '../components/DropoutRiskAnalyticsView';
 import {
   THEME,
   cardStyle,
@@ -70,6 +80,12 @@ import {
   EdgeNodesIcon,
   SyncMonitorIcon,
   AuditLogIcon,
+  RadarIcon,
+  ScorecardIcon,
+  ProofIcon,
+  AnalyticsIcon,
+  HeatmapIcon,
+  ScaleIcon,
 } from '../components/icons';
 
 export default function AdminDashboardPage() {
@@ -1004,6 +1020,7 @@ export default function AdminDashboardPage() {
         {/* Top Header with Tricolor Ribbon & Live Status */}
         <TopHeader
           activeTab={activeTab}
+          setActiveTab={setActiveTab}
           backendStatus={backendStatus}
           edgeNodesCount={edgeNodes.length}
         />
@@ -1074,7 +1091,7 @@ export default function AdminDashboardPage() {
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>
                   <span style={pillBadge('info')}>
-                    SMART INDIA HACKATHON • PS 26087
+                    SOVEREIGN COOPERATIVE STACK • APEX PORTAL
                   </span>
                   <span style={pillBadge('apex')}>
                     MINISTRY OF COOPERATION / NCCT
@@ -1259,6 +1276,180 @@ export default function AdminDashboardPage() {
                     style={buttonSecondaryStyle}
                   >
                     <span>Launch AI Counselor Chatbot</span>
+                    <ExternalLinkIcon size={12} />
+                  </button>
+                </div>
+
+                {/* Directorate 1 Card: Schemes & CAMEL */}
+                <div style={cardStyle}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>
+                    <div
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: THEME.radii.sm,
+                        backgroundColor: '#eff6ff',
+                        border: '1px solid #bfdbfe',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: THEME.colors.navyPrimary,
+                      }}
+                    >
+                      <RadarIcon size={16} />
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#1d4ed8', letterSpacing: '0.04em' }}>
+                        DIRECTORATE 1
+                      </span>
+                      <h3 style={{ fontSize: '0.98rem', margin: 0, fontWeight: 700, color: THEME.colors.inkPrimary }}>
+                        Scheme Advisory & CAMEL Health
+                      </h3>
+                    </div>
+                  </div>
+                  <p style={{ color: THEME.colors.inkBody, fontSize: '0.85rem', lineHeight: 1.5, margin: '0 0 1rem 0' }}>
+                    Real-time Central Sector Scheme entitlement radar, 4-tier subsidy matrix, and statutory 5-pillar CAMEL prudential supervision.
+                  </p>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <button
+                      onClick={() => setActiveTab('SCHEME_RADAR')}
+                      style={{ ...buttonPrimaryStyle, minHeight: '44px', flex: 1 }}
+                    >
+                      <span>Scheme Radar</span>
+                      <ExternalLinkIcon size={12} />
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('CAMEL_SCORECARD')}
+                      style={{ ...buttonSecondaryStyle, minHeight: '44px', flex: 1 }}
+                    >
+                      <span>CAMEL Audit</span>
+                      <ExternalLinkIcon size={12} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Directorate 2 Card: Viva & Simulation */}
+                <div style={cardStyle}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>
+                    <div
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: THEME.radii.sm,
+                        backgroundColor: '#ecfdf5',
+                        border: '1px solid #a7f3d0',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#047857',
+                      }}
+                    >
+                      <AnalyticsIcon size={16} />
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#047857', letterSpacing: '0.04em' }}>
+                        DIRECTORATE 2
+                      </span>
+                      <h3 style={{ fontSize: '0.98rem', margin: 0, fontWeight: 700, color: THEME.colors.inkPrimary }}>
+                        Institutional Viva & Simulation Diagnostics
+                      </h3>
+                    </div>
+                  </div>
+                  <p style={{ color: THEME.colors.inkBody, fontSize: '0.85rem', lineHeight: 1.5, margin: '0 0 1rem 0' }}>
+                    Oral evaluation rubrics across 20 institutes, 5x5 PACS voucher error heatmaps, and automated remedial training drill dispatch.
+                  </p>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <button
+                      onClick={() => setActiveTab('VIVA_ANALYTICS')}
+                      style={{ ...buttonPrimaryStyle, minHeight: '44px', flex: 1 }}
+                    >
+                      <span>Viva Analytics</span>
+                      <ExternalLinkIcon size={12} />
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('PACS_SIMULATION_HEATMAP')}
+                      style={{ ...buttonSecondaryStyle, minHeight: '44px', flex: 1 }}
+                    >
+                      <span>Error Heatmap</span>
+                      <ExternalLinkIcon size={12} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Directorate 3 Card: Trainee Verification */}
+                <div style={cardStyle}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>
+                    <div
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: THEME.radii.sm,
+                        backgroundColor: '#fff7ed',
+                        border: '1px solid #fed7aa',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#c2410c',
+                      }}
+                    >
+                      <ProofIcon size={16} />
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#c2410c', letterSpacing: '0.04em' }}>
+                        DIRECTORATE 3
+                      </span>
+                      <h3 style={{ fontSize: '0.98rem', margin: 0, fontWeight: 700, color: THEME.colors.inkPrimary }}>
+                        Sovereign Proof Inspector & Tamper Sandbox
+                      </h3>
+                    </div>
+                  </div>
+                  <p style={{ color: THEME.colors.inkBody, fontSize: '0.85rem', lineHeight: 1.5, margin: '0 0 1rem 0' }}>
+                    Deep RFC 8785 canonical JSON bytes, SHA-256 digest, Ed25519 (R, S, A) inspection with interactive tamper simulation.
+                  </p>
+                  <button
+                    onClick={() => setActiveTab('PROOF_INSPECTOR')}
+                    style={{ ...buttonPrimaryStyle, minHeight: '44px', width: '100%' }}
+                  >
+                    <span>Open Proof Inspector</span>
+                    <ExternalLinkIcon size={12} />
+                  </button>
+                </div>
+
+                {/* Directorate 4 Card: Ombudsman Governance */}
+                <div style={cardStyle}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>
+                    <div
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: THEME.radii.sm,
+                        backgroundColor: '#faf5ff',
+                        border: '1px solid #e9d5ff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#7e22ce',
+                      }}
+                    >
+                      <ScaleIcon size={16} />
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#7e22ce', letterSpacing: '0.04em' }}>
+                        DIRECTORATE 4
+                      </span>
+                      <h3 style={{ fontSize: '0.98rem', margin: 0, fontWeight: 700, color: THEME.colors.inkPrimary }}>
+                        Ombudsman Registry & Statutory Resolution
+                      </h3>
+                    </div>
+                  </div>
+                  <p style={{ color: THEME.colors.inkBody, fontSize: '0.85rem', lineHeight: 1.5, margin: '0 0 1rem 0' }}>
+                    Multi-State Cooperative Societies Act 2023 Sec 85A statutory grievance workflow with 30-day live SLA tracking and binding orders.
+                  </p>
+                  <button
+                    onClick={() => setActiveTab('GRIEVANCES')}
+                    style={{ ...buttonPrimaryStyle, minHeight: '44px', width: '100%' }}
+                  >
+                    <span>Open Ombudsman Registry</span>
                     <ExternalLinkIcon size={12} />
                   </button>
                 </div>
@@ -4368,6 +4559,62 @@ export default function AdminDashboardPage() {
               </div>
             </div>
           )}
+
+          {/* =========================================================================
+              DIRECTORATE 1: SCHEME ADVISORY RADAR VIEW
+          ========================================================================= */}
+          {activeTab === 'SCHEME_RADAR' && <SchemeAdvisoryRadarView />}
+
+          {/* =========================================================================
+              DIRECTORATE 1: CAMEL PRUDENTIAL HEALTH SCORECARD VIEW
+          ========================================================================= */}
+          {activeTab === 'CAMEL_SCORECARD' && <CamelScorecardView />}
+
+          {/* =========================================================================
+              DIRECTORATE 2: INSTITUTIONAL VIVA-VOCE RUBRIC ANALYTICS VIEW
+          ========================================================================= */}
+          {activeTab === 'VIVA_ANALYTICS' && <VivaAnalyticsView />}
+
+          {/* =========================================================================
+              DIRECTORATE 2: PACS SIMULATION ERROR HEATMAP & REMEDIAL DRILLS VIEW
+          ========================================================================= */}
+          {activeTab === 'PACS_SIMULATION_HEATMAP' && <PacsSimulationErrorHeatmapView />}
+
+          {/* =========================================================================
+              DIRECTORATE 3: SOVEREIGN ED25519 PROOF INSPECTOR & TAMPER SANDBOX
+          ========================================================================= */}
+          {activeTab === 'PROOF_INSPECTOR' && <ProofInspectorView />}
+
+          {/* =========================================================================
+              DIRECTORATE 4: OMBUDSMAN GOVERNANCE & STATUTORY RESOLUTION REGISTRY
+          ========================================================================= */}
+          {activeTab === 'GRIEVANCES' && <OmbudsmanRegistryView />}
+
+          {/* =========================================================================
+              DIRECTORATE 2: ATP BATCHES & NOMINATION QUEUE VIEW (Feature 12)
+          ========================================================================= */}
+          {(activeTab === 'ATP_BATCHES' || activeTab === 'atp-batches') && <AtpNominationQueueView />}
+
+          {/* =========================================================================
+              DIRECTORATE 2: TIMETABLE & 6-DIGIT ATTENDANCE RADAR VIEW (Feature 13)
+          ========================================================================= */}
+          {(activeTab === 'TIMETABLE_ATTENDANCE' || activeTab === 'timetable-attendance') && <TimetableAttendanceView />}
+
+          {/* =========================================================================
+              DIRECTORATE 2: CONTINUOUS ACADEMIC EVALUATION & GRADEBOOK (Feature 14)
+          ========================================================================= */}
+          {(activeTab === 'GRADEBOOK' || activeTab === 'gradebook') && (
+            <AcademicGradebookView
+              onNavigateToProof={(_certCode) => {
+                setActiveTab('PROOF_INSPECTOR');
+              }}
+            />
+          )}
+
+          {/* =========================================================================
+              DIRECTORATE 2: 4-FACTOR RETENTION & SKILL SHORTAGE RADAR (Feature 15)
+          ========================================================================= */}
+          {(activeTab === 'DROPOUT_RISK_ANALYTICS' || activeTab === 'dropout-risk-analytics') && <DropoutRiskAnalyticsView />}
         </main>
       </div>
 
