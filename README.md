@@ -1,7 +1,7 @@
 # Sahakar Edge (सहकार एज)
 
 [![CI](https://github.com/himanshu-2l/Sahakar-Edge/actions/workflows/ci.yml/badge.svg)](https://github.com/himanshu-2l/Sahakar-Edge/actions/workflows/ci.yml)
-[![Tests Passing](https://img.shields.io/badge/tests-12%2F12%20passing-2ea44f.svg?style=flat-square)](scripts/run-all-tests.ts)
+[![Tests Passing](https://img.shields.io/badge/tests-14%2F14%20passing-2ea44f.svg?style=flat-square)](scripts/run-all-tests.ts)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8%20Strict-blue.svg?style=flat-square)](tsconfig.base.json)
 [![Next.js 15](https://img.shields.io/badge/Next.js-15.2.1-black.svg?style=flat-square)](apps/web-admin)
 [![React 19](https://img.shields.io/badge/React-19.0-61dafb.svg?style=flat-square)](apps/trainee-pwa)
@@ -106,7 +106,7 @@ Grassroots rural training venues frequently operate in environments with intermi
 
 ## 🧪 Comprehensive Monorepo Test Matrix
 
-Sahakar Edge is engineered with absolute rigor. All **12 automated test suites** execute in sequence via `scripts/run-all-tests.ts` with 100% pass guarantee:
+Sahakar Edge is engineered with absolute rigor. All **14 automated test suites** execute in sequence via `scripts/run-all-tests.ts` with 100% pass guarantee:
 
 | Suite | Focus Area | Key Verifications & Assertions |
 |:---:|---|---|
@@ -122,6 +122,8 @@ Sahakar Edge is engineered with absolute rigor. All **12 automated test suites**
 | **#10** | `scripts/test-production-e2e.ts` | Multi-process live HTTP end-to-end integration and data lifecycle validation |
 | **#11** | `scripts/test-deep-adversarial.ts` | Security fuzzing, idempotency replay flood, and hash-mismatch tampering rejection |
 | **#12** | `scripts/test-phase9.ts` | Hardware RFID tap (<50ms), Oral Viva Assessment, 3-Tier Rollup, and Ed25519 Offer Letters |
+| **#13** | `scripts/test-phase10-domain-synthesis.ts` | Domain Capability Synthesis (Apex Advisory, CAMEL Scorecard, PACS Lab & Grievance SLA) |
+| **#14** | `scripts/test-phase11-ncct-elevation.ts` | NCCT Government Visual Elevation, Authentic Emblems & Domain Synthesis (All 6 Pillars) |
 
 ---
 
@@ -143,11 +145,11 @@ pnpm install
 pnpm run build
 ```
 
-### 3. Run the Complete Test Gauntlet (12/12 Suites)
+### 3. Run the Complete Test Gauntlet (14/14 Suites)
 ```bash
 pnpm test
 ```
-*Executes all 12 automated test suites across every layer of the monorepo.*
+*Executes all 14 automated test suites across every layer of the monorepo.*
 
 ### 4. Run Edge Concurrency & Load Benchmark
 Evaluates local venue edge performance under high concurrent trainee load:
@@ -206,7 +208,7 @@ Sahakar-Edge/
 │   ├── db-edge/               # Edge node SQLite WAL schema and crash-resilient journal driver
 │   └── test-fixtures/         # Seed fixtures for NCCT institutes (RICM Bhopal, VAMNICOM), courses, and jobs
 ├── scripts/
-│   ├── run-all-tests.ts       # Master test runner executing all 12 monorepo test suites
+│   ├── run-all-tests.ts       # Master test runner executing all 14 monorepo test suites
 │   ├── benchmark-load.ts      # High-concurrency edge throughput benchmark tool
 │   └── simulate-partition.ts  # 10-scene network partition and WAN disruption simulation
 └── deploy/
